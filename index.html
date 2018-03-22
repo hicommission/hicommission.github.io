@@ -32,16 +32,19 @@ Addressbook in Backbone.js
 
 <!-- addNewContact View starts here -->
 <script type='text/template' id='addContactTemplate'>
-    <h2><%= $.isEmptyObject(contact) ? 'Add' : 'Edit'%> New Contact</h2>
-    <form id='frmAddContact'>
-        <div>Full Name:</div> <input type='text' id='full_name' class='input' value="<%= !$.isEmptyObject(contact) ? contact.full_name : '' %>" /> <span class='false full_name_error'></span><br />
-        <div>Email Id:</div> <input type='text' id='email' class='input' value="<%= !$.isEmptyObject(contact) ? contact.email : '' %>" />  <span class='false email_error'></span><br />
-        <div>Phone:</div> <input type='text' id='phone' class='input' value="<%= !$.isEmptyObject(contact) ? contact.phone : '' %>" />  <span class='false phone_error'></span><br />
-        <div>Address:</div> <textarea id='address' class='textarea'><%= !$.isEmptyObject(contact) ? contact.address : '' %></textarea> <br /><br />		
-        <input type='submit' value='<%= $.isEmptyObject(contact) ? 'Save' : 'Update'%> Contact Details' class='button' />
-        <span class='success'></span>
-        <input type='hidden' id='id' class='input' value="<%= !$.isEmptyObject(contact) ? contact.id : '' %>"/>
-    </form>
+<body>
+  <h1>Gilbert Alipui</h1>
+  <h4>Rich Idiot</h4>
+  
+  <ul>
+    <li>
+      <a href="https://github.com/ianjsikes">Github</a>
+    </li>
+    <li>
+      <a href="https://medium.com/@ianjsikes">Medium</a>
+    </li>
+  </ul>
+</body>
 </script>
 <!-- addNewContact View ends here -->
 
