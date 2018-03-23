@@ -30,9 +30,9 @@ AB.Router = Backbone.Router.extend({
         AB.addview.addContactPage();
     }, 
     
-    renderAddJudahPage: function () {
+    //renderAddJudahPage: function () {
         //AB.addjudahview.addJudahPage();
-    }, 
+    //}, 
     
     renderListContactsPage: function () {
         AB.listview.setElement('div.abPanel');
