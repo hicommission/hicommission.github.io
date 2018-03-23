@@ -24,7 +24,7 @@ AB.Router = Backbone.Router.extend({
     }, 
 
     renderAddNewContactPage: function () {
-        //AB.addview.addContactPage();
+        AB.addview.addContactPage();
     }, 
 
     renderListContactsPage: function () {
@@ -99,7 +99,7 @@ AB.addView = Backbone.View.extend({
     }, 
 
     initialize: function () {
-        _.bindAll(this, 'addContactPage', 'addContact');
+        //_.bindAll(this, 'addContactPage', 'addContact');
     }, 
 
     addContactPage: function (id) {
