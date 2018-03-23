@@ -150,7 +150,7 @@ AB.addView = Backbone.View.extend({
 });
 
 /* addNewJudah View */
-AB.addJudahView = Backbone.View.extend({
+/*AB.addJudahView = Backbone.View.extend({
     el: 'div.abPanel', 
 
     template: _.template($('#addJudahTemplate').html()), 
@@ -172,7 +172,7 @@ addJudahPage: function (id) {
         }
         this.$el.html(this.template({contact: contact}));
     }
-});
+});*/
 
 /* addNewJudah View */
 AB.addJudahView = Backbone.View.extend({
