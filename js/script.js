@@ -149,8 +149,8 @@ AB.addView = Backbone.View.extend({
         return false;
     },
     
-//addJudahPage: function () {
-//        var contact = {}
+addJudahPage: function () {
+        var contact = {}
     /*    model = AB.contactscollection.get(id);
 
         if (id !== undefined && model !== undefined) {
@@ -158,7 +158,7 @@ AB.addView = Backbone.View.extend({
         }
         this.$el.html(this.template({contact: contact}));
     },*/
-//}
+}
     
 });
 
