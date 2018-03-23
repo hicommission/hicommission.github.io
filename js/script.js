@@ -6,6 +6,7 @@
 var AB = {
     run: function () {
         this.addview = new this.addView();
+        this.addJudahview = new this.addJudahView();
         this.listview = new this.listView();
         this.searchview = new this.searchView();
         this.contactscollection = new AB.contactsCollection();
@@ -145,6 +146,14 @@ AB.addView = Backbone.View.extend({
         contactmodel.save();
         return false;
     }
+});
+
+/* addNewJudah View */
+AB.addJudahView = Backbone.View.extend({
+    el: 'div.abPanel', 
+
+    template: _.template($('#addJudahTemplate').html()), 
+
 });
 
 /* listContacts View */
