@@ -11,14 +11,16 @@ var AB = {
         this.contactscollection = new AB.contactsCollection();
         this.router = new this.Router();
         Backbone.history.start();
-        this.router.navigate('add_new_contact', {trigger: true});		
+        //this.router.navigate('add_new_contact', {trigger: true});		
+        this.router.navigate('add_judah', {trigger: true});
     }
 };
 
 AB.Router = Backbone.Router.extend({
     routes: {
         'list_contacts': 	'renderListContactsPage', 
-        'add_new_contact': 	'renderAddNewContactPage', 
+        'add_new_contact': 	'renderAddNewContactPage',
+        'add_judah': 'renderAddJudahPage',
         'search_contacts': 	'renderSearchContactsPage', 
         'edit_contact/:id': 'renderEditContactPage'		
     }, 
@@ -26,7 +28,11 @@ AB.Router = Backbone.Router.extend({
     renderAddNewContactPage: function () {
         AB.addview.addContactPage();
     }, 
-
+    
+    renderAddJudahPage: function () {
+        AB.addview.addJudahPage();
+    }, 
+    
     renderListContactsPage: function () {
         AB.listview.setElement('div.abPanel');
         AB.listview.listContactsPage();
