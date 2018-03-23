@@ -147,9 +147,8 @@ AB.addView = Backbone.View.extend({
         }
         contactmodel.save();
         return false;
-    }
-});
-
+    },
+    
 addJudahPage: function () {
         var contact = {},
     /*    model = AB.contactscollection.get(id);
@@ -159,7 +158,11 @@ addJudahPage: function () {
         }
         this.$el.html(this.template({contact: contact}));
     },*/
-});     
+}
+    
+});
+
+     
 /* addNewJudah View */
 /*AB.addJudahView = Backbone.View.extend({
     el: 'div.abPanel', 
