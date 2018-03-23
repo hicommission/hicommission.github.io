@@ -148,6 +148,20 @@ AB.addView = Backbone.View.extend({
     }
 });
 
+/* addNewJudah View */
+AB.addJudahView = Backbone.View.extend({
+    el: 'div.abPanel', 
+
+    template: _.template($('#addJudahTemplate').html()), 
+
+    events: {
+        'submit form#frmAddContact': 'addContact'
+    }, 
+
+    initialize: function () {
+        //_.bindAll(this, 'addContactPage', 'addContact');
+        _.bindAll(this, 'addJudahPage', 'addContact');
+    }, 
 addJudahPage: function (id) {
         var contact = {},
         model = AB.contactscollection.get(id);
