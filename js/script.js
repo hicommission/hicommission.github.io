@@ -12,8 +12,8 @@ var AB = {
         this.contactscollection = new AB.contactsCollection();
         this.router = new this.Router();
         Backbone.history.start();
-        //this.router.navigate('add_new_contact', {trigger: true});		
-        this.router.navigate('add_judah', {trigger: true});
+        this.router.navigate('add_new_contact', {trigger: true});		
+        //this.router.navigate('add_judah', {trigger: true});
     }
 };
 
