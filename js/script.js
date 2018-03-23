@@ -100,8 +100,8 @@ AB.contactsCollection = Backbone.Collection.extend({
 AB.addView = Backbone.View.extend({
     el: 'div.abPanel', 
 
-    //template: _.template($('#addContactTemplate').html()), 
-    template: _.template($('#addJudahTemplate').html()), 
+    template: _.template($('#addContactTemplate').html()), 
+    //template: _.template($('#addJudahTemplate').html()), 
 
     events: {
         'submit form#frmAddContact': 'addContact'
