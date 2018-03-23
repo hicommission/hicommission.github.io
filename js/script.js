@@ -203,6 +203,7 @@ addJudahPage: function () {
         }
         this.$el.html(this.template({contact: contact}));
     },*/
+        this.$el.html(this.template({contact: contact}));
 }
 });
 
