@@ -6,7 +6,7 @@
 var AB = {
     run: function () {
         this.addview = new this.addView();
-        this.addJudahview = new this.addJudahView();
+        this.addjudahview = new this.addJudahView();
         this.listview = new this.listView();
         this.searchview = new this.searchView();
         this.contactscollection = new AB.contactsCollection();
@@ -31,7 +31,7 @@ AB.Router = Backbone.Router.extend({
     }, 
     
     renderAddJudahPage: function () {
-        AB.addJudahview.addJudahPage();
+        AB.addjudahview.addJudahPage();
     }, 
     
     renderListContactsPage: function () {
