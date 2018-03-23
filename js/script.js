@@ -105,7 +105,7 @@ AB.addView = Backbone.View.extend({
     }, 
 
     initialize: function () {
-        //_.bindAll(this, 'addContactPage', 'addContact');
+        _.bindAll(this, 'addContactPage', 'addContact');
         //_.bindAll(this, 'addJudahPage', 'addContact');
     }, 
 
