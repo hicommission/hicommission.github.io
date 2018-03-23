@@ -150,7 +150,7 @@ AB.addView = Backbone.View.extend({
     },
     
 addJudahPage: function () {
-        var contact = {},
+        var contact = {}
     /*    model = AB.contactscollection.get(id);
 
         if (id !== undefined && model !== undefined) {
