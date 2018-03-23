@@ -31,9 +31,9 @@ AB.Router = Backbone.Router.extend({
         AB.addview.addContactPage();
     }, 
     
-    //renderAddJudahPage: function () {
-        //AB.addjudahview.addJudahPage();
-    //}, 
+    renderAddJudahPage: function () {
+        AB.addjudahview.addJudahPage();
+    }, 
     
     renderListContactsPage: function () {
         AB.listview.setElement('div.abPanel');
@@ -150,6 +150,16 @@ AB.addView = Backbone.View.extend({
     }
 });
 
+addJudahPage: function () {
+        var contact = {},
+    /*    model = AB.contactscollection.get(id);
+
+        if (id !== undefined && model !== undefined) {
+            contact = model.toJSON();
+        }
+        this.$el.html(this.template({contact: contact}));
+    },*/
+});     
 /* addNewJudah View */
 /*AB.addJudahView = Backbone.View.extend({
     el: 'div.abPanel', 
