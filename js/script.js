@@ -149,8 +149,8 @@ AB.addView = Backbone.View.extend({
         return false;
     },
     
-addJudahPage: function () {
-        var contact = {}
+//addJudahPage: function () {
+//        var contact = {}
     /*    model = AB.contactscollection.get(id);
 
         if (id !== undefined && model !== undefined) {
@@ -158,7 +158,7 @@ addJudahPage: function () {
         }
         this.$el.html(this.template({contact: contact}));
     },*/
-}
+//}
     
 });
 
@@ -194,6 +194,16 @@ AB.addJudahView = Backbone.View.extend({
 
     template: _.template($('#addJudahTemplate').html()), 
 
+addJudahPage: function () {
+        var contact = {}
+    /*    model = AB.contactscollection.get(id);
+
+        if (id !== undefined && model !== undefined) {
+            contact = model.toJSON();
+        }
+        this.$el.html(this.template({contact: contact}));
+    },*/
+}
 });
 
 /* listContacts View */
