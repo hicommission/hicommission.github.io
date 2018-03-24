@@ -217,18 +217,19 @@ addJudahPage: function () {
         this.$el.html(this.template({contact: contact}));
 },
     
-/*addMePage: function () {
-        var contact = {}
-        this.$el.html(this.template({addMePage: contact}));
-}*/
-
 });
 
-/* addNewContact View */
+/* addMe View */
 /*AB.addMeView = Backbone.View.extend({
     el: 'div.abPanel', 
     
-    template: _.template($('#addMeTemplate').html()), 
+    template: _.template($('#addMeTemplate').html()),
+
+addMePage: function () {
+        var contact = {}
+        this.$el.html(this.template({addMePage: contact}));
+}
+    
 });
 */
 /* listContacts View */
