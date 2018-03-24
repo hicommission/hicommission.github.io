@@ -14,7 +14,8 @@ var AB = {
         this.router = new this.Router();
         Backbone.history.start();
         //this.router.navigate('add_new_contact', {trigger: true});		
-        this.router.navigate('add_judah', {trigger: true});
+        //this.router.navigate('add_judah', {trigger: true});
+        this.router.navigate('add_me', {trigger: true});
     }
 };
 
@@ -36,9 +37,9 @@ AB.Router = Backbone.Router.extend({
         AB.addjudahview.addJudahPage();
     }, 
     
-    /*renderAddNewMePage: function(){
+    renderAddNewMePage: function(){
        AB.addmeview.addMePage();    
-    },*/
+    },
     
     renderListContactsPage: function () {
         AB.listview.setElement('div.abPanel');
@@ -220,18 +221,18 @@ addJudahPage: function () {
 });
 
 /* addMe View */
-/*AB.addMeView = Backbone.View.extend({
+AB.addMeView = Backbone.View.extend({
     el: 'div.abPanel', 
     
     template: _.template($('#addMeTemplate').html()),
 
 addMePage: function () {
         var contact = {}
-        this.$el.html(this.template({addMePage: contact}));
+        this.$el.html(this.template({contact: contact}));
 }
     
 });
-*/
+
 /* listContacts View */
 AB.listView = Backbone.View.extend({
     el: 'div.abPanel', 
