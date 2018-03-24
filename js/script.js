@@ -175,33 +175,7 @@ addMePage: function () {
 }
 */
 });
-
      
-/* addNewJudah View */
-/*AB.addJudahView = Backbone.View.extend({
-    el: 'div.abPanel', 
-
-    template: _.template($('#addJudahTemplate').html()), 
-
-    events: {
-        'submit form#frmAddContact': 'addContact'
-    }, 
-
-    initialize: function () {
-        //_.bindAll(this, 'addContactPage', 'addContact');
-        _.bindAll(this, 'addJudahPage', 'addContact');
-    }, 
-addJudahPage: function (id) {
-        var contact = {},
-        model = AB.contactscollection.get(id);
-
-        if (id !== undefined && model !== undefined) {
-            contact = model.toJSON();
-        }
-        this.$el.html(this.template({contact: contact}));
-    }
-});*/
-
 /* addNewJudah View */
 AB.addJudahView = Backbone.View.extend({
     el: 'div.abPanel', 
@@ -223,7 +197,7 @@ addJudahPage: function () {
 });
 
 /* addMe View */
-AB.addMeView = Backbone.View.extend({
+/*AB.addMeView = Backbone.View.extend({
     el: 'div.abPanel', 
     
     template: _.template($('#addMeTemplate').html()),
@@ -234,6 +208,7 @@ addMePage: function () {
 }
     
 });
+*/
 
 /* listContacts View */
 AB.listView = Backbone.View.extend({
