@@ -24,6 +24,7 @@
     <div class='row'>
         <div class='cell abLinks'>
             <a href='#add_new_contact'>Join the Judah Group</a><br />
+            <a href='#add_new_me'>Add Me to the Judah Group</a><br />
             <a href='#list_contacts'>List all Contacts</a><br />
             <a href='#search_contacts'>Search any Contact</a><br />
         </div>
@@ -51,6 +52,22 @@
   </ul>
 </body>
 </script>
+
+    <!-- addMe View starts here -->    
+<h3>Save all your Favorite Movies here</h3>
+<hr />
+<input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" />
+<h4>My Favorite Movies</h4>
+<ol id="favMovies">
+ <label id="loading">Loading.. Please wait..</label>
+</ol>    
+<script src="app.js" type="text/javascript"></script>
+<script type="text/template" id="movieTemplate">
+     <%- name %> [
+        <a href="javascript:" class="edit">Edit</a>|
+        <a href="javascript:" class="delete">Delete</a>]
+</script>
+
     
 <!-- addNewContact View starts here -->
 <script type='text/template' id='addContactTemplate'>
