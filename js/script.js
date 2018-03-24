@@ -6,8 +6,8 @@
 var AB = {
     run: function () {
         this.addview = new this.addView();
-        //this.addjudahview = new this.addJudahView();
         this.addjudahview = new this.addJudahView();
+        this.addmeview = new this.addMeView();
         this.listview = new this.listView();
         this.searchview = new this.searchView();
         this.contactscollection = new AB.contactsCollection();
@@ -23,6 +23,7 @@ AB.Router = Backbone.Router.extend({
         'list_contacts': 	'renderListContactsPage', 
         'add_new_contact': 	'renderAddNewContactPage',
         'add_judah': 'renderAddNewJudahPage',
+        'add_me': 'renderAddNewMePage',
         'search_contacts': 	'renderSearchContactsPage', 
         'edit_contact/:id': 'renderEditContactPage'		
     }, 
@@ -34,6 +35,10 @@ AB.Router = Backbone.Router.extend({
     renderAddNewJudahPage: function () {
         AB.addjudahview.addJudahPage();
     }, 
+    
+    renderAddNewMePage: function(){
+       AB.addmeview.addMePage();    
+    }
     
     renderListContactsPage: function () {
         AB.listview.setElement('div.abPanel');
@@ -160,7 +165,11 @@ addJudahPage: function () {
     },*/
     //this.$el.html(this.template({contact: contact}));    
 }
-    
+
+addMePage: function () {
+        var contact = {}
+}
+
 });
 
      
