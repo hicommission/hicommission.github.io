@@ -54,16 +54,13 @@
 </script>
 
     <!-- addMe View starts here -->    
-<h3>Save all your Favorite Movies here</h3>
 <hr />
-<input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" />
-<h4>My Favorite Movies</h4>
-<ol id="favMovies">
- <label id="loading">Loading.. Please wait..</label>
-</ol>    
+
 <script src="app.js" type="text/javascript"></script>
 <script type="text/template" id="movieTemplate">
-     <%- name %> [
+<input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" />
+<h4>My Favorite Movies</h4>
+    <%- name %> [
         <a href="javascript:" class="edit">Edit</a>|
         <a href="javascript:" class="delete">Delete</a>]
 </script>
