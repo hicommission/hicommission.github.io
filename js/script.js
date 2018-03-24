@@ -7,7 +7,7 @@ var AB = {
     run: function () {
         this.addview = new this.addView();
         this.addjudahview = new this.addJudahView();
-        this.addmeview = new this.addMeView();
+        //this.addmeview = new this.addMeView();
         this.listview = new this.listView();
         this.searchview = new this.searchView();
         this.contactscollection = new AB.contactsCollection();
