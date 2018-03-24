@@ -7,7 +7,7 @@ var AB = {
     run: function () {
         this.addview = new this.addView();
         this.addjudahview = new this.addJudahView();
-        this.addmeview = new this.addMeView();
+        //this.addmeview = new this.addMeView();
         this.listview = new this.listView();
         this.searchview = new this.searchView();
         this.contactscollection = new AB.contactsCollection();
@@ -225,12 +225,12 @@ addJudahPage: function () {
 });
 
 /* addNewContact View */
-AB.addMeView = Backbone.View.extend({
+/*AB.addMeView = Backbone.View.extend({
     el: 'div.abPanel', 
     
     template: _.template($('#addMeTemplate').html()), 
 });
-
+*/
 /* listContacts View */
 AB.listView = Backbone.View.extend({
     el: 'div.abPanel', 
