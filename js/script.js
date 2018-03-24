@@ -115,6 +115,7 @@ AB.addView = Backbone.View.extend({
     initialize: function () {
         //_.bindAll(this, 'addContactPage', 'addContact');
         _.bindAll(this, 'addJudahPage', 'addContact');
+        //_.bindAll(this, 'addMePage', 'addContact');
     }, 
 
     addContactPage: function (id) {
@@ -214,7 +215,13 @@ addJudahPage: function () {
         this.$el.html(this.template({contact: contact}));
     },*/
         this.$el.html(this.template({contact: contact}));
+},
+    
+addMePage: function () {
+        var contact = {}
+        this.$el.html(this.template({addMePage: contact}));
 }
+
 });
 
 /* listContacts View */
