@@ -38,6 +38,7 @@ AB.Router = Backbone.Router.extend({
     }, 
     
     renderAddNewMePage: function(){
+       AB.addmeview.setElement('div.abPanel'); 
        AB.addmeview.addMePage();    
     },
     
@@ -166,11 +167,11 @@ addJudahPage: function () {
         this.$el.html(this.template({contact: contact}));
     },*/
     //this.$el.html(this.template({contact: contact}));    
-}/*,
+},
 
 addMePage: function () {
         var contact = {}
-}*/
+}
 
 });
 
