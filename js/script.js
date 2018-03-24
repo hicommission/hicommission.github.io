@@ -197,7 +197,7 @@ addJudahPage: function () {
 });
 
 /* addMe View */
-/*AB.addMeView = Backbone.View.extend({
+AB.addMeView = Backbone.View.extend({
     el: 'div.abPanel', 
     
     template: _.template($('#addMeTemplate').html()),
@@ -205,10 +205,10 @@ addJudahPage: function () {
 addMePage: function () {
         var contact = {}
         this.$el.html(this.template({contact: contact}));
-}
+},
     
 });
-*/
+
 
 /* listContacts View */
 AB.listView = Backbone.View.extend({
