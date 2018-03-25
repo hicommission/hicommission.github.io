@@ -1,4 +1,4 @@
-$(document).ready(function() {
+//$(document).ready(function() {
     // model
     var Movie = Backbone.Model.extend({
         defaults: function() {
@@ -75,4 +75,4 @@ $(document).ready(function() {
         }
     });
     var App = new AppView();
-});
+//});
