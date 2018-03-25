@@ -1,6 +1,6 @@
 //$(document).ready(function() {
     // model
- /*   var Movie = Backbone.Model.extend({
+    var Movie = Backbone.Model.extend({
         defaults: function() {
             return {
                 name: ""
@@ -75,5 +75,5 @@
         }
     });
     var App = new AppView();
-    */
+    /* */
 //});
