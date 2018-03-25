@@ -169,11 +169,11 @@ addJudahPage: function () {
     //this.$el.html(this.template({contact: contact}));    
 },
 
-/*    
+    
 addMePage: function () {
         var contact = {}
-}
-*/
+},
+
 });
      
 /* addNewJudah View */
