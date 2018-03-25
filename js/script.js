@@ -288,7 +288,7 @@ AB.searchView = Backbone.View.extend({
 });
 
 ////////
-    var Movie = Backbone.Model.extend({
+/*    var Movie = Backbone.Model.extend({
         defaults: function() {
             return {
                 name: ""
@@ -296,7 +296,7 @@ AB.searchView = Backbone.View.extend({
         }
     });
     //collection
-/*    var Movies = Backbone.Firebase.Collection.extend({
+    var Movies = Backbone.Firebase.Collection.extend({
         model: Movie,
         firebase: new Firebase("https://moviefire.firebaseio.com/movies")
     });
