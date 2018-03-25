@@ -204,7 +204,7 @@ AB.addMeView = Backbone.View.extend({
 
 addMePage: function () {
         var contact = {}
-        this.$el.html(this.template({contact: contact}));
+     //   this.$el.html(this.template({contact: contact}));
 },
     
 });
