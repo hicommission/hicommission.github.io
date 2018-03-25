@@ -47,7 +47,8 @@ $(document).ready(function() {
     });
 
     var AppView = Backbone.View.extend({
-        el: $("body"),
+        //el: $("body"),
+        el: $("favMovie"),
         events: {
             "keypress #movieName": "saveToList"
         },
