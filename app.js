@@ -26,8 +26,8 @@ $(document).ready(function() {
             this.listenTo(this.model, 'remove', this.remove);
         },
         render: function() {
-            //this.$el.html(_.template($('#movieTemplate').html().trim(), this.model.toJSON()));
-            this.$el.html(_.template($('#addMeTemplate').html().trim(), this.model.toJSON()));
+            this.$el.html(_.template($('#movieTemplate').html().trim(), this.model.toJSON()));
+            //this.$el.html(_.template($('#addMeTemplate').html().trim(), this.model.toJSON()));
             return this;
         },
         edit: function() {
