@@ -62,8 +62,11 @@
     <!-- addMe View starts here -->
     
 <script type="text/template" id="addMeTemplate">
-
     <input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" />
+    <h4>My Favorite Movies</h4>
+    <ol id="favMovies">
+      <label id="loading">Loading.. Please wait..</label>
+    </ol>    
     <h4>My Favorite Movies</h4>
 
     <%- name %> [
