@@ -1,4 +1,4 @@
-//$(document).ready(function() {
+$(document).ready(function() {
     // model
     var Movie = Backbone.Model.extend({
         defaults: function() {
@@ -77,4 +77,4 @@ alert('testimas');
     });
     var App = new AppView();
      */
-//});
+});
