@@ -69,7 +69,7 @@
 
     <!-- addMe View starts here -->
 <hr />
-<ol id="favMovies">
+<!--ol id="favMovies">
 
   </ol>
 
@@ -79,8 +79,21 @@
     <%- name %> [
         <a href="javascript:" class="edit">Edit</a>|
         <a href="javascript:" class="delete">Delete</a>]
-</script>
+</script-->
 
+    <hr />
+    <input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" />
+    <h4>My Favorite Movies</h4>
+    <ol id="favMovies">
+      <label id="loading">Loading.. Please wait..</label>
+    </ol>
+    
+    <script type="text/template" id="movieTemplate">
+    <%- name %> [
+            <a href="javascript:" class="edit">Edit</a>|
+            <a href="javascript:" class="delete">Delete</a>]
+    </script>
+    
 
 <!-- addNewContact View starts here -->
 <script type='text/template' id='addContactTemplate'>
