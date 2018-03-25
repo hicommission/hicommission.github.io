@@ -27,7 +27,7 @@
         },
         render: function() {
             //this.$el.html(_.template($('#movieTemplate').html().trim(), this.model.toJSON()));
-            this.$el.html(_.template($('#addMeTemplate').html().trim(), this.model.toJSON()));
+            this.$el.html(_.template($('#movieTemplate#addMeTemplate').html().trim(), this.model.toJSON()));
             return this;
         },
         edit: function() {
@@ -56,7 +56,7 @@
             this.input = this.$("#movieName");
             this.listenTo(favMovies, 'add', this.addOne);
         },
-        saveToList: function(e) {
+/*        saveToList: function(e) {
             if (e.keyCode != 13) return
             else {
                 if (this.input.val().length > 0)
@@ -75,5 +75,5 @@
         }
     });
     var App = new AppView();
-    /* */
+     */
 //});
