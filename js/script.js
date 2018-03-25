@@ -287,6 +287,21 @@ AB.searchView = Backbone.View.extend({
     }
 });
 
+    var Movie = Backbone.Model.extend({
+        defaults: function() {
+            return {
+                name: ""
+            };
+        }
+    });
+    //collection
+    var Movies = Backbone.Firebase.Collection.extend({
+        model: Movie,
+        firebase: new Firebase("https://moviefire.firebaseio.com/movies")
+    });
+    // init collection
+    var favMovies = new Movies();
+
 $(function () {
     AB.run();
 });
