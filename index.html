@@ -60,7 +60,19 @@
 </script>
 
     <!-- addMe View starts here -->
-<script type="text/javascript">
+<body>
+    <h1>Movie Fire</h1>
+    <h3>Save all your Favorite Movies here</h3>
+    <hr />
+    <input type="text" id="movieName" placeholder="Enter your Favorite Movie Name" onkeypress="return saveToList(event)" />
+    <h4>My Favorite Movies</h4>
+    <ol id="favMovies">
+        Loading.. Please wait..
+    </ol>
+    <script type='text/javascript' src='https://cdn.firebase.com/js/client/1.0.15/firebase.js'></script>
+    <script type="text/javascript" src="app.js"></script>
+</body>    
+<!--script type="text/javascript">
     
 function codeAddress() {
   alert('testimas');
@@ -79,7 +91,7 @@ function codeAddress() {
     <%- name %> [
             <a href="javascript:" class="edit">Edit</a>|
             <a href="javascript:" class="delete">Delete</a>]
-</script>
+</script-->
     
 
 <!-- addNewContact View starts here -->
