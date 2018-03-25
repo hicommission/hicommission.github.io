@@ -45,7 +45,7 @@ $(document).ready(function() {
             }
         }
     });
-alert('testimas');
+//alert('testimas');
 /*
     var AppView = Backbone.View.extend({
         el: $("body"),
