@@ -296,7 +296,7 @@ AB.searchView = Backbone.View.extend({
         }
     });
     //collection
-    var Movies = Backbone.Firebase.Collection.extend({
+/*    var Movies = Backbone.Firebase.Collection.extend({
         model: Movie,
         firebase: new Firebase("https://moviefire.firebaseio.com/movies")
     });
@@ -361,7 +361,7 @@ AB.searchView = Backbone.View.extend({
             this.$("#favMovies").append(view.render().el);
         }
     });
-    //var App = new AppView();
+    //var App = new AppView();*/
 ///////
 $(function () {
     AB.run();
