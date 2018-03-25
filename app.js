@@ -55,8 +55,8 @@
         initialize: function() {
             this.input = this.$("#movieName");
             this.listenTo(favMovies, 'add', this.addOne);
-        },
-/*        saveToList: function(e) {
+        });/*,
+        saveToList: function(e) {
             if (e.keyCode != 13) return
             else {
                 if (this.input.val().length > 0)
