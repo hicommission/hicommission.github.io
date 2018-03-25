@@ -47,8 +47,8 @@
     });
 
     var AppView = Backbone.View.extend({
-        //el: $("body"),
-        el: $("favMovie"),
+        el: $("body"),
+        //el: $("favMovie"),
         events: {
             "keypress #movieName": "saveToList"
         },
