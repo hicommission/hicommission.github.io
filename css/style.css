@@ -16,6 +16,17 @@ body {
    overflow: scroll;
    overflow-x: hidden;
 }
+.banner {
+   marging: 0px auto;
+   padding: 0;
+   height: 16%;
+   width: 100%;
+   overflow: hidden;
+   border: solid;
+   background-color: d8d8d8;
+   border-color: 81daf5;
+   border-width: 0px 0px 5px 0px;
+}
 #page {
     margin-left: 200px;
     background-color: #F0F0F0;
