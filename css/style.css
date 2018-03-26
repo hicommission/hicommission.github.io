@@ -6,6 +6,11 @@ html{
    overflow: hidden;
 }
 
+div {
+   word-wrap: break-word;
+   width: 100px;
+}
+
 body {
     font: small sans-serif;
    margin: 0;
