@@ -23,8 +23,9 @@ body {
    width: 100%;
    overflow: hidden;
    border: solid;
-   background-color: #d8d8d8;
-   border-color: #81daf5;
+   font: normal 11px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+   color: #4f6b72;
+   background: #E6EAE9;
    border-width: 0px 0px 5px 0px;
 }
 #page {
