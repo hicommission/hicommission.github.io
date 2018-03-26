@@ -61,41 +61,49 @@
 
     <!-- addMe View starts here -->
 <script type="text/template" id="addMeTemplate">    
-<body>
-    <h1>Join Judah</h1>
-    <h3>I want to Join the Judah Group</h3>
-    <hr />
-    <input type="text" id="movieName" placeholder="Add me to the Judah Group" onkeypress="return saveToList(event)" />   
-    <!--h4>My Favorite Movies</h4>
-    <ol id="favMovies">
-        Loading.. Please wait..
-    </ol-->
-    <script type='text/javascript' src='https://cdn.firebase.com/js/client/1.0.15/firebase.js'></script>
-    <script type="text/javascript" src="app.js"></script> 
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>title</title>
+    <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
+  </head>
+  <body>
+    <h2>Firebase Example</h2>
+    <input type='text' id='messageInput'  placeholder='Enter your data here...'>
+    <button type="button" onclick="savedata()">Save Data</button>
+    <br><br><br>
+    <hr>
+    <h2>Results</h2>
+    <textarea rows="10" cols="50" id="results"></textarea>
+    <script>
+    var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
+
+    var messageField = document.getElementById('messageInput');
+    var messageResults = document.getElementById('results');
+
+    // Save data to firebase
+    function savedata(){
+      var message = messageField.value;
+
+      messagesRef.push({fieldName:'messageField', text:message});
+      messageField.value = '';
+    }
+
+    // Update results when data is added
+    messagesRef.limitToLast(10).on('child_added', function (snapshot) {
+        var data = snapshot.val();
+        console.log(snapshot.val());
+        var message = data.text;
+
+        if (message != undefined)
+        {
+          messageResults.value += '\n' + message;
+        }
+    });
+    </script>
+  </body>
 </script>    
-<!--script type="text/javascript">
     
-function codeAddress() {
-  alert('testimas');
-}
-<body onLoad="codeAddress()">    
-
-</script>
-<script type="text/template" id="addMeTemplate">
-    <input type="text" id="movieName" placeholder="Add me to the Judah group" />
-    <h4>My Favorite Movies</h4>
-    <ol id="favMovies">
-      <label id="loading">Loading.. Please wait..</label>
-    </ol>    
-    <h4>My Favorite Movies</h4>
-    <script type="text/template" id="movieTemplate">
-    <%- name %> [
-            <a href="javascript:" class="edit">Edit</a>|
-            <a href="javascript:" class="delete">Delete</a>]
-</script-->
     
-
 <!-- addNewContact View starts here -->
 <script type='text/template' id='addContactTemplate'>
 <h2><%= $.isEmptyObject(contact) ? 'Add' : 'Edit'%> New Contact</h2>
