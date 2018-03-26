@@ -38,7 +38,7 @@ body {
 }
 #menuleftcontent {
     float: left;
-    width: 200px;
+    width: 100px;
     margin-left: -200px;
     background-color: #CCCCCC;
 }
