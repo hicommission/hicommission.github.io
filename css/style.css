@@ -30,7 +30,8 @@ body {
    border: solid;
    font: normal 11px auto "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
    color: #4f6b72;
-   background: #E6EAE9;
+   //background: #E6EAE9;
+   background: #79c879;
    border-width: 0px 0px 5px 0px;
 }
 #page {
@@ -45,7 +46,8 @@ body {
     float: left;
     width: 200px;
     margin-left: -200px;
-    background-color: #CCCCCC;
+    //background-color: #CCCCCC;
+   background-color: #79c879;
 }
 #clearingdiv {
     clear: both;
