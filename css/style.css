@@ -39,7 +39,7 @@ body {
 }
 #menuleftcontent {
     float: left;
-    width: 100px;
+    width: 200px;
     margin-left: -200px;
     background-color: #CCCCCC;
 }
