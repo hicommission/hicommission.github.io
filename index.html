@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <title>title</title>
     <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
   </head>
   <body>
-    <h2>Firebase Example</h2>
+  <div id="page">
+    <div id="maincontent">
+        <div id="firstcontent">firstcontent</div>
+        <div id="secondcontent">secondcontent</div>
+        <div id="thirdcontent">thirdcontent     <h2>Firebase Example</h2>
     <input type='text' id='messageInput'  placeholder='Enter your data here...'>
     <button type="button" onclick="savedata()">Save Data</button>
     <br><br><br>
@@ -39,5 +44,16 @@
         }
     });
     </script>
+</div>
+    </div>
+    <div id="menuleftcontent">
+        <ul id="menu">
+            <li><a href="#firstcontent">first</a></li>
+            <li><a href="#secondcontent">second</a></li>
+            <li><a href="#thirdcontent">third</a></li>
+        </ul>
+    </div>
+    <div id="clearingdiv"></div>
+</div>  
   </body>
 </html>
