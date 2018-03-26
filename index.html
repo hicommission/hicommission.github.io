@@ -1,69 +1,13 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-    <title>Juah!</title>
-    <!--link rel="stylesheet" type="text/css" href="app.css"-->
-    <link rel="stylesheet" href="css/style.css">
+  <head>
+    <meta charset="UTF-8">
+    <title>title</title>
     <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
-</head>
-
-<body>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/json2/20121008/json2.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.4.3/underscore-min.js"></script>
-    <script src="https://cdn.firebase.com/v0/firebase.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/backbone.js/0.9.10/backbone-min.js"></script>
-    <script src="https://cdn.firebase.com/libs/backfire/0.3.0/backbone-firebase.min.js"></script>
-    <script src="app.js" type="text/javascript"></script>
-    
-    <!--script type="text/template" id="movieTemplate">
-    <%- name %> [
-            <a href="javascript:" class="edit">Edit</a>|
-            <a href="javascript:" class="delete">Delete</a>]
-    </script-->
-<body>
-<header>
-<h1>Tribe of Judah Self-Determination Portal</h1>
-</header>
-<div class='table abWrapper'>
-    <div class='row'>
-        <div class='cell abLinks'>
-            <!--a href='#add_new_contact'>Join the Judah Group</a><br /-->
-            <a href='#add_me'>Join the Judah Group</a><br />
-            <!--a href='#list_contacts'>List all Contacts</a><br /-->
-            <a href='#search_contacts'>Search any Contact</a><br />
-        </div>
-        <div class='cell abPanel'>Loading... Please Wait.</div>
-    </div>
-</div>
-
-
-    <!-- addJudah View starts here -->
-<script type='text/template' id='addJudahTemplate'>
-<body>
-  <h1>Doing for One's Self</h1>
-  <h2>Brothers in arms to help our people!</h2>
-  <h4>Our objective: To set things in motion. an interactive web-based platform for youth in our world to interact with others from home in the diaspora, </h4><br>
-  <h4>also for direct mentoring and coaching provided to the youth by professionals and volunteers who've excelled in diverse fields of praxis</4>
-  <h4><br>and the then a platform where internship and scholarship and training / job opportunities can be announced and targeted to benefit youth from home... simple. </h4>
-
-  <ul>
-    <li>
-      <a href="https://github.com/ianjsikes">Github</a>
-    </li>
-    <li>
-      <a href="https://medium.com/@ianjsikes">Medium</a>
-    </li>
-  </ul>
-</body>
-</script>
-
-    <!-- addMe View starts here -->
-<script type="text/template" id="addMeTemplate">    
+  </head>
   <body>
-    <h2>Add me to the Juda Self-Determination Group</h2>
+    <img id="gravatar" />
+    <h2>Firebase Example</h2>
     <input type='text' id='messageInput'  placeholder='Enter your data here...'>
     <button type="button" onclick="savedata()">Save Data</button>
     <br><br><br>
@@ -71,7 +15,28 @@
     <h2>Results</h2>
     <textarea rows="10" cols="50" id="results"></textarea>
     <script>
-    var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
+    var messagesRef = new Firebase('https://brilliant-fire-3159.firebaseio.com/users');
+    var userId = 0;
+
+    // For user authentication
+    function authHandler(error, authData) {
+      if (error) {
+        console.log('Login Failed!', error);
+      } else {
+        // Set the gravatar
+        document.getElementById('gravatar').src = authData.password.profileImageURL;
+      }
+    }
+
+    // Log the user in with an email combination
+    messagesRef.authWithPassword({
+      email    : 'hello@deanhume.com',
+      password : 'dean123'
+    }, authHandler);
+
+    messagesRef.onAuth(function(authData) {
+       userId = authData.uid;
+    });
 
     var messageField = document.getElementById('messageInput');
     var messageResults = document.getElementById('results');
@@ -80,12 +45,12 @@
     function savedata(){
       var message = messageField.value;
 
-      messagesRef.push({fieldName:'messageField', text:message});
+      messagesRef.child('users').child(userId).push({fieldName:'messageField', text:message});
       messageField.value = '';
     }
 
     // Update results when data is added
-    messagesRef.limitToLast(10).on('child_added', function (snapshot) {
+    messagesRef.child('users').child(userId).limitToLast(10).on('child_added', function (snapshot) {
         var data = snapshot.val();
         console.log(snapshot.val());
         var message = data.text;
@@ -97,77 +62,4 @@
     });
     </script>
   </body>
-</script>    
-    
-    
-<!-- addNewContact View starts here -->
-<script type='text/template' id='addContactTemplate'>
-<h2><%= $.isEmptyObject(contact) ? 'Add' : 'Edit'%> New Contact</h2>
-<form id='frmAddContact'>
-    <div>Full Name:</div> <input type='text' id='full_name' class='input' value="<%= !$.isEmptyObject(contact) ? contact.full_name : '' %>" /> <span class='false full_name_error'></span><br />
-    <div>Email Id:</div> <input type='text' id='email' class='input' value="<%= !$.isEmptyObject(contact) ? contact.email : '' %>" />  <span class='false email_error'></span><br />
-    <div>Phone:</div> <input type='text' id='phone' class='input' value="<%= !$.isEmptyObject(contact) ? contact.phone : '' %>" />  <span class='false phone_error'></span><br />
-    <div>Address:</div> <textarea id='address' class='textarea'><%= !$.isEmptyObject(contact) ? contact.address : '' %></textarea> <br /><br />
-    <input type='submit' value='<%= $.isEmptyObject(contact) ? 'Save' : 'Update'%> Contact Details' class='button' />
-    <span class='success'></span>
-    <input type='hidden' id='id' class='input' value="<%= !$.isEmptyObject(contact) ? contact.id : '' %>"/>
-</form>
-</script>
-<!-- addNewContact View ends here -->
-
-    <!-- listContacts View starts here -->
-<script type='text/template' id='listContactsTemplate'>
-    <h2>List Contacts</h2>
-<body>
-    coon
-</body>
-    
-    <!--table id='contactsGrid' width='100%' border='1' cellspacing='1' cellpadding='5'>
-        <tr>
-            <td width='25%'><b>Full Name</b></td>
-            <td width='25%'><b>Email ID</b></td>
-            <td width='15%'><b>Phone</b></td>
-            <td width='25%'><b>Address</b></td>
-            <td width='10%' align='center'><b>Action</b></td>
-        </tr>
-        <%	if ($.isEmptyObject(contacts)) { %>
-            <tr><td colspan='5'>No Record Found</td></tr>
-        <% 	} else {
-            $.each(contacts, function () { %>
-            <tr data-id=<%= this.id%>>
-                <td><%= this.full_name%></td>
-                <td><%= this.email %></td>
-                <td><%= this.phone %></td>
-                <td><%= this.address %></td>
-                <td align='center'><a>Edit</a> | <a>Delete</a></td>
-            </tr>
-            <%
-            })
-        }%>
-    </table>
-</script>
-<!-- listContacts View ends here -->
-
-<!-- searchContacts View starts here -->
-<script type='text/template' id='searchContactsTemplate'>
-    <h2>Search Contacts</h2>
-    <form id='frmSearchContacts'>
-        <div>Name:</div> <input type='text' id='full_name' class='input' /> <br />
-        <div>Email Id:</div> <input type='text' id='email' class='input' /> <br />
-        <input type='submit' value='Search Contact' class='button' />
-    </form>
-    <div id='grid'></div>
-</script>
-<!-- searchContacts View ends here -->
-
-<!--script src="https://cdn.firebase.com/v0/firebase.js"></script-->
-
-<script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-<script>window.jQuery || document.write('<script src="js/libs/jquery-1.7.2.min.js"><\/script>')</script>
-
-<script src="js/plugins.js"></script>
-<script src="js/script.js"></script>
-
-</body>
-
 </html>
