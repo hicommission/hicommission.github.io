@@ -47,12 +47,18 @@ H1 {
     float: right;
     width: 100%;
 }
+
+#firstcontent {
+  padding-left: 1.5em;
+}
+
 #menuleftcontent {
     float: left;
     width: 200px;
     margin-left: -200px;
    background-color: #B7EAF4;
 }
+
 #clearingdiv {
     clear: both;
 }
