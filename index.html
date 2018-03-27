@@ -38,7 +38,6 @@
     <ul>
       <li>
         <div class="card">
-          <!--img src="https://static.pexels.com/photos/574077/pexels-photo-574077.jpeg" alt=""-->
           <img src="img/pexels-photo-940543.jpeg" alt="">
           <div class="card-content">
             <h3 class="card-title">Diaspora Interaction</h3>
@@ -48,7 +47,6 @@
       </li>
       <li>
         <div class="card">
-          <!--img src="https://static.pexels.com/photos/261628/pexels-photo-261628.jpeg" alt=""-->
           <img src="img/pexels-photo-925682.png.jpeg" alt="">
           <div class="card-content">
             <h3 class="card-title">Mentoring and Training</h3>
@@ -58,7 +56,6 @@
       </li>
       <li>
         <div class="card">
-          <!--img src="https://static.pexels.com/photos/265087/pexels-photo-265087.jpeg" alt=""-->
           <img src="img/pexels-photo-934718.jpeg" alt="">
           <div class="card-content">
             <h3 class="card-title">Internships and Scholarships</h3>
@@ -93,7 +90,7 @@ function savedata(){
 var message = messageField.value;
 
 messagesRef.push({fieldName:'messageField', text:message});
-messageField.value = '';
+  messageField.value = '';
 }
 
 // Update results when data is added
@@ -104,7 +101,7 @@ var message = data.text;
 
 if (message != undefined)
 {
-messageResults.value += '\n' + message;
+  messageResults.value += '\n' + message;
 }
 });
 </script>
