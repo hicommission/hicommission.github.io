@@ -125,7 +125,7 @@ p {
 
 /* Section E / Boxes */
 
-#section-e {
+#section-e .box{
   padding: 2em;
   color: #fff;
 }
