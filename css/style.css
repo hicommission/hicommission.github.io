@@ -55,7 +55,6 @@ p {
   position: absolute;
   background: #333
     url("img/pexels-photo-127512.jpeg");
-    /* url("https://static.pexels.com/photos/248515/pexels-photo-248515.png"); */
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -124,6 +123,17 @@ p {
   background: #2690d4;
 }
 
+/* Section E / Boxes */
+
+#section-e .box {
+  padding: 2em;
+  color: #fff;
+}
+/*
+#section-e .box:first-child {
+  background: #2690d4;
+}
+*/
 /* Footer */
 
 #main-footer {
