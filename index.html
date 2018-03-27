@@ -86,39 +86,6 @@
     <div class="box">
       <h2 class="content-title">Contact Us</h2>
       <p>Lorem ipsum dolor, sit amet consectetur adipisicing elit. Eum, suscipit. Rerum ducimus a quod, ut et voluptas obcaecati unde fuga.</p>
-          <div><h2>Join the Group</h2>
-        <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
-        <button type="button" onclick="savedata()">Submit</button>
-        <br><br><br>
-    <hr> 
-    <h2>WhatsApp Group Members</h2>
-    <textarea rows="10" cols="50" id="results"></textarea>
-    <script>
-    var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
-
-    var messageField = document.getElementById('messageInput');
-    var messageResults = document.getElementById('results');
-
-    // Save data to firebase
-    function savedata(){
-      var message = messageField.value;
-
-      messagesRef.push({fieldName:'messageField', text:message});
-      messageField.value = '';
-    }
-
-    // Update results when data is added
-    messagesRef.limitToLast(10).on('child_added', function (snapshot) {
-        var data = snapshot.val();
-        console.log(snapshot.val());
-        var message = data.text;
-
-        if (message != undefined)
-        {
-          messageResults.value += '\n' + message;
-        }
-    });
-    </script>       
       <p>gsizzler@gmail.com</p>
     </div>
     <div class="box">
