@@ -30,8 +30,6 @@ p {
 
 #project-txt {
   text-align: justify;
-  /* font: 1em Verdana, Geneva, Arial, Helvetica, sans-serif; */
-  /* line-height: 2.2; */
 }
 
 .btn {
@@ -123,8 +121,6 @@ p {
 #section-d .box {
   padding: 2em;
   color: #fff;
-  /* text-align: justify;
-  text-justify: inter-world; */
 }
 
 #section-d .box:first-child {
