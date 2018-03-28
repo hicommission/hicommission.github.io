@@ -28,7 +28,7 @@ p {
   padding: 1em 0;
 
   text-align: justify;
-  font: 1em Verdana, Geneva, Arial, Helvetica, sans-serif;
+  /* font: 1em Verdana, Geneva, Arial, Helvetica, sans-serif; */
   /* line-height: 2.2; */
 }
 
