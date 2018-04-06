@@ -74,7 +74,7 @@
 <hr> 
     <div><h2>Join the Group</h2>
        <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
-       <button type="button" onclick="savedata()">Submit</button>
+       <button type="button" id='submitButton' onclick="savedata()">Submit</button>
     </div>
       
 <h2>WhatsApp Group Members</h2>
@@ -84,12 +84,13 @@ var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude')
 
 var messageField = document.getElementById('messageInput');
 var messageResults = document.getElementById('results');
+var submitOnEnter = document.getElementById('submitButton');
 
 // Listen for the enter key press.
 document.body.addEventListener( 'keyup', function (e) {
   if ( e.keyCode == 13 ) {
     // Simulate clicking on the submit button.
-    messageField.click();
+    submitOnEnter.click();
   }
 });
 
