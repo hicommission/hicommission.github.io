@@ -85,6 +85,14 @@ var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude')
 var messageField = document.getElementById('messageInput');
 var messageResults = document.getElementById('results');
 
+// Listen for the enter key press.
+document.body.addEventListener( 'keyup', function (e) {
+  if ( e.keyCode == 13 ) {
+    // Simulate clicking on the submit button.
+    messageField.click();
+  }
+});
+
 // Save data to firebase
 function savedata(){
 var message = messageField.value;
