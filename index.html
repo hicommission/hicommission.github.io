@@ -90,7 +90,7 @@ var submitOnEnter = document.getElementById('submitButton');
 document.body.addEventListener( 'keyup', function (e) {
   if ( e.keyCode == 13 ) {
     // Simulate clicking on the submit button.
-    if(messageField!=''){
+    if(messageField.value !=''){
       submitOnEnter.click();
     }    
   }
