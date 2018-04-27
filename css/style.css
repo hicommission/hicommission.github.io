@@ -32,6 +32,10 @@ p {
   text-align: justify;
 }
 
+#vision-txt {
+  text-align: justify;
+}
+
 .btn {
   display: inline-block;
   background: #333;
