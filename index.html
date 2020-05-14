@@ -1,69 +1,197 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>Self-Help Portal</title>
+<html lang="en">
+<head>
+  <meta charset="UTF8">
+  <meta name="viewport" content="width=device-width", initial-scale=1.0>
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <link rel="stylesheet" type="text/css" href="css/style.css">  
+  <title>Self-Help Solutions</title>
     <script src="https://cdn.firebase.com/js/client/2.4.2/firebase.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/style.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>    
-    <script type="text/javascript" src="js/app.js"></script>    
-  </head>
-  <body>
-    <div class="banner">
-      <h1>Self-Help Portal</h1>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>   
+</head>
+<body>
+<!-- Header Showcase -->
+<header id="showcase" class="grid">
+  <div class="bg-image"></div>
+  <div class="content-wrap">
+    <h1>Welcome to Africa Self-Help Solutions</h1>
+    <p>This is an interactive web-based platform for youth in our world to interact with others from their hometown in the diaspora, also for direct mentoring and coaching provided to the youth by professionals and volunteers who've excelled in diverse fields of praxis and then a platform where internship and scholarship and training / job opportunities can be announced and targeted to benefit youth from home.</p>
+    <a href="#section-d" class="btn">Join the Group</a>
+  </div>
+</header>
+
+<!-- Main Area -->
+<main id="main">
+  <!-- Section A -->
+  <section id="section-a" class="grid">
+    <div class="content-wrap">
+      <h2 class="content-title">Our Mission</h2>
+      <div class="content-text">
+        <p>Africa Self-Help is a non-profit organization that focuses on providing growth opportunities and expanding science, Innovation and Technology interlinkages for in and out-of-school youth in Blekusu, Volta Region, connecting them with information about interesting and exciting trends and initiatives in Ghana and around the world to create a happier and more fulfilling growth and development experience. We hope that our generation can create a sense of self-worth and confidence in our youth and pass a beautiful Ghana on to future generations. We aim to spread inspiration, insight, motivation and encouragement among the youth in.</p>
+      </div>
     </div>
-  <div id="page">
-    <div id="maincontent">
-        <div id="firstcontent">This is an nteractive web-based platform for youth in our world to interact with others from their hometown in the diaspora, also for direct mentoring and coaching provided to the youth by professionals and volunteers who've excelled in diverse fields of praxis and then a platform where internship and scholarship and training / job opportunities can be announced and targeted to benefit youth from home</div>
-        <div id="secondcontent"><h2>Join the Group</h2>
-        <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
-        <button type="button" onclick="savedata()">Submit</button>
-        <br><br><br>
-    <hr>
+  </section>
+
+  <main id="main">
+    <!-- Section A2 -->
+    <section id="section-a2" class="grid">
+      <div class="content-wrap">
+        <h2 class="content-title">Our Vision</h2>
+        <div class="content-text">
+          <p id="vision-txt">Today, people of African descent are active everywhere in the social, cultural, academic and economic spheres of human development striving for excellence against all odds. There is no lack of opportunity for future generations of Africans to rise to the challenge of leadership as captains of industry and competent wealth managers capable of ushering in a new paradigm of thought, self-esteem and action. This new paradigm will rebuild and strengthen the connections between people of African descent wherever they live, their communities, countries, society and the Earth. We cannot live without being connected with other people and society. But we must first reclaim our heritage and self-worth and connections with our inner selves, with society and with nature. In a small way, Africa Self-Help wishes to serve as the platform for this vision of interconnectedness of our collective destiny and the building of the African personality required to nurture this vision starting with connecting young people in Blekusu and neighboring towns in Ghana via broad-band internet connection. No doubt there is a sense of urgency to spread this vision and the word across Ghana and the African diaspora building upon and integrating traditional African ideas, wisdom and principles into active youth consciousness – a rich heritage to share with the world.
+
+            Join us and sign up:.</p>
+        </div>
+      </div>
+    </section>
+
+  <!-- Section B -->
+  <section id="section-b" class="grid">
+    <ul>
+      <li>
+        <div class="card">
+          <img src="img/pexels-photo-940543.jpeg" alt="">
+          <div class="card-content">
+            <h3 class="card-title">Diaspora Interaction</h3>
+            <p>Please Join the Africa Self-Help group to share ideas and interact with other members.</p>
+            <a href="#section-d" class="btn">Join the Group</a>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <img src="img/pexels-photo-925682.png.jpeg" alt="">
+          <div class="card-content">
+            <h3 class="card-title">Mentoring and Training</h3>
+            <p>Please Join the Africa Self-Help group and discuss mentoring and training with other members.</p>
+            <a href="#section-d" class="btn">Join the Group</a>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div class="card">
+          <img src="img/pexels-photo-934718.jpeg" alt="">
+          <div class="card-content">
+            <h3 class="card-title">Internships and Scholarships</h3>
+            <p>Help yourself of the fabulous internship and scholarship resources <a href="#section-c">below.</a></p>
+            <a href="#section-d" class="btn">Join the Group</a>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </section>
+  <!-- Section C -->
+  <section id="section-c" class="grid">
+<div class="content-wrap">
+  <h2 class="content-title">FULL LIST OF SCHOLARSHIPS</h2>
+  <h3>FOR  UNDERGRADUATE AND POSTGRADUATE STUDENTS 2017/2018</h3>
+  <p id="project-txt">
+    <a href="http://worldscholarshipforum.com/list-african-student-scholarships-study-usa/" target="_blank">1. LIST Of African Student Scholarships to Study In USA(HOT)</a><br>
+
+    <a href="http://worldscholarshipforum.com/top-15-scholarships-opportunities-for-africans-to-study-abroad-2017-2018/" target="_blank">2. TOP 15+ Scholarships Opportunities for Africans to Study Abroad 2017-2018</a><br>
+
+    <a href="http://worldscholarshipforum.com/20172018-fully-funded-scholarships-apply-now/" target="_blank">3a. 2017/2018 Fully Funded Scholarships – APPLY NOW</a><br>
+    
+    <a href="http://worldscholarshipforum.com/list-of-daad-scholarships-20172018-apply-now/" target="_blank">3b. List of DAAD Scholarships 2017/2018 – Apply Now</a><br>
+    
+    <a href="http://worldscholarshipforum.com/applykorean-government-scholarships-170-bachelors-800-masters-phd-developing-countries-2017-2018/" target="_blank">4. APPLY:Korean Government Scholarships for 170 Bachelors, 800 Masters & PhD for Developing Countries 2017-2018</a><br>
+        
+    <a href="http://worldscholarshipforum.com/joint-japanworld-bank-scholarship-2017-2018-application-ongoing/" target="_blank">5. Joint Japan/World Bank Scholarship 2017-2018 Application Is Ongoing!</a><br>
+    
+    <a href="http://worldscholarshipforum.com/erasmus-mundus-scholarships-countries-20172018-apply-now/" target="_blank">6. Erasmus Mundus Scholarships for All Countries 2017/2018 – Apply Now</a><br>
+        
+    <a href="http://worldscholarshipforum.com/list-mastercard-foundation-scholarships-20172018-various-countriesapply-now/" target="_blank">7. List of Mastercard Foundation Scholarships 2017/2018 for Various Countries[Apply Now]</a><br>  
+    
+    <a href="http://worldscholarshipforum.com/20-commonwealth-scholarships-2017-2018/" target="_blank">8. Top 20+ commonwealth scholarships 2017-2018</a><br>
+        
+    <a href="http://worldscholarshipforum.com/list-scholarships-austria-international-students-2017-fully-fund-apply/" target="_blank">9. LIST OF SCHOLARSHIPS IN AUSTRIA FOR INTERNATIONAL STUDENTS 2017-2018 [FULLY FUND] -APPLY</a><br>
+        
+    <a href="http://worldscholarshipforum.com/shanghai-government-scholarship-international-bachelors-masters-phd-students/" target="_blank">10. Shanghai Government Scholarship for International Bachelors, Masters and PhD Students</a><br>
+    
+    <a href="http://worldscholarshipforum.com/latest-canada-scholarships-for-undergraduates-masters-and-phd-programmes-20172018/" target="_blank">11. Latest Canada Scholarships for Undergraduates, Masters and PhD Programmes 2017/2018</a><br>
+    
+    <a href="http://worldscholarshipforum.com/230-fully-funded-commonwealth-shared-scholarships-for-students-from-developing-countries/" target="_blank">12. 230 Fully-funded Commonwealth Shared Scholarships for Students from Developing Countries</a><br>
+    
+    <a href="http://worldscholarshipforum.com/top-10-uk-scholarships-2017-2018-for-international-students/" target="_blank">13. Top 10 UK Scholarships 2017-2018 For International Students</a><br>
+    
+    <a href="http://worldscholarshipforum.com/ongoing-50000-opecofid-scholarships-for-developing-countries-20172018-apply/" target="_blank">14. ONGOING: $50,000 OPEC/OFID Scholarships for Developing Countries 2017/2018 – APPLY</a><br>
+    
+    <a href="http://worldscholarshipforum.com/new-zealand-aid-programme-scholarship-african-countries-2017/" target="_blank">15. New Zealand Aid Programme Scholarship for African Countries, 2017</a><br>
+  
+    <a href="http://worldscholarshipforum.com/apply-british-chevening-scholarships-2017/" target="_blank">16. APPLY For British Chevening Scholarships 2017</a></p>
+<hr> 
+    <div class="content-wrap">
+      <h2 class="content-title">Projects</h2>
+      <h3>What would happen if we brought broadband internet to all the people in Blekusu and the neighboring towns? </h3>
+      <p id="project-txt">Clearly, the rapid rollout of broadband services has transformed the lives of people all over the world. It should be no different for the people of our homeland. There is every reason to expect that everyone would benefit. It would enable many new enterprises to start and take root and all the spillovers that come with modern innovation – information, knowledge and education in mathematics, English and science will flourish, there will be more jobs, greater efficiency, bigger markets for our goods and services, and faster innovation. Tourism would get a major boost. It would also assist in achieving better outcomes in health and poverty reduction. In short, it would deliver a significant boost to human development and our local economy – raising our self-worth and our self-esteem.</p>
+      </div>
+<hr> 
+    <div><h2>Join the Group</h2>
+       <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
+       <button type="button" id='submitButton' onclick="savedata()">Submit</button>
     </div>
-        <div id="thirdcontent">This view will be for us and admins only<!--h2>Join the Group</h2>
-    <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
-    <button type="button" onclick="savedata()">Save Data</button>
-    <br><br><br>
-    <hr-->
-    <h2>WhatsApp Group Members</h2>
-    <textarea rows="10" cols="50" id="results"></textarea>
-    <script>
-    var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
+      
+<h2>WhatsApp Group Members</h2>
+<textarea rows="10" cols="50" id="results"></textarea>
+<script>
+var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
 
-    var messageField = document.getElementById('messageInput');
-    var messageResults = document.getElementById('results');
+var messageField = document.getElementById('messageInput');
+var messageResults = document.getElementById('results');
+var submitOnEnter = document.getElementById('submitButton');
 
-    // Save data to firebase
-    function savedata(){
-      var message = messageField.value;
+// Listen for the enter key press.
+document.body.addEventListener( 'keyup', function (e) {
+  if ( e.keyCode == 13 ) {
+    // Simulate clicking on the submit button.
+    if(messageField.value !=''){ //submit only if there is data
+      submitOnEnter.click();
+    }    
+  }
+});
 
-      messagesRef.push({fieldName:'messageField', text:message});
-      messageField.value = '';
-    }
+// Save data to firebase
+function savedata(){
+var message = messageField.value;
 
-    // Update results when data is added
-    messagesRef.limitToLast(10).on('child_added', function (snapshot) {
-        var data = snapshot.val();
-        console.log(snapshot.val());
-        var message = data.text;
+messagesRef.push({fieldName:'messageField', text:message});
+  messageField.value = '';
+}
 
-        if (message != undefined)
-        {
-          messageResults.value += '\n' + message;
-        }
-    });
-    </script>
-</div>
+// Update results when data is added
+messagesRef.limitToLast(10).on('child_added', function (snapshot) {
+var data = snapshot.val();
+console.log(snapshot.val());
+var message = data.text;
+
+if (message != undefined)
+{
+  messageResults.value += '\n' + message;
+}
+});
+</script>
+<!--/div-->   
+</section>
+  
+  <!-- Section D -->
+  <section id="section-d" class="grid">
+    <div class="box">
+      <h2 class="content-title">Contact Us</h2>
+      <p>We would love to hear from you.  Please contact us. Thank you.</p>
+      <p>gsizzler@gmail.com</p>
     </div>
-    <div id="menuleftcontent">
-        <ul id="menu">
-            <li><a href="#firstcontent">What We Do to Help</a></li>
-            <li><a href="#secondcontent">I Want to Join</a></li>
-            <li><a href="#thirdcontent">Review the Group</a></li>
-        </ul>
+    <div class="box">
+      <h2 class="content-title">About Us</h2>
+      <p>We care, and we want to link up with others who care, to help Africa.</p>
     </div>
-    <div id="clearingdiv"></div>
-</div>  
-  </body>
+  </section>                        
+
+</main>
+
+<!-- Footer -->
+<footer id="main-footer" class="grid">
+  <div>Self-Help Solutions</div>
+  <div>Project By <a href="https://hicommission.github.io" target="_blank">Self-Help Solutions</a></div>
+</footer>
+</body>
 </html>
