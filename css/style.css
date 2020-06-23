@@ -28,6 +28,10 @@ p {
   padding: 1em 0;
 }
 
+#content-text {
+  text-align: justify;
+}
+
 #vision-txt {
   text-align: justify;
 }
