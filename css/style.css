@@ -52,9 +52,8 @@ p {
 }
 
 #showbtn{
-  margin-top: 100px;
   text-align: center;
-  align-self: auto;
+  align-self: center;
 }
 
 /* Header Showcase */
