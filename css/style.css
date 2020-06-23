@@ -58,6 +58,9 @@ p {
   color: #fff;
   text-align: left;
 }
+#showcasebutton {
+  text-align: center;
+}
 
 #showcase .bg-image {
   position: absolute;
