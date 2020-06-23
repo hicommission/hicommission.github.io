@@ -10,7 +10,7 @@ body {
   background: #333;
   color: #fff;
   font-size: 1.1em;
-  line-height: 1.5;
+  line-height: 1.0;
   text-align: left;
 }
 
@@ -93,7 +93,7 @@ p {
 #section-a {
   background: #eaeaea;
   color: #333;
-  padding-bottom: 1.5em;
+  padding-bottom: 2em;
 }
 
 #section-a2 {
