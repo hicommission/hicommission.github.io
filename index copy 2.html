@@ -131,11 +131,49 @@
       </div>
 <hr> 
     <div><h2>Join the Group</h2>
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdG_8GdhKIvay31zETfaUZP4bwQoSliB9qPP_U1eYaR3RSATw/viewform?embedded=true" width="640" height="905" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
+       <input type='text' id='messageInput'  placeholder='Enter your email address and cell phone number...'>
+       <button type="button" id='submitButton' onclick="savedata()">Submit</button>
     </div>
     <div><h2>Support the Group with a $5 Donation</h2>
     </div>     
 
+<script>
+var messagesRef = new Firebase('https://tribeofjudah-9c61f.firebaseio.com/jude');
+
+var messageField = document.getElementById('messageInput');
+var messageResults = document.getElementById('results');
+var submitOnEnter = document.getElementById('submitButton');
+
+// Listen for the enter key press.
+document.body.addEventListener( 'keyup', function (e) {
+  if ( e.keyCode == 13 ) {
+    // Simulate clicking on the submit button.
+    if(messageField.value !=''){ //submit only if there is data
+      submitOnEnter.click();
+    }    
+  }
+});
+
+// Save data to firebase
+function savedata(){
+var message = messageField.value;
+
+messagesRef.push({fieldName:'messageField', text:message});
+  messageField.value = '';
+}
+
+// Update results when data is added
+messagesRef.limitToLast(10).on('child_added', function (snapshot) {
+var data = snapshot.val();
+console.log(snapshot.val());
+var message = data.text;
+
+if (message != undefined)
+{
+  messageResults.value += '\n' + message;
+}
+});
+</script>
 <script
     src="https://www.paypal.com/sdk/js?client-id=AbK03DTih30Jg8Vo-7MdnyhVk3kFuDH9rUvGO1aNqoueY1Mg5jXeP9J29e2rx0FLjYsuvXJ1-f5nyT4r"> // Required. Replace SB_CLIENT_ID with your sandbox client ID.
   </script>
