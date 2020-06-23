@@ -7,7 +7,7 @@ body {
   color: #fff;
   font-size: 1.1em;
   line-height: 1.5;
-  text-align: left;
+  text-align: center;
 }
 
 img {
@@ -56,7 +56,7 @@ p {
 #showcase {
   min-height: 450px;
   color: #fff;
-  text-align: center;
+  text-align: left;
 }
 
 #showcase .bg-image {
@@ -75,6 +75,7 @@ p {
 #showcase h1 {
   padding-top: 100px;
   padding-bottom: 0;
+  text-align: center;
 }
 
 #showcase .content-wrap,
