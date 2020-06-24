@@ -51,6 +51,7 @@ p {
 }
 
 .btn:hover {
+  background: #555353;
   color: #333;
 }
 
