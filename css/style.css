@@ -110,12 +110,12 @@ p {
 
 #section-b ul {
   list-style: none;
+  padding-bottom: 10em;
   margin: 0;
   padding: 0;
 }
 
 #section-b li {
-  padding-bottom: 10em;
   margin-bottom: 1em;
   background: #fff;
   color: #333;
