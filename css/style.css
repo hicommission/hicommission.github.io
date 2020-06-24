@@ -115,7 +115,7 @@ p {
 }
 
 #section-b li {
-  margin-top: 6em;
+  padding-top: 6em;
   margin-bottom: 1em;
   background: #fff;
   color: #333;
