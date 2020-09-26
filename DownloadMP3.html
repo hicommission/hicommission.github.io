@@ -9,9 +9,8 @@
 
         if(document.referrer){
 
-           document.write("Hello, Thank you for arriving from: "
-                                                   + document.referrer);
-           `}
+           document.write("Hello, Thank you for arriving from: " + document.referrer);
+       		}
            </script>
 
            <p>Click on the image to download the music file:<p>
@@ -22,11 +21,10 @@
 		
 		<script  type="text/javascript">
 
-         if(!document.referrer){
+         if(document.referrer==null){
 
-           document.write("Hello, 
-                  Thank you for arriving directly to this page");
-
+           document.write("Hello, Thank you for arriving directly to this page");
+                  
          }
 
     </script>
