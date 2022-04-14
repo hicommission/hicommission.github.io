@@ -2,6 +2,7 @@
 
 #showbtn{
   align-items: center;
+
   }
 
 body {
@@ -42,7 +43,8 @@ p {
 
 .btn {
   display: inline-block;
-  background: #333;
+  /* background: #333; */
+  background: rgb(95, 67, 6);
   color: #fff;
   text-decoration: none;
   padding: 1em 2em;
@@ -68,7 +70,7 @@ p {
 #showcase .bg-image {
   position: absolute;
   background: #333
-    url("../img/pexels-photo-127512.jpeg");
+    url("../img/pexels-tima-miroshnichenko-4988139.jpg");
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -193,4 +195,19 @@ p {
   #section-b li {
     width: 31%;
   }
+  
+  #section-gg {
+
+    text-align: center;
+  }
+
+  #paypal-button-container {
+ 
+    text-align: center;
+  }  
+
+  #section-d {
+ 
+    text-align: center;
+  }   
 }
