@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>ZingGrid Demo</title>
+  <!--script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.4.0/papaparse.min.js"></script-->
+  <!--script src="https://cdn.zinggrid.com/zinggrid.min.js" defer></script-->
+  <script src="zinggrid-master/dist/zinggrid.min.js"></script>
+  <script src="papaparse.min.js"></script> 
+  <style>
+    html,
+    body {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .caption-container {
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      align-items: baseline;
+    }
+
+    zing-grid[loading] {
+      height: 168px;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Lets Connect a Grid to a CSV on the Client</h1>
+  <!--p>In this example we will use the <a href="https://tribeofjudah-9c61f.firebaseio.com/jude">papaparse</a> library.</p-->
+  <p>In this example we will use the <a href="http://localhost:9000/?ns=localfire">papaparse</a> library.</p-->
+  <p>You can click the following button to export the data back to csv and save it.</p>
+  <button onClick="_exportDataToCSV()">Export To CSV</button>
+  <p>You can also highlight (drag and select) the grid cells and export that selection to a CSV via the context menu (right click menu.)</p>
+
+
+  <!-- empty anchor tag for downloading -->
+  <a href="" id="downloadAnchor">&nbsp;</a>
+
+  <!-- other script tags at the bottom of the page -->
+
+  
+</body>
+
+</html>
