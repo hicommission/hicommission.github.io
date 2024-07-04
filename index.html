@@ -44,7 +44,7 @@
     <div class="content-wrap">
       <h2 class="content-title">Our Mission</h2>
       <div class="content-text">
-        <p id="content-txt">Our mission is to leverage our experience to colaborate with other artists, record and release an EP, CD, or online MP3s. We invite good singers to join us. We ask our fans to support us by downloading BlaKats music! Click the Buy Now button.<a href="#paypal-button-container">Support us now!</a></p>
+        <p id="content-txt">Our mission is to leverage our experience to colaborate with other artists, record and release an EP, CD, or online MP3s. We invite good singers to join us. We ask our fans to support us by downloading BlaKats music! Click the Buy Now button.<a href="#section-gg">Support us now!</a></p>
       </div>
     </div>
   </section>
@@ -57,7 +57,7 @@
         <div class="content-text">
           <p id="vision-txt">We believe that musicians and singers who colaborate, bring out the best in each other.
 
-            Support us by downloading BlaKats music! Click the Buy Now button. <a href="#paypal-button-container">Support us now!</a>
+            Support us by downloading BlaKats music! Click the Buy Now button. <a href="#section-gg">Support us now!</a>
         </div>
       </div>
     </section>
@@ -134,44 +134,6 @@
 >
 </stripe-buy-button>
 </section>
-  <!-- cut-->
-<!--section id="section-gg">
-    <div><h2>Join our mailing list</h2><div> Google Account login Required to Join.</div>
-      <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSdG_8GdhKIvay31zETfaUZP4bwQoSliB9qPP_U1eYaR3RSATw/viewform?embedded=true" width="640" height="905" frameborder="0" marginheight="0" marginwidth="0">Loading…</iframe>
-    </div>
-    <div><h2>Support us with $199 to help up release new music.</h2>
-    </div>     
-</section>
-<script
-    src="https://www.paypal.com/sdk/js?client-id=AbK03DTih30Jg8Vo-7MdnyhVk3kFuDH9rUvGO1aNqoueY1Mg5jXeP9J29e2rx0FLjYsuvXJ1-f5nyT4r"> // Required. Replace SB_CLIENT_ID with your sandbox client ID.
-  </script>
-
-<section id="paypal-button-container">
-<div id="paypal-button-container">
-<script>
-  paypal.Buttons({
-    createOrder: function(data, actions) {
-      // This function sets up the details of the transaction, including the amount and line item details.
-      return actions.order.create({
-        purchase_units: [{
-          amount: {
-            value: '199.00'
-          }
-        }]
-      });
-    },
-    onApprove: function(data, actions) {
-      // This function captures the funds from the transaction.
-      return actions.order.capture().then(function(details) {
-        // This function shows a transaction success message to your buyer.
-        alert('Transaction completed by ' + details.payer.name.given_name);
-      });
-    }
-  }).render('#paypal-button-container');  
-</script>
-</div-->
-<!--/div-->   
-</section>  
   <!-- Section D -->
   <section id="section-d" class="grid">
     <div class="box">
