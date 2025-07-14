@@ -211,6 +211,12 @@ p {
     text-align: center;
   }
 
+  #section-cantp {
+  background: #333;
+  color: #fff;;
+    padding: 2em;
+    text-align: center;
+  }  
   #section-gg {
 
     text-align: center;
@@ -224,5 +230,16 @@ p {
   #section-d {
  
     text-align: center;
-  }   
+  }  
+  
+  #section-d-d {
+    display: flex;
+    justify-content: center;
+    border-radius: 24px;
+    align-items: center;
+    width: 100%;
+    max-width: 1200px; /* Adjust this value as needed */
+    margin: 0 auto;
+    padding: 0 15px; /* Add some padding for smaller screens */
+  } 
 }
