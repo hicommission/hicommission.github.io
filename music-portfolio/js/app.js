@@ -15,9 +15,9 @@
 
 const musicData = {
     pop: Array.from({length: 50}, (_, i) => ({
-        title: `Song ${i+1}`,
-        artist: `BlaKats ${i+1}`,
-        price: "1.29",
+        title: `CD ${i+1}`,
+        artist: `BlaKats CD # ${i+1}`,
+        price: "14.99",
         cover: 'assets/pop-cover.jpg',
         download: '#'
     }))/*,
