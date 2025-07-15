@@ -212,7 +212,9 @@ p {
   }
 
   #section-cantp {
-
+    background: #333;
+    color: #ffffff;
+    padding: 2em;
     text-align: center;
   }  
   #section-gg {
