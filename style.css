@@ -1,10 +1,5 @@
 /* Core Styles */
 
-#showbtn{
-  align-items: center;
-
-  }
-
 body {
   margin: 0;
   font-family: Arial, Helvetica, sans-serif;
@@ -33,18 +28,9 @@ p {
   padding: 1em 0;
 }
 
-#project-txt {
-  text-align: justify;
-}
-
-#vision-txt {
-  text-align: justify;
-}
-
 .btn {
   display: inline-block;
-  /* background: #333; */
-  background: rgb(95, 67, 6);
+  background: #333;
   color: #fff;
   text-decoration: none;
   padding: 1em 2em;
@@ -53,24 +39,23 @@ p {
 }
 
 .btn:hover {
-  background: #555353;
+  background: #eaeaea;
   color: #333;
 }
-
-
 
 /* Header Showcase */
 
 #showcase {
   min-height: 450px;
   color: #fff;
-  text-align: center;
+  text-align: left;
 }
 
 #showcase .bg-image {
   position: absolute;
   background: #333
-    url("../img/pexels-tima-miroshnichenko-4988139.jpg");
+    url("img/pexels-photo-127512.jpeg");
+    /* url("https://static.pexels.com/photos/248515/pexels-photo-248515.png"); */
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
@@ -95,13 +80,7 @@ p {
 #section-a {
   background: #eaeaea;
   color: #333;
-  padding-bottom: 1em;
-}
-
-#section-a2 {
-  background: #eaeaea;
-  color: #333;
-  padding: 1em;
+  padding-bottom: 2em;
 }
 
 /* Section B */
@@ -132,7 +111,6 @@ p {
   background: #fff;
   color: #333;
   padding: 2em;
-  text-align: center;
 }
 
 /* Section D / Boxes */
@@ -146,6 +124,17 @@ p {
   background: #2690d4;
 }
 
+/* Section E / Boxes */
+
+#section-e .box {
+  padding: 2em;
+  color: #fff;
+}
+/*
+#section-e .box:first-child {
+  background: #2690d4;
+}
+*/
 /* Footer */
 
 #main-footer {
@@ -195,49 +184,4 @@ p {
   #section-b li {
     width: 31%;
   }
-  
-  #section-ask {
-
-    text-align: center;
-  }
-
-  #section-dontfeed {
-
-    text-align: center;
-  }
-
-  #section-cant {
-
-    text-align: center;
-  }
-
-  #section-cantp {
-
-    text-align: center;
-  }  
-  #section-gg {
-
-    text-align: center;
-  }
-
-  #paypal-button-container {
- 
-    text-align: center;
-  }  
-
-  #section-d {
- 
-    text-align: center;
-  }  
-  
-  #section-d-d {
-    display: flex;
-    justify-content: center;
-    border-radius: 24px;
-    align-items: center;
-    width: 100%;
-    max-width: 1200px; /* Adjust this value as needed */
-    margin: 0 auto;
-    padding: 0 15px; /* Add some padding for smaller screens */
-  } 
 }
