@@ -16,7 +16,7 @@
 const musicData = {
     pop: Array.from({length: 50}, (_, i) => ({
         title: `CD ${i+1}`,
-        artist: `BlaKats CD # ${i+1}`,
+        artist: `BlaKats CD # ${i+1} $14.99`,
         price: "14.99",
         cover: 'assets/pop-cover.jpg',
         download: '#'
@@ -107,7 +107,8 @@ function getPayPalLink(item) {
     const businessEmail = "gilbertalipui@gmail.com"; // Replace with your PayPal email
     const currency = "USD";
     //const returnUrl = encodeURIComponent("https://yourwebsite.com/thankyou"); // Your thank you/download page
-    const returnUrl = encodeURIComponent("https://hicommission.github.io/DownloadMP3.html"); // Your thank you/download page
+    //const returnUrl = encodeURIComponent("https://hicommission.github.io/DownloadMP3.html"); // Your thank you/download page
+    const returnUrl = encodeURIComponent("https://drive.google.com/drive/folders/1FirvgGOIR2FEsi97862xrcv4VaybCRyZ?usp=drive_link"); // Your thank you/download page
     return `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=${businessEmail}` +
            `&item_name=${encodeURIComponent(item.title)}` +
            `&amount=${item.price}` +
