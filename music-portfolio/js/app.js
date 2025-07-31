@@ -1,16 +1,4 @@
-// Simulated music data (replace with fetch from server or JSON file in production)
-/* const musicData = {
-    pop: [
-        {
-            title: "Pop Song 1",
-            artist: "Pop Artist 1",
-            cover: "assets/pop-cover.jpg",
-            price: 1.29
-        },
-        // ... more items
-    ],
-    // ... other genres
-}; */
+
 
 
 const musicData = {
@@ -60,22 +48,13 @@ function renderItems(tab, reset = false) {
         const item = musicData[tab][i];
         const div = document.createElement('div');
         div.className = 'music-item';
-/*         div.innerHTML = `
-            <img src="${item.cover}" alt="${item.title}">
-            <div class="music-details">
-                <div class="music-title">${item.title}</div>
-                <div class="music-artist">${item.artist}</div>
-            </div>
-            <a class="download-btn" href="${item.download}">Download</a>
-             <!-- div class="music-price">$${item.price.toFixed(2)}</div-->
-        `; */
+
 
         div.innerHTML = `
     <img src="${item.cover}" alt="${item.title}">
     <div class="music-details">
         <div class="music-title">${item.title}</div>
         <div class="music-artist">${item.artist}</div>
-        <button class="preview-btn" data-preview="${item.preview}">▶ Preview</button>
     </div>
     <a class="download-btn" href="${getPayPalLink(item)}" target="_blank">Buy & Download</a>
 `;
@@ -138,24 +117,5 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     TABS.slice(1).forEach(tab => {
         document.getElementById(`tab-${tab}`).classList.add('hidden');
-    });
-
-    // Preview button handler
-    document.body.addEventListener('click', function(e) {
-        if (e.target.classList.contains('preview-btn')) {
-            const previewUrl = e.target.getAttribute('data-preview');
-            const audio = document.getElementById('audio-preview');
-            if (audio.src !== window.location.origin + '/' + previewUrl) {
-                audio.src = previewUrl;
-            }
-            if (audio.paused) {
-                audio.play();
-                e.target.textContent = '⏸ Pause';
-                audio.onended = () => { e.target.textContent = '▶ Preview'; };
-            } else {
-                audio.pause();
-                e.target.textContent = '▶ Preview';
-            }
-        }
     });
 });
