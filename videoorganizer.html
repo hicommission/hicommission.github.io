@@ -1,223 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VideoOrganizer – Streamline Your YouTube Workflow</title>
-
-<style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>VideoOrganizer – Organize Your YouTube Playlists</title>
+  <style>
     body {
-        margin: 0;
-        font-family: "Inter", sans-serif;
-        color: #222;
-        background: #fafafa;
-        line-height: 1.6;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #fafafa;
+      color: #333;
     }
-
-    /* HERO */
-    header {
-        background: linear-gradient(135deg, #ff7043, #ff3d00);
-        padding: 80px 20px 90px;
-        text-align: center;
-        color: white;
-        border-bottom-left-radius: 40px;
-        border-bottom-right-radius: 40px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      text-align: center;
+      background: #fff;
     }
-
-    header img.hero-icon {
-        width: 150px;
-        margin-bottom: 25px;
-        filter: drop-shadow(0 6px 12px rgba(0,0,0,0.2));
+    h1 {
+      font-size: 2.4em;
+      margin-bottom: 10px;
     }
-
-    header h1 {
-        font-size: 3.4rem;
-        margin: 0;
-        font-weight: 800;
+    h2 {
+      margin-top: 40px;
+      font-size: 1.6em;
     }
-
-    header p {
-        font-size: 1.25rem;
-        margin-top: 15px;
-        opacity: 0.9;
+    .feature {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      max-width: 750px;
+      margin: 30px auto;
+      text-align: left;
     }
-
-    .store-buttons img {
-        height: 60px;
-        margin: 20px 12px;
-        cursor: pointer;
+    .feature img {
+      width: 140px;
+      height: auto;
+      border-radius: 8px;
     }
-
-    /* SECTIONS */
-    .section {
-        padding: 70px 20px;
-        max-width: 1200px;
-        margin: auto;
+    .feature div {
+      flex: 1;
     }
-
-    .section h2 {
-        text-align: center;
-        font-size: 2.4rem;
-        margin-bottom: 10px;
-        font-weight: 700;
+    .center-img {
+      width: 80%;
+      max-width: 600px;
+      display: block;
+      margin: 30px auto;
+      border-radius: 10px;
     }
-
-    .section p.center {
-        text-align: center;
-        opacity: 0.75;
-        margin-bottom: 50px;
-        font-size: 1.15rem;
-    }
-
-    /* FEATURES */
-    .features {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-        gap: 35px;
-    }
-
-    .feature-card {
-        background: white;
-        padding: 28px;
-        border-radius: 16px;
-        text-align: center;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-6px);
-        box-shadow: 0 12px 30px rgba(0,0,0,0.18);
-    }
-
-    .feature-card img {
-        height: 80px;
-        margin-bottom: 18px;
-    }
-
-    /* SCREENSHOT GALLERY */
-    .screenshots {
-        display: flex;
-        justify-content: center;
-        gap: 40px;
-        flex-wrap: wrap;
-    }
-
-    .screenshots img {
-        width: clamp(560px, 28vw, 350px);
-        border-radius: 24px;
-        box-shadow:
-            0 8px 20px rgba(0,0,0,0.12),
-            0 12px 35px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-
-    .screenshots img:hover {
-        transform: scale(1.04);
-        box-shadow:
-            0 12px 30px rgba(0,0,0,0.18),
-            0 18px 40px rgba(0,0,0,0.15);
-    }
-
-    /* CTA */
-    .cta-section {
-        text-align: center;
-        padding: 80px 20px;
-    }
-
-    .cta-section img {
-        height: 60px;
-        margin-top: 20px;
-        cursor: pointer;
-    }
-
-    /* FOOTER */
     footer {
-        text-align: center;
-        padding: 50px 20px;
-        background: #222;
-        color: white;
-        margin-top: 40px;
+      margin-top: 50px;
+      font-size: 0.9em;
+      color: #666;
     }
-
     footer a {
-        color: #ff9800;
-        text-decoration: none;
+      color: #007aff;
+      text-decoration: none;
     }
-</style>
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </head>
-
 <body>
 
-<!-- HERO -->
-<header>
-    <img src="your-app-icon.png" class="hero-icon" alt="VideoOrganizer Icon">
+  <div class="container">
+    <img src="banner.png" alt="VideoOrganizer Banner" class="center-img">
+
     <h1>VideoOrganizer</h1>
-    <p>The fastest way to manage, sort, and streamline your YouTube playlists & saved videos.</p>
+    <p>
+      The fastest way to organize your YouTube playlists and saved videos.
+      All actions are fully manual, initiated directly by you—no automation,
+      and no data accessed without your permission.
+    </p>
 
-    <div class="store-buttons">
-        <img src="appstore-badge.png" alt="Download on App Store">
+    <img src="playlist_demo.png" alt="Playlist Organizing Demo" class="center-img">
+
+    <h2>Key Features</h2>
+
+    <div class="feature">
+      <img src="sort_icon.png" alt="Sorting Icon">
+      <div>
+        <h3>Quick Reordering</h3>
+        <p>Rearrange your playlists with precision—one tap at a time, directly by you.</p>
+      </div>
     </div>
-</header>
 
-<!-- FEATURES -->
-<section class="section">
-    <h2>Organize Your Video Life</h2>
-    <p class="center">A beautifully fast and intuitive app for managing YouTube playlists at scale.</p>
-
-    <div class="features">
-        <div class="feature-card">
-            <img src="https://img.icons8.com/fluency/96/folder-invoices.png">
-            <h3>Instant Sorting</h3>
-            <p>Automatically reorder and categorize playlists with advanced smart rules.</p>
-        </div>
-
-        <div class="feature-card">
-            <img src="https://img.icons8.com/fluency/96/stack.png">
-            <h3>Folder Management</h3>
-            <p>Organize playlists into clean, flexible folders for fast browsing.</p>
-        </div>
-
-        <div class="feature-card">
-            <img src="https://img.icons8.com/fluency/96/video.png">
-            <h3>Bulk Editing</h3>
-            <p>Edit titles, move playlists, clean duplicates — all in one tap.</p>
-        </div>
-
-        <div class="feature-card">
-            <img src="https://img.icons8.com/fluency/96/search.png">
-            <h3>Powerful Search</h3>
-            <p>Find any playlist or video instantly with intelligent real-time search.</p>
-        </div>
+    <div class="feature">
+      <img src="folder_icon.png" alt="Playlist Folder Icon">
+      <div>
+        <h3>Smart Folder Organization</h3>
+        <p>Create structured playlist groups for better navigation and control.</p>
+      </div>
     </div>
-</section>
 
-<!-- SCREENSHOTS -->
-<section class="section">
-    <h2>See VideoOrganizer in Action</h2>
-    <p class="center">Beautiful, clean, modern UI built for iPhone & iPad.</p>
-
-    <div class="screenshots">
-        <img src="iphone-mockup-1.png" alt="iPhone Screenshot">
-        <img src="iphone-mockup-2.png" alt="iPhone Screenshot">
-        <img src="ipad-mockup.png" alt="iPad Screenshot">
+    <div class="feature">
+      <img src="bulk_icon.png" alt="Bulk Editing Icon">
+      <div>
+        <h3>Manual Bulk Editing</h3>
+        <p>Select multiple playlists and move or modify them—only when initiated by you.</p>
+      </div>
     </div>
-</section>
 
-<!-- CTA -->
-<section class="cta-section">
-    <h2>Try VideoOrganizer Today</h2>
-    <p class="center">It's your YouTube library — finally organized.</p>
-    <img src="appstore-badge.png">
-</section>
+    <div class="feature">
+      <img src="search_icon.png" alt="Search Icon">
+      <div>
+        <h3>Advanced Search</h3>
+        <p>Instantly locate playlists or videos with powerful text-based filtering.</p>
+      </div>
+    </div>
 
-<!-- FOOTER -->
-<footer>
-    VideoOrganizer © 2025 · All Rights Reserved  
-    <br><br>
-    <a href="#">Privacy Policy</a> · <a href="#">Support</a>
-</footer>
+    <img src="final_demo.png" alt="App Demo" class="center-img">
+
+    <h2>Built for Creators & Power Users</h2>
+    <p>
+      VideoOrganizer gives you complete control of your YouTube playlist library without interfering
+      with private videos, subscribers, or user data. It’s your account—organized your way.
+    </p>
+
+    <footer>
+      <p>© 2025 VideoOrganizer. All Rights Reserved.</p>
+      <p>
+        <a href="https://hicommission.github.io/privacystatementvo.html" target="_blank">Privacy Policy</a> ·
+        <a href="https://hicommission.github.io/termsvo.html" target="_blank">Terms of Service</a> ·
+        <a href="mailto:gsizzler@gmail.com">Support</a>
+      </p>
+    </footer>
+  </div>
 
 </body>
 </html>
