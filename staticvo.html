@@ -52,11 +52,14 @@
       margin-bottom: 10px;
     }
     #player {
-      width: 100%;
-      max-width: 640px;
-      aspect-ratio: 16 / 9;
-      margin: 0 auto 16px;
-      background: #000;
+    width: 100%;
+    height: auto;
+    max-height: 360px; /* cap size */
+    aspect-ratio: 16 / 9;
+    margin: 0 auto 16px;
+    background: #000;
+    position: relative;
+    overflow: hidden;
     }
     .loop-controls {
       margin-top: 10px;
@@ -114,7 +117,9 @@
     </div>
   </div>
 
-  <script src="https://www.youtube.com/iframe_api"></script>
+  <script
+  src="https://www.youtube.com/iframe_api"
+  allow="autoplay"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
     const initialVideoId = params.get("video") || "";
@@ -171,9 +176,10 @@
         width: '640',
         videoId: "",
         playerVars: {
-          'origin': window.location.origin,
-          'playsinline': 1,
-          'rel': 0
+        'origin': window.location.origin,
+        'playsinline': 1,
+        'rel': 0,
+        'fs': 0      // ⛔ Disable fullscreen mode
         },
         events: {
           onReady: () => {
@@ -182,8 +188,17 @@
             if (initialVideoId.length > 0) {
                player.loadVideoById(initialVideoId);
                statusText.textContent = "Video loaded: " + initialVideoId;
-               player.mute();      // Allow autoplay
-               player.playVideo(); // Start playback immediately
+               //player.mute();      // Allow autoplay
+               //player.playVideo(); // Start playback immediately
+               player.mute(); // required for silent auto-play
+                player.playVideo();
+
+                // Backup in case iOS still blocks
+                setTimeout(() => {
+                if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                    player.playVideo();
+                }
+                }, 300);
             }else {
               statusText.textContent = "No video provided.";
             }
