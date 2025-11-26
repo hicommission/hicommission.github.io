@@ -180,10 +180,11 @@
             playerReady = true;
             playBtn.disabled = loopBtn.disabled = false;
             if (initialVideoId.length > 0) {
-              player.loadVideoById(initialVideoId);
-              statusText.textContent = "Video loaded: " + initialVideoId;
-              player.playVideo();
-            } else {
+               player.loadVideoById(initialVideoId);
+               statusText.textContent = "Video loaded: " + initialVideoId;
+               player.mute();      // Allow autoplay
+               player.playVideo(); // Start playback immediately
+            }else {
               statusText.textContent = "No video provided.";
             }
           },
