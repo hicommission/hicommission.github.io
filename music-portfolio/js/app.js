@@ -1,4 +1,28 @@
 // music-portfolio/js/app.js
+// DROP-IN replacement
+// - Generates PayPal Buy Now links with custom=sku|nonce
+// - Uses Cloudflare Worker endpoints for notify_url / return / cancel
+// - Renders 10 items at a time and lazy-loads on scroll
+// - Default test price: 0.10 (set below)
+
+// ================================
+// CONFIG
+// ================================
+const BUSINESS_EMAIL = "gilbertalipui@gmail.com";
+const CURRENCY = "USD";
+
+// IMPORTANT: change to "0.01" if PayPal allows for your account/button type
+const TEST_PRICE_USD = "0.10";
+
+// Cloudflare Worker base
+const CLOUDFLARE_BASE = "https://cliquetraxx.com";
+const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
+const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
+const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
+
+// How many items to render per "page"
+const ITEMS_PER_LOAD = 10;
+const TABS = ["pop", "rock", "jazz"];
 
 // ================================
 // DATA
@@ -6,18 +30,17 @@
 const musicData = {
   pop: Array.from({ length: 50 }, (_, i) => {
     const n = i + 1;
-    const sku = `blakats_cd_${String(n).padStart(2, "0")}`; // blakats_cd_01, blakats_cd_02, ...
+    const sku = `blakats_cd_${String(n).padStart(2, "0")}`; // blakats_cd_01 ...
     return {
       title: `BlaKats CD ${String(n).padStart(2, "0")}`,
       artist: `BlaKats — CD #${n}`,
-      price: "0.1",
-      sku, // IMPORTANT: used by PayPal + Worker + R2
+      price: TEST_PRICE_USD,
+      sku, // used by PayPal + Worker + R2 (object key = `${sku}.mp3`)
       cover: "assets/pop-cover.jpg",
       preview: "assets/previews/blakats-song-1.mp3",
     };
   }),
 
-  // placeholders
   rock: Array.from({ length: 50 }, (_, i) => ({
     title: `Rock Song ${i + 1}`,
     artist: `Rock Artist ${i + 1}`,
@@ -35,18 +58,7 @@ const musicData = {
   })),
 };
 
-const TABS = ["pop", "rock", "jazz"];
-const ITEMS_PER_LOAD = 10;
-
-let tabState = { pop: 0, rock: 0, jazz: 0 };
-
-// ================================
-// CLOUDFLARE WORKER ENDPOINTS
-// ================================
-const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
-const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
-const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
+const tabState = { pop: 0, rock: 0, jazz: 0 };
 
 // ================================
 // HELPERS
@@ -59,28 +71,26 @@ function randomNonce(len = 20) {
 }
 
 /**
- * Creates a standard PayPal "Buy Now" link (_xclick) with:
- * - custom=sku|nonce   (your Worker reads this)
- * - notify_url         (IPN to your Worker)
- * - return/cancel      (to your Worker pages)
- * - rm=2               (POST back variables; harmless)
+ * Standard PayPal "Buy Now" link (_xclick)
+ * Includes:
+ *  - custom=sku|nonce  (Worker reads this from IPN)
+ *  - notify_url        (IPN endpoint on your Worker)
+ *  - return/cancel     (Worker landing endpoints)
+ *  - rm=2              (forces PayPal to return variables via POST; harmless)
  */
 function getPayPalLink(item) {
-  const businessEmail = "gilbertalipui@gmail.com";
-  const currency = "USD";
-
-  if (!item.sku) {
-    console.warn("Missing sku for item:", item);
+  if (!item || !item.sku) {
+    console.warn("Missing item or sku:", item);
   }
 
   const custom = `${item.sku}|${randomNonce(20)}`;
 
   return (
     `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-    `&business=${encodeURIComponent(businessEmail)}` +
+    `&business=${encodeURIComponent(BUSINESS_EMAIL)}` +
     `&item_name=${encodeURIComponent(item.title)}` +
     `&amount=${encodeURIComponent(item.price)}` +
-    `&currency_code=${encodeURIComponent(currency)}` +
+    `&currency_code=${encodeURIComponent(CURRENCY)}` +
     `&custom=${encodeURIComponent(custom)}` +
     `&notify_url=${encodeURIComponent(PAYPAL_IPN_URL)}` +
     `&return=${encodeURIComponent(PAYPAL_RETURN_URL)}` +
@@ -106,6 +116,7 @@ function renderItems(tab, reset = false) {
 
   for (let i = start; i < end; i++) {
     const item = musicData[tab][i];
+
     const div = document.createElement("div");
     div.className = "music-item";
 
@@ -116,7 +127,10 @@ function renderItems(tab, reset = false) {
         <div class="music-artist">${item.artist}</div>
         <div style="font-size: 0.9em; opacity: 0.8;">$${item.price} • SKU: ${item.sku}</div>
       </div>
-      <a class="download-btn" href="${getPayPalLink(item)}" target="_blank" rel="noopener">
+      <a class="download-btn"
+         href="${getPayPalLink(item)}"
+         target="_blank"
+         rel="noopener">
         Buy & Download
       </a>
     `;
@@ -133,8 +147,8 @@ function handleTabClick(e) {
   document.querySelectorAll(".tab").forEach((btn) => btn.classList.remove("active"));
   e.target.classList.add("active");
 
-  TABS.forEach((tab) => {
-    const el = document.getElementById(`tab-${tab}`);
+  TABS.forEach((t) => {
+    const el = document.getElementById(`tab-${t}`);
     if (el) el.classList.add("hidden");
   });
 
@@ -163,14 +177,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabsEl = document.querySelector(".tabs");
   if (tabsEl) tabsEl.addEventListener("click", handleTabClick);
 
-  // Render first tab only, hide others
+  // First tab visible, others hidden by default
   renderItems("pop", true);
   handleScroll("pop");
 
   TABS.slice(1).forEach((tab) => {
     const el = document.getElementById(`tab-${tab}`);
     if (el) el.classList.add("hidden");
-    // still attach scroll handlers so when user switches tabs it works
     handleScroll(tab);
   });
 });
