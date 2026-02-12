@@ -10,7 +10,7 @@ const musicData = {
     return {
       title: `BlaKats CD ${String(n).padStart(2, "0")}`,
       artist: `BlaKats — CD #${n}`,
-      price: "14.99",
+      price: "0.1",
       sku, // IMPORTANT: used by PayPal + Worker + R2
       cover: "assets/pop-cover.jpg",
       preview: "assets/previews/blakats-song-1.mp3",
