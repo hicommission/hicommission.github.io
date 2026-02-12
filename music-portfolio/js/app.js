@@ -1,189 +1,217 @@
-// music-portfolio/js/app.js
-// DROP-IN replacement
-// - Generates PayPal Buy Now links with custom=sku|nonce
-// - Uses Cloudflare Worker endpoints for notify_url / return / cancel
-// - Renders 10 items at a time and lazy-loads on scroll
-// - Default test price: 0.10 (set below)
+// cloudfworker.js (Cloudflare Worker) — FULL DROP-IN REPLACEMENT
+// Requires bindings:
+//   - R2 bucket binding name: MP3_BUCKET
+//   - KV namespace binding name: PURCHASES
+//
+// Endpoints:
+//   POST /api/paypal/ipn      (PayPal IPN receiver + verifier)
+//   GET/POST /pay/return      (PayPal return landing; redirects to /download?token=<tx> if present)
+//   GET/POST /pay/cancel
+//   GET  /download?token=...  (single-use download, served from R2)
+//   GET  /                   (health check)
+//
+// IMPORTANT (Cloudflare Routes):
+//   Add these routes to THIS worker:
+//     cliquetraxx.com/api/*
+//     cliquetraxx.com/pay/*
+//     cliquetraxx.com/download*
+//   Do NOT route *.cliquetraxx.com/* (too broad)
 
-// ================================
-// CONFIG
-// ================================
-const BUSINESS_EMAIL = "gilbertalipui@gmail.com";
-const CURRENCY = "USD";
+export default {
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
 
-// IMPORTANT: change to "0.01" if PayPal allows for your account/button type
-const TEST_PRICE_USD = "0.10";
+    // ----------------------------
+    // Helpers
+    // ----------------------------
+    const text = (msg, status = 200, headers = {}) =>
+      new Response(msg, {
+        status,
+        headers: { "Content-Type": "text/plain; charset=utf-8", ...headers },
+      });
 
-// Cloudflare Worker base
-const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
-const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
-const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
+    const html = (body, status = 200, headers = {}) =>
+      new Response(body, {
+        status,
+        headers: { "Content-Type": "text/html; charset=utf-8", ...headers },
+      });
 
-// How many items to render per "page"
-const ITEMS_PER_LOAD = 10;
-const TABS = ["pop", "rock", "jazz"];
-
-// ================================
-// DATA
-// ================================
-const musicData = {
-  pop: Array.from({ length: 50 }, (_, i) => {
-    const n = i + 1;
-    const sku = `blakats_cd_${String(n).padStart(2, "0")}`; // blakats_cd_01 ...
-    return {
-      title: `BlaKats CD ${String(n).padStart(2, "0")}`,
-      artist: `BlaKats — CD #${n}`,
-      price: TEST_PRICE_USD,
-      sku, // used by PayPal + Worker + R2 (object key = `${sku}.mp3`)
-      cover: "assets/pop-cover.jpg",
-      preview: "assets/previews/blakats-song-1.mp3",
-    };
-  }),
-
-  rock: Array.from({ length: 50 }, (_, i) => ({
-    title: `Rock Song ${i + 1}`,
-    artist: `Rock Artist ${i + 1}`,
-    price: "1.29",
-    sku: `rock_${String(i + 1).padStart(2, "0")}`,
-    cover: "assets/rock-cover.jpg",
-  })),
-
-  jazz: Array.from({ length: 50 }, (_, i) => ({
-    title: `Jazz Song ${i + 1}`,
-    artist: `Jazz Artist ${i + 1}`,
-    price: "1.29",
-    sku: `jazz_${String(i + 1).padStart(2, "0")}`,
-    cover: "assets/jazz-cover.jpg",
-  })),
-};
-
-const tabState = { pop: 0, rock: 0, jazz: 0 };
-
-// ================================
-// HELPERS
-// ================================
-function randomNonce(len = 20) {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
-}
-
-/**
- * Standard PayPal "Buy Now" link (_xclick)
- * Includes:
- *  - custom=sku|nonce  (Worker reads this from IPN)
- *  - notify_url        (IPN endpoint on your Worker)
- *  - return/cancel     (Worker landing endpoints)
- *  - rm=2              (forces PayPal to return variables via POST; harmless)
- */
-function getPayPalLink(item) {
-  if (!item || !item.sku) {
-    console.warn("Missing item or sku:", item);
-  }
-
-  const custom = `${item.sku}|${randomNonce(20)}`;
-
-  return (
-    `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-    `&business=${encodeURIComponent(BUSINESS_EMAIL)}` +
-    `&item_name=${encodeURIComponent(item.title)}` +
-    `&amount=${encodeURIComponent(item.price)}` +
-    `&currency_code=${encodeURIComponent(CURRENCY)}` +
-    `&custom=${encodeURIComponent(custom)}` +
-    `&notify_url=${encodeURIComponent(PAYPAL_IPN_URL)}` +
-    `&return=${encodeURIComponent(PAYPAL_RETURN_URL)}` +
-    `&cancel_return=${encodeURIComponent(PAYPAL_CANCEL_URL)}` +
-    `&rm=2`
-  );
-}
-
-// ================================
-// RENDER
-// ================================
-function renderItems(tab, reset = false) {
-  const container = document.getElementById(`tab-${tab}`);
-  if (!container) return;
-
-  if (reset) {
-    container.innerHTML = "";
-    tabState[tab] = 0;
-  }
-
-  const start = tabState[tab];
-  const end = Math.min(start + ITEMS_PER_LOAD, musicData[tab].length);
-
-  for (let i = start; i < end; i++) {
-    const item = musicData[tab][i];
-
-    const div = document.createElement("div");
-    div.className = "music-item";
-
-    div.innerHTML = `
-      <img src="${item.cover}" alt="${item.title}">
-      <div class="music-details">
-        <div class="music-title">${item.title}</div>
-        <div class="music-artist">${item.artist}</div>
-        <div style="font-size: 0.9em; opacity: 0.8;">$${item.price} • SKU: ${item.sku}</div>
-      </div>
-      <a class="download-btn"
-         href="${getPayPalLink(item)}"
-         target="_blank"
-         rel="noopener">
-        Buy & Download
-      </a>
-    `;
-
-    container.appendChild(div);
-  }
-
-  tabState[tab] = end;
-}
-
-function handleTabClick(e) {
-  if (!e.target.classList.contains("tab")) return;
-
-  document.querySelectorAll(".tab").forEach((btn) => btn.classList.remove("active"));
-  e.target.classList.add("active");
-
-  TABS.forEach((t) => {
-    const el = document.getElementById(`tab-${t}`);
-    if (el) el.classList.add("hidden");
-  });
-
-  const currentTab = e.target.dataset.tab;
-  const currentEl = document.getElementById(`tab-${currentTab}`);
-  if (currentEl) currentEl.classList.remove("hidden");
-
-  renderItems(currentTab, true);
-}
-
-function handleScroll(tab) {
-  const container = document.getElementById(`tab-${tab}`);
-  if (!container) return;
-
-  container.onscroll = function () {
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
-      renderItems(tab);
+    // Parse POST form body if needed
+    async function readFormParams(req) {
+      const ct = req.headers.get("content-type") || "";
+      const raw = await req.text();
+      // PayPal IPN and rm=2 return are urlencoded
+      if (ct.includes("application/x-www-form-urlencoded") || raw.includes("=")) {
+        return new URLSearchParams(raw);
+      }
+      // Fallback: try anyway
+      return new URLSearchParams(raw);
     }
-  };
-}
 
-// ================================
-// INIT
-// ================================
-document.addEventListener("DOMContentLoaded", () => {
-  const tabsEl = document.querySelector(".tabs");
-  if (tabsEl) tabsEl.addEventListener("click", handleTabClick);
+    // ----------------------------
+    // 1) PAYPAL IPN HANDLER
+    // ----------------------------
+    if (url.pathname === "/api/paypal/ipn") {
+      // PayPal sends POST. If you browse this URL in a browser (GET), return something harmless.
+      if (request.method !== "POST") return text("OK", 200);
 
-  // First tab visible, others hidden by default
-  renderItems("pop", true);
-  handleScroll("pop");
+      const body = await request.text();
 
-  TABS.slice(1).forEach((tab) => {
-    const el = document.getElementById(`tab-${tab}`);
-    if (el) el.classList.add("hidden");
-    handleScroll(tab);
-  });
-});
+      // Verify IPN with PayPal (LIVE endpoint)
+      const verifyRes = await fetch("https://ipnpb.paypal.com/cgi-bin/webscr", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: "cmd=_notify-validate&" + body,
+      });
+
+      const verifyText = (await verifyRes.text()).trim();
+      if (verifyText !== "VERIFIED") {
+        // Return 200 or 400? 400 is OK; PayPal may retry.
+        return text("Invalid IPN", 400);
+      }
+
+      const params = new URLSearchParams(body);
+
+      // Common IPN fields:
+      const paymentStatus = params.get("payment_status"); // "Completed"
+      const txnId = params.get("txn_id"); // transaction id (token we use)
+      const custom = params.get("custom"); // sku|nonce (from your link)
+      const receiverEmail = params.get("receiver_email") || null;
+
+      // If it's not a completed payment, ignore (but 200 so PayPal doesn't spam retries)
+      if (paymentStatus !== "Completed" || !txnId) {
+        return text("Ignored", 200);
+      }
+
+      // custom is optional (depends on your button/link); if missing, still store record
+      let sku = null;
+      let nonce = null;
+      if (custom) {
+        const parts = custom.split("|");
+        sku = parts[0] || null;
+        nonce = parts[1] || null;
+      }
+
+      const now = Date.now();
+      const record = {
+        sku,          // must match R2 object key prefix (objectKey = `${sku}.mp3`)
+        nonce,
+        used: false,
+        created: now,
+        txnId,
+        receiverEmail,
+        paymentStatus,
+      };
+
+      // Idempotent: overwrites on IPN retries
+      await env.PURCHASES.put(txnId, JSON.stringify(record));
+
+      return text("OK", 200);
+    }
+
+    // ----------------------------
+    // 2) PAYPAL RETURN / CANCEL
+    //    MUST accept GET and POST (PayPal can POST when rm=2)
+    //    PayPal may send tx OR only PayerID, depending on flow.
+    // ----------------------------
+    if (url.pathname === "/pay/return") {
+      let tx = url.searchParams.get("tx");
+
+      // If PayPal posts variables (rm=2), parse form body
+      if (!tx && request.method === "POST") {
+        const params = await readFormParams(request);
+        tx = params.get("tx");
+      }
+
+      // If tx present, redirect to download
+      if (tx) {
+        return new Response(null, {
+          status: 302,
+          headers: { Location: `/download?token=${encodeURIComponent(tx)}` },
+        });
+      }
+
+      // Otherwise show a helpful page (PayerID-only returns happen)
+      return html(`<!doctype html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment received</title></head>
+<body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:28px;max-width:720px;margin:0 auto">
+  <h2>Payment received ✅</h2>
+  <p>Thanks! Your payment went through.</p>
+  <p><b>Next step:</b> PayPal may not have provided a <code>tx</code> parameter on return.</p>
+  <p>Within a minute, IPN should create your purchase record. If you have your PayPal <b>Transaction ID</b>, you can download immediately at:</p>
+  <p><code>${url.origin}/download?token=&lt;TransactionID&gt;</code></p>
+  <p>If you don’t know it, check the PayPal receipt email for “Transaction ID”.</p>
+</body>
+</html>`);
+    }
+
+    if (url.pathname === "/pay/cancel") {
+      return html(`<!doctype html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Payment canceled</title></head>
+<body style="font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;padding:28px;max-width:720px;margin:0 auto">
+  <h2>Payment canceled</h2>
+  <p>No worries — you weren’t charged.</p>
+</body>
+</html>`);
+    }
+
+    // ----------------------------
+    // 3) SECURE DOWNLOAD ENDPOINT (single-use)
+    //    GET /download?token=<txnId>
+    // ----------------------------
+    if (url.pathname === "/download" && request.method === "GET") {
+      const token = url.searchParams.get("token");
+      if (!token) return text("Missing token.", 400);
+
+      const purchaseData = await env.PURCHASES.get(token);
+      if (!purchaseData) return text("Download expired or invalid.", 403);
+
+      let purchase;
+      try {
+        purchase = JSON.parse(purchaseData);
+      } catch {
+        return text("Corrupt purchase record.", 500);
+      }
+
+      // Optional expiration window (30 minutes)
+      const MAX_AGE_MS = 30 * 60 * 1000;
+      if (typeof purchase.created === "number" && Date.now() - purchase.created > MAX_AGE_MS) {
+        return text("Download expired or invalid.", 403);
+      }
+
+      if (purchase.used) return text("Link already used.", 403);
+
+      if (!purchase.sku) {
+        return text("Purchase record missing SKU (custom field not received).", 500);
+      }
+
+      const objectKey = `${purchase.sku}.mp3`;
+      const obj = await env.MP3_BUCKET.get(objectKey);
+      if (!obj) return text(`File not found: ${objectKey}`, 404);
+
+      // Mark single-use BEFORE streaming back (prevents double-click racing)
+      purchase.used = true;
+      await env.PURCHASES.put(token, JSON.stringify(purchase));
+
+      const headers = new Headers();
+      headers.set("Content-Type", "audio/mpeg");
+      headers.set("Content-Disposition", `attachment; filename="${objectKey}"`);
+      headers.set("Cache-Control", "no-store");
+
+      return new Response(obj.body, { headers });
+    }
+
+    // ----------------------------
+    // 4) DEFAULT / HEALTH
+    // ----------------------------
+    if (url.pathname === "/" && request.method === "GET") {
+      return text("OK (cloudfworker)");
+    }
+
+    return text("Not Found", 404);
+  },
+};
