@@ -18,7 +18,7 @@
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-const PRICE_USD = "0.99";
+const PRICE_USD = "0.10";
 
 // Auto-download timing (ms). Browsers do not reliably support sub-1000ms
 // setInterval/timeout accuracy, and 0.5ms is not meaningful on the web.
