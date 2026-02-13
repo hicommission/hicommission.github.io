@@ -1,12 +1,11 @@
 // ============================================================
 // music-portfolio/js/app.js
 // DROP-IN: 12 items + reliable PayPal link generation via Worker
-// Works with <a class="download-btn" target="_blank"> buttons
+// NO popups, NO target=_blank, works in modern browsers.
 // ============================================================
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-
 const TEST_PRICE_USD = "0.10";
 
 // ONLY the 12 MP3s you actually have: blakats_cd_01 ... blakats_cd_12
@@ -22,43 +21,12 @@ const items = Array.from({ length: 12 }, (_, i) => {
   };
 });
 
-function $(sel) {
-  return document.querySelector(sel);
-}
-
-function renderAll() {
-  const container = document.getElementById("tab-pop");
-  if (!container) return;
-
-  container.innerHTML = "";
-
-  for (const item of items) {
-    const div = document.createElement("div");
-    div.className = "music-item";
-
-    // IMPORTANT:
-    // - href is a safe placeholder
-    // - target=_blank is ok because we intercept click and control the new tab
-    div.innerHTML = `
-      <img src="${item.cover}" alt="${item.title}">
-      <div class="music-details">
-        <div class="music-title">${item.title}</div>
-        <div class="music-artist">${item.artist}</div>
-        <div style="font-size:0.9em; opacity:0.8;">$${item.price} • SKU: ${item.sku}</div>
-      </div>
-      <a class="download-btn"
-         href="#"
-         target="_blank"
-         rel="noopener noreferrer"
-         data-sku="${item.sku}"
-         data-title="${item.title}"
-         data-amount="${item.price}">
-        Buy & Download
-      </a>
-    `;
-
-    container.appendChild(div);
-  }
+function setBusy(btn, busy) {
+  if (!btn) return;
+  btn.dataset.busy = busy ? "1" : "0";
+  btn.style.pointerEvents = busy ? "none" : "";
+  btn.style.opacity = busy ? "0.6" : "";
+  btn.textContent = busy ? "Loading…" : "Buy & Download";
 }
 
 async function createPayPalLink({ sku, title, amount }) {
@@ -75,68 +43,67 @@ async function createPayPalLink({ sku, title, amount }) {
 
   const data = await res.json();
   if (!data?.url) throw new Error("create failed: missing url");
-  return data; // { url, nonce }
+  return data.url;
+}
+
+function renderAll() {
+  const container = document.getElementById("tab-pop");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  for (const item of items) {
+    const div = document.createElement("div");
+    div.className = "music-item";
+
+    div.innerHTML = `
+      <img src="${item.cover}" alt="${item.title}">
+      <div class="music-details">
+        <div class="music-title">${item.title}</div>
+        <div class="music-artist">${item.artist}</div>
+        <div style="font-size:0.9em; opacity:0.8;">$${item.price} • SKU: ${item.sku}</div>
+      </div>
+      <a class="download-btn"
+         href="#"
+         rel="nofollow"
+         data-sku="${item.sku}"
+         data-title="${item.title}"
+         data-amount="${item.price}">
+        Buy & Download
+      </a>
+    `;
+
+    container.appendChild(div);
+  }
 }
 
 function attachClickHandler() {
-  // Capture phase helps beat default link navigation reliably.
-  document.addEventListener(
-    "click",
-    async (e) => {
-      const link = e.target.closest("a.download-btn");
-      if (!link) return;
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("a.download-btn");
+    if (!btn) return;
 
-      e.preventDefault();
+    e.preventDefault();
 
-      const sku = link.dataset.sku;
-      const title = link.dataset.title;
-      const amount = link.dataset.amount;
+    // prevent double-click
+    if (btn.dataset.busy === "1") return;
 
-      // Open tab immediately (avoid popup blocker)
-      const payTab = window.open("", "_blank", "noopener,noreferrer");
-      if (!payTab) {
-        alert("Popup blocked. Please allow popups for this site and try again.");
-        return;
-      }
+    const sku = btn.dataset.sku;
+    const title = btn.dataset.title;
+    const amount = btn.dataset.amount;
 
-      // Write immediately so you never see a blank tab
-      payTab.document.open();
-      payTab.document.write(`
-        <!doctype html>
-        <html><head><meta charset="utf-8"><title>Preparing PayPal…</title></head>
-        <body style="font-family:system-ui;padding:24px">
-          <h2>Preparing PayPal…</h2>
-          <p>Please wait…</p>
-        </body></html>
-      `);
-      payTab.document.close();
+    setBusy(btn, true);
 
-      link.classList.add("disabled");
+    try {
+      const paypalUrl = await createPayPalLink({ sku, title, amount });
 
-      try {
-        const { url } = await createPayPalLink({ sku, title, amount });
-        payTab.location.href = url;
-      } catch (err) {
-        console.error(err);
-        payTab.document.open();
-        payTab.document.write(`
-          <!doctype html>
-          <html><head><meta charset="utf-8"><title>Error</title></head>
-          <body style="font-family:system-ui;padding:24px">
-            <h2>Payment link failed to generate</h2>
-            <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">${String(
-              err
-            )}</pre>
-          </body></html>
-        `);
-        payTab.document.close();
-        alert("Payment link failed to generate. Please try again.");
-      } finally {
-        link.classList.remove("disabled");
-      }
-    },
-    true
-  );
+      // Navigate SAME TAB (no popup blockers)
+      window.location.href = paypalUrl;
+    } catch (err) {
+      console.error(err);
+      alert("Payment link failed to generate. Please try again.");
+      setBusy(btn, false);
+    }
+  });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
