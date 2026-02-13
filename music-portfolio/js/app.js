@@ -7,6 +7,9 @@ const BUSINESS_EMAIL = "gilbertalipui@gmail.com";
 const CURRENCY = "USD";
 const TEST_PRICE_USD = "0.10";
 
+// CHANGE THIS to match how many MP3s you actually uploaded (e.g. 12 right now)
+const BLAKATS_COUNT = 12;
+
 // Cloudflare Worker base (DO NOT use root path / for anything)
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
@@ -19,7 +22,7 @@ const TABS = ["pop", "rock", "jazz"];
 // DATA
 // ================================
 const musicData = {
-  pop: Array.from({ length: 50 }, (_, i) => {
+  pop: Array.from({ length: BLAKATS_COUNT }, (_, i) => {
     const n = i + 1;
     const sku = `blakats_cd_${String(n).padStart(2, "0")}`;
     return {
