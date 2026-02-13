@@ -23,7 +23,7 @@ const PRICE_USD = "0.10";
 // Auto-download timing (ms). Browsers do not reliably support sub-1000ms
 // setInterval/timeout accuracy, and 0.5ms is not meaningful on the web.
 // Use 0 for "as soon as possible".
-const AUTO_DOWNLOAD_DELAY_MS = 0; // set to 500 or 1000 if you want a brief flash
+const AUTO_DOWNLOAD_DELAY_MS = 1200; // set to 500 or 1000 if you want a brief flash
 
 // 12 REAL track titles (from your screenshot)
 const TRACKS = [
