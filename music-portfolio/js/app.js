@@ -1,22 +1,10 @@
 // ============================================================
 // music-portfolio/js/app.js
-// FULL DROP-IN REPLACEMENT
-// ============================================================
-// - Generates PayPal Buy Now links (_xclick)
-// - custom=sku|nonce
-// - notify_url -> Cloudflare Worker IPN
-// - return -> /pay/return?nonce=<nonce>   (critical fix)
-// - cancel -> /pay/cancel
-// - Renders 10 items at a time, lazy loads on scroll
+// FULL DROP-IN REPLACEMENT (NO LAZY LOAD — SHOW ALL)
 // ============================================================
 
-// ================================
-// CONFIG
-// ================================
 const BUSINESS_EMAIL = "gilbertalipui@gmail.com";
 const CURRENCY = "USD";
-
-// IMPORTANT: set to "0.01" if PayPal allows it for your account
 const TEST_PRICE_USD = "0.10";
 
 // Cloudflare Worker base (DO NOT use root path / for anything)
@@ -25,8 +13,6 @@ const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
 const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
 const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
 
-// Pagination
-const ITEMS_PER_LOAD = 12;
 const TABS = ["pop", "rock", "jazz"];
 
 // ================================
@@ -63,8 +49,6 @@ const musicData = {
   })),
 };
 
-const tabState = { pop: 0, rock: 0, jazz: 0 };
-
 // ================================
 // HELPERS
 // ================================
@@ -77,14 +61,11 @@ function randomNonce(len = 20) {
 
 /**
  * PayPal Buy Now link (_xclick)
- * Fix: return includes nonce so Worker can redirect even when PayPal omits tx.
+ * FIX: return includes nonce so Worker can redirect even when PayPal omits tx.
  */
 function getPayPalLink(item) {
-  if (!item || !item.sku) console.warn("Missing item or sku:", item);
-
   const nonce = randomNonce(20);
   const custom = `${item.sku}|${nonce}`;
-
   const returnUrlWithNonce = `${PAYPAL_RETURN_URL}?nonce=${encodeURIComponent(nonce)}`;
 
   return (
@@ -102,23 +83,15 @@ function getPayPalLink(item) {
 }
 
 // ================================
-// RENDER
+// RENDER (SHOW ALL ITEMS)
 // ================================
-function renderItems(tab, reset = false) {
+function renderAllItems(tab) {
   const container = document.getElementById(`tab-${tab}`);
   if (!container) return;
 
-  if (reset) {
-    container.innerHTML = "";
-    tabState[tab] = 0;
-  }
+  container.innerHTML = "";
 
-  const start = tabState[tab];
-  const end = Math.min(start + ITEMS_PER_LOAD, musicData[tab].length);
-
-  for (let i = start; i < end; i++) {
-    const item = musicData[tab][i];
-
+  for (const item of musicData[tab]) {
     const div = document.createElement("div");
     div.className = "music-item";
 
@@ -139,8 +112,6 @@ function renderItems(tab, reset = false) {
 
     container.appendChild(div);
   }
-
-  tabState[tab] = end;
 }
 
 function handleTabClick(e) {
@@ -158,18 +129,7 @@ function handleTabClick(e) {
   const currentEl = document.getElementById(`tab-${currentTab}`);
   if (currentEl) currentEl.classList.remove("hidden");
 
-  renderItems(currentTab, true);
-}
-
-function handleScroll(tab) {
-  const container = document.getElementById(`tab-${tab}`);
-  if (!container) return;
-
-  container.onscroll = function () {
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
-      renderItems(tab);
-    }
-  };
+  renderAllItems(currentTab);
 }
 
 // ================================
@@ -179,14 +139,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabsEl = document.querySelector(".tabs");
   if (tabsEl) tabsEl.addEventListener("click", handleTabClick);
 
-  // First tab visible
-  renderItems("pop", true);
-  handleScroll("pop");
+  // Show POP by default, hide others
+  renderAllItems("pop");
 
-  // Hide the other tabs, but attach scroll handlers
   TABS.slice(1).forEach((tab) => {
     const el = document.getElementById(`tab-${tab}`);
     if (el) el.classList.add("hidden");
-    handleScroll(tab);
   });
 });
