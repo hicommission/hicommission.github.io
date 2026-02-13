@@ -1,0 +1,402 @@
+<!-- =========================================================
+     sofia-landing.html
+     DROP-IN LANDING PAGE for:
+     "SOFIA: African Concept of God, Creation and Fundamentals..."
+     Uses your existing Cloudflare Worker checkout flow:
+       POST https://cliquetraxx.com/api/paypal/create
+       then redirects to PayPal
+       then PayPal return -> /pay/return -> /download
+
+     TESTING: uses blakats_cd_01 (mp3) as the downloadable file
+     (so you can validate the end-to-end flow)
+     ========================================================= -->
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SOFIA — African Concept of God, Creation & Fundamentals of Spirituality and Science</title>
+
+  <!-- Basic SEO -->
+  <meta name="description" content="SOFIA — African Concept of God, Creation and Fundamentals of Spirituality and Science (No “Big Bang”). Download after secure checkout." />
+  <meta name="robots" content="index,follow" />
+
+  <!-- Social previews (optional but nice) -->
+  <meta property="og:title" content="SOFIA — African Concept of God, Creation & Fundamentals of Spirituality and Science" />
+  <meta property="og:description" content="Download after secure checkout." />
+  <meta property="og:type" content="product" />
+  <!-- Put the cover image at this path in your site -->
+  <meta property="og:image" content="assets/sofia-cover.jpg" />
+
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --card: rgba(255,255,255,0.06);
+      --card2: rgba(255,255,255,0.10);
+      --text: rgba(255,255,255,0.92);
+      --muted: rgba(255,255,255,0.72);
+      --border: rgba(255,255,255,0.12);
+      --accent: #c9a227;
+      --accent2: #f4d35e;
+      --shadow: 0 18px 60px rgba(0,0,0,0.55);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(1100px 700px at 20% 10%, rgba(201,162,39,0.20), transparent 55%),
+        radial-gradient(900px 600px at 80% 35%, rgba(244,211,94,0.12), transparent 60%),
+        radial-gradient(1200px 900px at 55% 95%, rgba(255,90,90,0.08), transparent 62%),
+        var(--bg);
+      padding: 28px 16px 64px;
+    }
+
+    .wrap {
+      max-width: 1020px;
+      margin: 0 auto;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .brand-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, rgba(201,162,39,0.95), rgba(244,211,94,0.65));
+      box-shadow: 0 10px 26px rgba(201,162,39,0.18);
+    }
+
+    .brand span {
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 18px;
+    }
+
+    @media (max-width: 880px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(201,162,39,0.16);
+      border: 1px solid rgba(201,162,39,0.28);
+      color: var(--accent2);
+      font-weight: 600;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(26px, 3.2vw, 40px);
+      line-height: 1.08;
+      letter-spacing: 0.2px;
+    }
+
+    .subtitle {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.6;
+    }
+
+    .meta {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 520px) {
+      .meta { grid-template-columns: 1fr; }
+    }
+
+    .meta .box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 14px;
+      padding: 12px 12px;
+    }
+    .meta .k { color: var(--muted); font-size: 12px; margin-bottom: 4px; }
+    .meta .v { font-weight: 650; }
+
+    .cover {
+      padding: 0;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .cover-top {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .cover-top .label {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .cover-top .small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .cover-img {
+      width: 100%;
+      height: 100%;
+      max-height: 610px;
+      object-fit: contain;
+      background: rgba(0,0,0,0.22);
+      display: block;
+    }
+
+    .cta {
+      padding: 18px 18px 20px;
+      border-top: 1px solid rgba(255,255,255,0.10);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.08));
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .price {
+      font-size: 26px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+    }
+    .fine {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .btn {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 14px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      color: #1a1402;
+      background: linear-gradient(135deg, var(--accent2), var(--accent));
+      box-shadow: 0 16px 34px rgba(201,162,39,0.20);
+      transition: transform 120ms ease, filter 120ms ease;
+    }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.02); }
+    .btn:active { transform: translateY(0px); filter: brightness(0.98); }
+    .btn[disabled] { cursor: not-allowed; opacity: 0.7; filter: none; transform: none; }
+
+    .status {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer {
+      margin-top: 14px;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      line-height: 1.5;
+      text-align: center;
+    }
+
+    .link {
+      color: rgba(244,211,94,0.92);
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(244,211,94,0.45);
+    }
+    .link:hover { border-bottom-color: rgba(244,211,94,0.9); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <a class="brand" href="#" onclick="return false;">
+        <div class="brand-badge"></div>
+        <span>HiCommission Music</span>
+      </a>
+      <div style="color:rgba(255,255,255,0.60); font-size:12px;">
+        Secure checkout → instant download
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- LEFT: copy -->
+      <div class="card hero">
+        <div class="pill">SOFIA • Digital Download</div>
+
+        <h1>SOFIA — African Concept of God, Creation and Fundamentals of Spirituality and Science</h1>
+
+        <p class="subtitle">
+          A landing page for the SOFIA title. After checkout, you’re redirected to a secure download endpoint.
+          <strong>For testing right now, this download is wired to <code>blakats_cd_01.mp3</code>.</strong>
+          Once you replace the asset with the real book PDF, just change the <code>sku</code> below and upload the file to the bucket.
+        </p>
+
+        <div class="meta">
+          <div class="box">
+            <div class="k">Author</div>
+            <div class="v">Midao Dr Dalike Kagbo Kumodzie</div>
+          </div>
+          <div class="box">
+            <div class="k">Edition note</div>
+            <div class="v">No “Big Bang”</div>
+          </div>
+          <div class="box">
+            <div class="k">Delivery</div>
+            <div class="v">Secure link after payment</div>
+          </div>
+          <div class="box">
+            <div class="k">Support</div>
+            <div class="v"><a class="link" href="mailto:gilbertalipui@msn.com">gilbertalipui@msn.com</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: cover + CTA -->
+      <div class="card cover">
+        <div class="cover-top">
+          <div>
+            <div class="label">Book cover</div>
+            <div class="small">Click “Download” to checkout</div>
+          </div>
+          <div class="small">Test SKU: <code>blakats_cd_01</code></div>
+        </div>
+
+        <!-- Put the image in your site: /assets/sofia-cover.jpg -->
+        <img class="cover-img" src="assets/sofia-cover.jpg" alt="SOFIA book cover" />
+
+        <div class="cta">
+          <div class="price-row">
+            <div class="price">$0.10</div>
+            <div class="fine">Test price • USD</div>
+          </div>
+
+          <button id="buyBtn" class="btn">Buy & Download</button>
+          <div id="status" class="status"></div>
+
+          <div class="fine">
+            After payment, PayPal returns you to <code>/pay/return</code>, then the Worker redirects you to <code>/download</code>.
+            If you don’t download immediately, refresh once.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      Tip: If you want this on your GitHub Pages site, place this file next to your <code>index.html</code> and link to it.
+    </div>
+  </div>
+
+  <script>
+    // =========================================================
+    // CONFIG
+    // =========================================================
+    const CLOUDFLARE_BASE = "https://cliquetraxx.com";
+    const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+
+    // TESTING download:
+    // This uses your EXISTING mp3 so you can validate the flow.
+    // Later, switch sku/title/amount for the real book product.
+    const PRODUCT = {
+      sku: "blakats_cd_01",           // <-- TEST download target
+      title: "SOFIA (Test Download)", // what shows in PayPal
+      amount: "0.10",
+    };
+
+    const buyBtn = document.getElementById("buyBtn");
+    const statusEl = document.getElementById("status");
+
+    function setBusy(busy, msg = "") {
+      buyBtn.disabled = busy;
+      buyBtn.textContent = busy ? "Loading…" : "Buy & Download";
+      statusEl.textContent = msg || "";
+    }
+
+    async function createPayPalLink() {
+      const res = await fetch(CREATE_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(PRODUCT),
+      });
+
+      if (!res.ok) {
+        const t = await res.text().catch(() => "");
+        throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
+      }
+
+      const data = await res.json();
+      if (!data || !data.url) throw new Error("create failed: missing url");
+      return data.url;
+    }
+
+    buyBtn.addEventListener("click", async () => {
+      if (buyBtn.disabled) return;
+
+      setBusy(true, "Generating secure PayPal link…");
+
+      try {
+        const paypalUrl = await createPayPalLink();
+        // SAME TAB navigation (no popup blockers)
+        window.location.href = paypalUrl;
+      } catch (err) {
+        console.error(err);
+        setBusy(false, "Could not generate payment link. Please try again.");
+        alert("Payment link failed to generate. Please try again.");
+      }
+    });
+  </script>
+</body>
+</html>
