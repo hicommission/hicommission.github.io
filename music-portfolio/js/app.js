@@ -26,7 +26,7 @@ const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
 const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
 
 // Pagination
-const ITEMS_PER_LOAD = 10;
+const ITEMS_PER_LOAD = 12;
 const TABS = ["pop", "rock", "jazz"];
 
 // ================================
