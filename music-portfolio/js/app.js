@@ -2,28 +2,11 @@
 // music-portfolio/js/app.js
 // FULL DROP-IN: 12 items, real song names, thumbnail hover + lightbox
 // Uses Cloudflare Worker to generate PayPal link (NO popups, SAME TAB)
-//
-// NEW:
-//  - Instant “flash” auto-download on the /pay/return page (browser-only)
-//  - Removes “Debug: nonce=...” from the /pay/return page (best-effort hide)
-//  - If nonce is present in URL, automatically redirects to:
-//      https://cliquetraxx.com/download?token=<nonce>
-//
-// IMPORTANT:
-//  - This works even if the Worker return page still shows the debug line,
-//    because we hide it on the client and immediately redirect.
-//  - If you want the Worker to stop emitting debug server-side, that’s a
-//    separate Worker change. This file handles it client-side.
 // ============================================================
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-const PRICE_USD = "0.10";
-
-// Auto-download timing (ms). Browsers do not reliably support sub-1000ms
-// setInterval/timeout accuracy, and 0.5ms is not meaningful on the web.
-// Use 0 for "as soon as possible".
-const AUTO_DOWNLOAD_DELAY_MS = 1200; // set to 500 or 1000 if you want a brief flash
+const PRICE_USD = "0.99";
 
 // 12 REAL track titles (from your screenshot)
 const TRACKS = [
@@ -41,57 +24,11 @@ const TRACKS = [
   { sku: "blakats_cd_12", trackNo: "12", title: "Monster Love" },
 ];
 
-// Same cover is fine (as requested)
+// Use your existing image(s). If you have per-track images, change thumb/full paths here.
 function coverFor(track) {
+  // If you later add separate images like assets/covers/blakats_cd_01.jpg:
+  // return { thumb: `assets/covers/${track.sku}.jpg`, full: `assets/covers/${track.sku}.jpg` };
   return { thumb: "assets/pop-cover.jpg", full: "assets/pop-cover.jpg" };
-}
-
-// ---------- AUTO-DOWNLOAD on /pay/return ----------
-function runAutoDownloadIfOnReturnPage() {
-  // This file is used site-wide. Only run on the return page.
-  const path = window.location.pathname || "";
-  if (!path.endsWith("/pay/return")) return;
-
-  const url = new URL(window.location.href);
-  const nonce = url.searchParams.get("nonce");
-
-  // Remove/hide debug line immediately (best-effort, client-side)
-  removeDebugNonceLine();
-
-  // If we have nonce, redirect straight to download.
-  if (nonce) {
-    setTimeout(() => {
-      window.location.replace(`${CLOUDFLARE_BASE}/download?token=${encodeURIComponent(nonce)}`);
-    }, Math.max(0, AUTO_DOWNLOAD_DELAY_MS));
-    return;
-  }
-
-  // If no nonce, do nothing (Worker will handle tx-based flow / processing page)
-}
-
-function removeDebugNonceLine() {
-  // 1) Nuke any line containing "Debug:" (common case)
-  // 2) Also hide any element that contains "nonce=" just in case.
-  try {
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-    const nodes = [];
-    while (walker.nextNode()) nodes.push(walker.currentNode);
-
-    for (const n of nodes) {
-      const t = (n.nodeValue || "").trim();
-      if (!t) continue;
-
-      if (t.includes("Debug:") || t.includes("nonce=")) {
-        const el = n.parentElement;
-        if (el) {
-          // Hide the whole line/container
-          el.style.display = "none";
-        } else {
-          n.nodeValue = "";
-        }
-      }
-    }
-  } catch {}
 }
 
 // ---------- UI helpers ----------
@@ -305,11 +242,6 @@ function attachHandlers() {
 document.addEventListener("DOMContentLoaded", () => {
   injectStyles();
   ensureLightbox();
-
-  // Run “instant flash download” logic if we are on /pay/return
-  runAutoDownloadIfOnReturnPage();
-
-  // Render the catalog page if the container exists
   renderAll();
   attachHandlers();
 });
