@@ -6,7 +6,7 @@
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-const TEST_PRICE_USD = "0.10";
+const TEST_PRICE_USD = "9.99";
 
 const items = Array.from({ length: 12 }, (_, i) => {
   const n = i + 1;
