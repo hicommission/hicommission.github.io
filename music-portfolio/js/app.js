@@ -6,7 +6,7 @@
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-const PRICE_USD = "0.10";
+const PRICE_USD = "0.99";
 
 // 12 REAL track titles (from your screenshot)
 const TRACKS = [
