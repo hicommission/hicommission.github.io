@@ -1,93 +1,37 @@
 // ============================================================
 // music-portfolio/js/app.js
-// DROP-IN REPLACEMENT (FRONT-END ONLY, NO BACKEND CALLS)
-// - Shows ONLY 12 BlaKats items (01–12)
-// - Generates PayPal Buy Now links directly (no /api/paypal/create)
-// - Uses nonce in return URL + custom=sku|nonce for Worker lookup
+// FRONT-END DROP-IN (12 ITEMS, uses /api/paypal/create)
 // ============================================================
 
-const BUSINESS_EMAIL = "gilbertalipui@gmail.com";
-const CURRENCY = "USD";
+const CLOUDFLARE_BASE = "https://cliquetraxx.com";
+const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+
 const TEST_PRICE_USD = "0.10";
 
-// Cloudflare Worker base (we are NOT using / root for anything)
-const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-const PAYPAL_IPN_URL = `${CLOUDFLARE_BASE}/api/paypal/ipn`;
-const PAYPAL_RETURN_URL = `${CLOUDFLARE_BASE}/pay/return`;
-const PAYPAL_CANCEL_URL = `${CLOUDFLARE_BASE}/pay/cancel`;
+// Build the 12 SKUs you actually have in R2: blakats_cd_01 ... blakats_cd_12
+const items = Array.from({ length: 12 }, (_, i) => {
+  const n = i + 1;
+  const sku = `blakats_cd_${String(n).padStart(2, "0")}`;
+  return {
+    title: `BlaKats CD ${String(n).padStart(2, "0")}`,
+    artist: `BlaKats — CD #${n}`,
+    price: TEST_PRICE_USD,
+    sku,
+    cover: "assets/pop-cover.jpg",
+  };
+});
 
-// Tabs used by your page layout
-const TABS = ["pop", "rock", "jazz"];
-
-// ================================
-// DATA (FIXED: ONLY 12 BlaKats)
-// ================================
-const musicData = {
-  pop: Array.from({ length: 12 }, (_, i) => {
-    const n = i + 1;
-    const sku = `blakats_cd_${String(n).padStart(2, "0")}`;
-    return {
-      title: `BlaKats CD ${String(n).padStart(2, "0")}`,
-      artist: `BlaKats — CD #${n}`,
-      price: TEST_PRICE_USD,
-      sku,
-      cover: "assets/pop-cover.jpg",
-    };
-  }),
-
-  // Keep these as-is (they won't show unless you click the tab)
-  rock: Array.from({ length: 0 }, () => ({})),
-  jazz: Array.from({ length: 0 }, () => ({})),
-};
-
-// ================================
-// HELPERS
-// ================================
-function randomNonce(len = 20) {
-  const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let out = "";
-  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
+function el(id) {
+  return document.getElementById(id);
 }
 
-/**
- * PayPal Buy Now link (_xclick)
- * - custom = sku|nonce
- * - return includes ?nonce=... so Worker can resolve even if tx is missing
- */
-function getPayPalLink(item) {
-  const nonce = randomNonce(20);
-  const custom = `${item.sku}|${nonce}`;
-  const returnUrlWithNonce = `${PAYPAL_RETURN_URL}?nonce=${encodeURIComponent(nonce)}`;
-
-  return (
-    `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick` +
-    `&business=${encodeURIComponent(BUSINESS_EMAIL)}` +
-    `&item_name=${encodeURIComponent(item.title)}` +
-    `&amount=${encodeURIComponent(item.price)}` +
-    `&currency_code=${encodeURIComponent(CURRENCY)}` +
-    `&custom=${encodeURIComponent(custom)}` +
-    `&notify_url=${encodeURIComponent(PAYPAL_IPN_URL)}` +
-    `&return=${encodeURIComponent(returnUrlWithNonce)}` +
-    `&cancel_return=${encodeURIComponent(PAYPAL_CANCEL_URL)}` +
-    `&rm=2`
-  );
-}
-
-// ================================
-// RENDER
-// ================================
-function renderAllItems(tab) {
-  const container = document.getElementById(`tab-${tab}`);
+function render() {
+  const container = el("tab-pop");
   if (!container) return;
 
   container.innerHTML = "";
 
-  const items = musicData[tab] || [];
   for (const item of items) {
-    // Skip empty placeholders (rock/jazz are length 0)
-    if (!item || !item.sku) continue;
-
     const div = document.createElement("div");
     div.className = "music-item";
 
@@ -98,47 +42,93 @@ function renderAllItems(tab) {
         <div class="music-artist">${item.artist}</div>
         <div style="font-size:0.9em; opacity:0.8;">$${item.price} • SKU: ${item.sku}</div>
       </div>
-      <a class="download-btn"
-         href="${getPayPalLink(item)}"
-         target="_blank"
-         rel="noopener">
+      <button class="download-btn" data-sku="${item.sku}" data-title="${item.title}" data-amount="${item.price}">
         Buy & Download
-      </a>
+      </button>
     `;
 
     container.appendChild(div);
   }
 }
 
-function handleTabClick(e) {
-  if (!e.target.classList.contains("tab")) return;
-
-  document.querySelectorAll(".tab").forEach((btn) => btn.classList.remove("active"));
-  e.target.classList.add("active");
-
-  TABS.forEach((t) => {
-    const el = document.getElementById(`tab-${t}`);
-    if (el) el.classList.add("hidden");
+async function createPayPalLink({ sku, title, amount }) {
+  const res = await fetch(CREATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    // IMPORTANT: keep this small/clean
+    body: JSON.stringify({ sku, title, amount }),
   });
 
-  const currentTab = e.target.dataset.tab;
-  const currentEl = document.getElementById(`tab-${currentTab}`);
-  if (currentEl) currentEl.classList.remove("hidden");
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    throw new Error(`create failed: HTTP ${res.status} ${txt}`);
+  }
 
-  renderAllItems(currentTab);
+  const data = await res.json();
+  if (!data || !data.url || !data.nonce) {
+    throw new Error("create failed: bad JSON response");
+  }
+
+  return data; // { url, nonce }
 }
 
-// ================================
-// INIT
-// ================================
-document.addEventListener("DOMContentLoaded", () => {
-  const tabsEl = document.querySelector(".tabs");
-  if (tabsEl) tabsEl.addEventListener("click", handleTabClick);
+function attachHandlers() {
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("button.download-btn");
+    if (!btn) return;
 
-  // Show POP by default, hide others
-  renderAllItems("pop");
-  TABS.slice(1).forEach((tab) => {
-    const el = document.getElementById(`tab-${tab}`);
-    if (el) el.classList.add("hidden");
+    const sku = btn.dataset.sku;
+    const title = btn.dataset.title;
+    const amount = btn.dataset.amount;
+
+    // 1) Open a tab immediately (avoids popup blockers)
+    const payTab = window.open("", "_blank", "noopener,noreferrer");
+    if (!payTab) {
+      alert("Popup blocked. Please allow popups for this site and try again.");
+      return;
+    }
+
+    // Show something in the new tab while we fetch
+    payTab.document.write(`
+      <doctype html>
+      <html><head><meta charset="utf-8"><title>Preparing PayPal...</title></head>
+      <body style="font-family:system-ui;padding:24px">
+        <h2>Preparing PayPal…</h2>
+        <p>Please wait…</p>
+      </body></html>
+    `);
+
+    btn.disabled = true;
+
+    try {
+      const { url } = await createPayPalLink({ sku, title, amount });
+
+      // 2) Navigate the already-open tab to PayPal URL
+      payTab.location.href = url;
+    } catch (err) {
+      console.error(err);
+
+      payTab.document.open();
+      payTab.document.write(`
+        <doctype html>
+        <html><head><meta charset="utf-8"><title>Error</title></head>
+        <body style="font-family:system-ui;padding:24px">
+          <h2>Payment link failed to generate</h2>
+          <pre style="white-space:pre-wrap;background:#f6f6f6;padding:12px;border-radius:8px">${String(err)}</pre>
+          <p>Open DevTools → Console on the main page for more details.</p>
+        </body></html>
+      `);
+      payTab.document.close();
+
+      alert("Payment link failed to generate. Please try again.");
+    } finally {
+      btn.disabled = false;
+    }
   });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Show pop tab container, hide others if you have them
+  render();
+  attachHandlers();
 });
