@@ -1,13 +1,14 @@
 <!-- =========================================================
      sofia-landing.html
      FULL DROP-IN LANDING PAGE
-     - Zoomed OUT so everything fits (all buttons visible)
-     - Auto-alternates cover/front every 5s
-     - Single-click on the cover toggles pause/resume
+     CHANGE: Cover area now FILLS the red highlighted space.
+     - Shows TWO pages side-by-side (front + back) filling the stage
+     - Auto-flips every 5s by swapping which side shows which (front/back)
+     - Single-click anywhere on the cover stage toggles pause/resume
      - Uses Cloudflare Worker checkout flow:
          POST https://cliquetraxx.com/api/paypal/create -> PayPal
          PayPal return -> /pay/return -> /download
-     TESTING: uses blakats_cd_01 (mp3) as the downloadable file
+     TESTING: uses blakats_cd_01 (mp3)
      ========================================================= -->
 <!doctype html>
 <html lang="en">
@@ -16,11 +17,9 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SOFIA — African Concept of God, Creation & Fundamentals of Spirituality and Science</title>
 
-  <!-- Basic SEO -->
   <meta name="description" content="SOFIA — African Concept of God, Creation and Fundamentals of Spirituality and Science (No “Big Bang”). Download after secure checkout." />
   <meta name="robots" content="index,follow" />
 
-  <!-- Social previews -->
   <meta property="og:title" content="SOFIA — African Concept of God, Creation & Fundamentals of Spirituality and Science" />
   <meta property="og:description" content="Download after secure checkout." />
   <meta property="og:type" content="product" />
@@ -51,10 +50,9 @@
         radial-gradient(900px 600px at 80% 35%, rgba(244,211,94,0.12), transparent 60%),
         radial-gradient(1200px 900px at 55% 95%, rgba(255,90,90,0.08), transparent 62%),
         var(--bg);
-      padding: 14px 14px 20px; /* slightly tighter */
+      padding: 14px 14px 20px;
     }
 
-    /* Slightly narrower max-width so things aren't "zoomed in" */
     .wrap {
       width: 100%;
       max-width: 1500px;
@@ -90,11 +88,7 @@
       flex: 0 0 auto;
     }
 
-    .brand span {
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      font-size: 14px;
-    }
+    .brand span { font-weight: 800; letter-spacing: 0.3px; font-size: 14px; }
 
     .hint {
       color: rgba(255,255,255,0.60);
@@ -102,7 +96,6 @@
       white-space: nowrap;
     }
 
-    /* Fit viewport: slightly smaller gap and typography, and cap cover height */
     .grid {
       flex: 1;
       display: grid;
@@ -206,40 +199,58 @@
       gap: 12px;
     }
 
-    .cover-top .label {
-      font-weight: 800;
-      letter-spacing: 0.2px;
-    }
+    .cover-top .label { font-weight: 800; letter-spacing: 0.2px; }
+    .cover-top .small { color: var(--muted); font-size: 12px; }
 
-    .cover-top .small {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    /* Clickable cover area */
+    /* ======= FILL THE RED SPACE =======
+       Stage fills available height, and images fill the stage height.
+       Two pages side-by-side with minimal padding and no "contain" gaps.
+    */
     .cover-stage {
       position: relative;
       background: rgba(0,0,0,0.22);
-      display: grid;
-      place-items: center;
-      padding: 10px;
+      padding: 10px;                 /* small padding so it fills more */
       min-height: 0;
       user-select: none;
       cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    .cover-img {
+    .cover-pages {
       width: 100%;
       height: 100%;
-      max-height: 58vh; /* keeps CTA visible */
-      object-fit: contain;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;                     /* thin "gutter" between covers */
+      align-items: stretch;
+      min-height: 0;
+    }
+
+    .page {
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(0,0,0,0.18);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 12px 30px rgba(0,0,0,0.22);
+      display: grid;
+      place-items: stretch;
+      min-height: 0;
+    }
+
+    .page img {
+      width: 100%;
+      height: 100%;
       display: block;
-      border-radius: 12px;
+      /* KEY: fill the space */
+      object-fit: cover;             /* fills the red space */
+      object-position: center;
     }
 
     .cover-overlay {
       position: absolute;
-      left: 12px;
+      left: 14px;
       bottom: 12px;
       padding: 6px 10px;
       border-radius: 999px;
@@ -364,15 +375,18 @@
       <div class="card cover">
         <div class="cover-top">
           <div>
-            <div class="label">Book cover</div>
-            <div class="small">Single-click cover: pause/resume flip</div>
+            <div class="label">Book covers</div>
+            <div class="small">Single-click cover area: pause/resume flip</div>
           </div>
           <div class="small">Test SKU: <code>blakats_cd_01</code></div>
         </div>
 
-        <!-- Click to toggle flipping -->
+        <!-- Two covers filling the stage -->
         <div id="coverStage" class="cover-stage" title="Click to pause/resume">
-          <img id="coverImg" class="cover-img" src="assets/sofia-cover.png" alt="SOFIA book cover" />
+          <div class="cover-pages" aria-label="Book covers (front and back)">
+            <div class="page"><img id="imgLeft"  src="assets/sofia-cover.png" alt="SOFIA front cover"></div>
+            <div class="page"><img id="imgRight" src="assets/sofia-back-cover.png" alt="SOFIA back cover"></div>
+          </div>
           <div id="coverOverlay" class="cover-overlay">Auto-flip: ON • every 5s</div>
         </div>
 
@@ -411,7 +425,7 @@
       amount: "0.10",
     };
 
-    // Cover flip config
+    // Covers
     const FRONT_COVER = "assets/sofia-cover.png";
     const BACK_COVER  = "assets/sofia-back-cover.png";
     const FLIP_EVERY_MS = 5000;
@@ -420,8 +434,9 @@
     const statusEl = document.getElementById("status");
 
     const coverStage = document.getElementById("coverStage");
-    const coverImg = document.getElementById("coverImg");
     const coverOverlay = document.getElementById("coverOverlay");
+    const imgLeft = document.getElementById("imgLeft");
+    const imgRight = document.getElementById("imgRight");
 
     // =========================================================
     // PayPal create + redirect
@@ -464,29 +479,39 @@
     });
 
     // =========================================================
-    // Cover flip logic (auto every 5s; click toggles)
+    // Cover flip logic
+    // - Start showing [FRONT | BACK]
+    // - Every 5s swap them -> [BACK | FRONT] -> [FRONT | BACK]...
+    // - Click toggles pause/resume
     // =========================================================
     let isFlipping = true;
     let flipTimer = null;
-
-    function currentIsFront() {
-      return (coverImg.getAttribute("src") || "").includes("sofia-cover");
-    }
+    let swapped = false;
 
     function setOverlay() {
       coverOverlay.textContent = `Auto-flip: ${isFlipping ? "ON" : "OFF"} • every 5s`;
     }
 
+    function renderPair() {
+      if (!swapped) {
+        imgLeft.src = FRONT_COVER;
+        imgRight.src = BACK_COVER;
+      } else {
+        imgLeft.src = BACK_COVER;
+        imgRight.src = FRONT_COVER;
+      }
+    }
+
     function flipOnce() {
-      const next = currentIsFront() ? BACK_COVER : FRONT_COVER;
-      coverImg.src = next;
+      swapped = !swapped;
+      renderPair();
     }
 
     function startFlipping() {
       if (flipTimer) clearInterval(flipTimer);
-      flipTimer = setInterval(flipOnce, FLIP_EVERY_MS);
       isFlipping = true;
       setOverlay();
+      flipTimer = setInterval(flipOnce, FLIP_EVERY_MS);
     }
 
     function stopFlipping() {
@@ -496,13 +521,13 @@
       setOverlay();
     }
 
-    // Single click toggles flip
     coverStage.addEventListener("click", () => {
       if (isFlipping) stopFlipping();
       else startFlipping();
     });
 
-    // Start on load
+    // Init
+    renderPair();
     startFlipping();
   </script>
 </body>
