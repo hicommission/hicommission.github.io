@@ -72,13 +72,31 @@ const ARTIST3_HERO = {
  *  STATE
  *  ========================= */
 let activeTabId = CATALOG[0]?.id || "blakats";
-
-// preview state (only one preview at a time)
 let audio = null;
 let audioTimer = null;
 let activePreviewBtn = null;
 let activeWavebox = null;
 let activeTimeEl = null;
+
+// 🔊 Global mute state (hero video + previews)
+let isMuted = true;
+
+function applyMuteState(){
+  // Hero video
+  const v = document.querySelector("video.hero-video");
+  if (v) v.muted = isMuted;
+
+  // Preview audio
+  if (audio) audio.muted = isMuted;
+
+  // Update button label
+  const btn = document.querySelector(".mute-btn");
+  if (btn){
+    btn.setAttribute("aria-pressed", String(isMuted));
+    btn.textContent = isMuted ? "🔇 Muted" : "🔊 Sound";
+    btn.title = isMuted ? "Unmute audio" : "Mute audio";
+  }
+}
 
 /** =========================
  *  DOM HELPERS
@@ -337,6 +355,7 @@ function renderTrackRow(track){
 
     audio = new Audio(audioUrl);
     audio.preload = "auto";
+    audio.muted = isMuted;
 
     let startedAt = 0;
 
@@ -393,23 +412,45 @@ function mountLoopingHeroVideo(containerEl, opts) {
     caption = "Preview",
   } = opts;
 
-  containerEl.innerHTML = `
-    <div class="hero-media">
-      <video
-        class="hero-video"
-        ${poster ? `poster="${poster}"` : ""}
-        muted
-        autoplay
-        playsinline
-        preload="metadata"
-      >
-        <source src="${src}" type="video/mp4" />
-      </video>
-      <div class="hero-caption">${escapeHtml(caption)}</div>
+containerEl.innerHTML = `
+  <div class="hero-media">
+    <video
+      class="hero-video"
+      ${poster ? `poster="${poster}"` : ""}
+      muted
+      autoplay
+      playsinline
+      preload="metadata"
+    >
+      <source src="${src}" type="video/mp4" />
+    </video>
+
+    <div class="hero-caption hero-caption-row">
+      <span>${escapeHtml(caption)}</span>
+
+      <button type="button" class="mute-btn" aria-pressed="true" title="Unmute audio">
+        🔇 Muted
+      </button>
     </div>
-  `;
+  </div>
+`;
 
   const video = containerEl.querySelector("video.hero-video");
+  // respect global mute state
+video.muted = isMuted;
+
+// wire mute button
+const muteBtn = containerEl.querySelector(".mute-btn");
+if (muteBtn){
+  muteBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    isMuted = !isMuted;
+    applyMuteState();
+
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+}
   if (!video) return;
 
   const end = start + duration;
@@ -459,4 +500,5 @@ function renderAll(){
  *  ========================= */
 document.addEventListener("DOMContentLoaded", () => {
   renderAll();
+  applyMuteState();
 });
