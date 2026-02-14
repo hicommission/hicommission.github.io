@@ -97,6 +97,81 @@ function injectStyles() {
   document.head.appendChild(style);
 }
 
+let currentAudio = null;
+let currentRow = null;
+let stopTimer = null;
+
+function stopCurrent() {
+  if (stopTimer) {
+    clearTimeout(stopTimer);
+    stopTimer = null;
+  }
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  if (currentRow) {
+    currentRow.querySelector(".wavebox")?.classList.remove("playing");
+    currentRow.querySelector(".preview-btn").textContent = "▶ Preview";
+    currentRow = null;
+  }
+}
+
+function initWaveBars(wavebox) {
+  const bars = [...wavebox.querySelectorAll(".bar")];
+  bars.forEach((bar, idx) => {
+    // Left-to-right positions
+    const left = 10 + idx * 11; // spacing
+    bar.style.left = `${left}px`;
+
+    // Staggered animation delay so it "moves"
+    bar.style.animationDelay = `${(idx % 6) * 70}ms`;
+
+    // Different durations for variation
+    bar.style.animationDuration = `${780 + (idx % 7) * 60}ms`;
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".wavebox").forEach(initWaveBars);
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest(".preview-btn");
+    if (!btn) return;
+
+    const row = btn.closest(".music-item") || btn.parentElement;
+    const wave = row.querySelector(".wavebox");
+    const src = btn.dataset.audio;
+
+    // Toggle: if clicking same row while playing -> stop
+    if (currentRow === row) {
+      stopCurrent();
+      return;
+    }
+
+    // Start new
+    stopCurrent();
+    currentRow = row;
+
+    currentAudio = new Audio(src);
+    currentAudio.play().then(() => {
+      wave.classList.add("playing");
+      btn.textContent = "⏸ Stop";
+
+      // safety stop at 30 seconds (even if file changes later)
+      stopTimer = setTimeout(() => stopCurrent(), 30000);
+    }).catch(err => {
+      console.error(err);
+      stopCurrent();
+      alert("Preview failed to play. Check the preview MP3 path.");
+    });
+
+    // If it ends early, clean up UI
+    currentAudio.addEventListener("ended", stopCurrent);
+  });
+});
+
 function ensureLightbox() {
   let lb = document.getElementById("lightbox");
   if (lb) return lb;
