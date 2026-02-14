@@ -1,13 +1,15 @@
-/* music-portfolio/js/app.js (FULL DROP-IN REPLACEMENT)
-   REQUIREMENTS COVERED:
-   1) Video mute button only affects the hero video (NOT previews).
-   2) Changing tabs stops + mutes any currently playing hero video, then switches tab.
-      (Also stops any currently playing preview audio.)
-   3) Tab 2 renamed to 1GNM (+ metadata).
-   4) Tab 3 renamed to BoomBash (+ metadata).
-*/
-
-"use strict";
+/* ============================================================
+   music-portfolio/js/app.js  (DROP-IN REPLACEMENT)
+   Tabbed multi-artist catalog with:
+   - Clickable thumbnails (play/pause preview)
+   - 30s preview w/ placeholder waveform + timer
+   - Buy button -> POST create -> redirect to PayPal
+   - Hero video for Tab 3 with 13s loop + mute/unmute button
+   - LOGIC FIXES:
+     1) If video is playing AND unmuted, starting ANY preview will immediately mute the video.
+     2) If a preview is playing AND user unmutes video, the preview audio is immediately muted
+        until preview completes; then previews return to default (unmuted) state.
+   ============================================================ */
 
 /** =========================
  *  CONFIG
@@ -15,7 +17,10 @@
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
 
+// Preview length (seconds)
 const PREVIEW_SECONDS = 30;
+
+// Where previews live (GitHub Pages)
 const PREVIEW_BASE = "assets/previews";
 
 /** =========================
@@ -34,7 +39,7 @@ const CATALOG = [
       { sku: "blakats_cd_05", title: "05. Tonite",                      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_05_preview.mp3" },
       { sku: "blakats_cd_06", title: "06. Ask Me Nicely",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_06_preview.mp3" },
       { sku: "blakats_cd_07", title: "07. Pure Heart",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_07_preview.mp3" },
-      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",       artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
+      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",        artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
       { sku: "blakats_cd_09", title: "09. Hold Me Close",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_09_preview.mp3" },
       { sku: "blakats_cd_10", title: "10. (Track 10)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_10_preview.mp3" },
       { sku: "blakats_cd_11", title: "11. (Track 11)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_11_preview.mp3" },
@@ -45,9 +50,9 @@ const CATALOG = [
   {
     id: "1gnm",
     label: "1GNM",
-    themeClass: "theme-1gnm",
+    themeClass: "theme-artist2",
     tracks: [
-      // Replace with your real 1GNM tracks:
+      // Replace these with your real 1GNM tracks:
       { sku: "1gnm_track_01", title: "01. Sample Track One", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_01_preview.mp3" },
       { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
@@ -56,20 +61,19 @@ const CATALOG = [
   {
     id: "boombash",
     label: "BoomBash",
-    themeClass: "theme-boombash",
+    themeClass: "theme-artist3",
     tracks: [
-      // Replace with your real BoomBash tracks:
+      // Replace these with your real BoomBash tracks:
       { sku: "boombash_track_01", title: "01. Sample Track One", artist: "BoomBash", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
       { sku: "boombash_track_02", title: "02. Sample Track Two", artist: "BoomBash", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
     ],
   },
 ];
 
-/** =========================
- *  HERO VIDEO CONFIG (BoomBash)
- *  ========================= */
-const BOOMBASH_HERO = {
-  src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",   // <-- your loop MP4 (with audio)
+// Hero video config (Tab 3)
+const HERO_TAB_ID = "boombash";
+const HERO_VIDEO = {
+  src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
   start: 0,
   duration: 13,
   poster: "assets/pop-cover.jpg",
@@ -81,70 +85,99 @@ const BOOMBASH_HERO = {
  *  ========================= */
 let activeTabId = CATALOG[0]?.id || "blakats";
 
-/* Preview audio state (separate from hero video!) */
+// Preview audio state
 let previewAudio = null;
 let previewTimer = null;
 let activePreviewBtn = null;
 let activeWavebox = null;
 let activeTimeEl = null;
 
-/* Hero video state (separate from preview audio!) */
-const heroByTabId = new Map(); // tabId -> { videoEl, muteBtnEl, cleanupFn }
+// Video hero state (separate from preview audio)
+let heroVideoEl = null;
+let heroMuteBtnEl = null;
+let heroCleanupFn = null;
+
+// Logic fix #2: if user unmutes video while a preview is playing,
+// we mute the preview audio until it completes.
+let previewMutedByVideo = false;
 
 /** =========================
  *  HELPERS
  *  ========================= */
-function $(sel, root = document){ return root.querySelector(sel); }
-function $all(sel, root = document){ return Array.from(root.querySelectorAll(sel)); }
+function $(sel, root = document) { return root.querySelector(sel); }
+function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
-function fmtTime(seconds){
+function escapeHtml(str) {
+  return String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function fmtTime(seconds) {
   const s = Math.max(0, Math.floor(seconds));
   const mm = Math.floor(s / 60);
   const ss = String(s % 60).padStart(2, "0");
   return `${mm}:${ss}`;
 }
 
-function escapeHtml(str){
-  return String(str)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
+function isPreviewPlaying() {
+  return !!(previewAudio && !previewAudio.paused && !previewAudio.ended);
 }
 
 /** =========================
- *  PREVIEW AUDIO (MP3) — STOP/START
+ *  VIDEO MUTING / UI
  *  ========================= */
-function stopPreview(){
-  if (previewAudio){
-    try { previewAudio.pause(); } catch {}
-    previewAudio = null;
+function setHeroMuted(muted) {
+  if (!heroVideoEl) return;
+  heroVideoEl.muted = !!muted;
+
+  // Update button label/state if present
+  if (heroMuteBtnEl) {
+    heroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
+    heroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
+    heroMuteBtnEl.textContent = muted ? "🔇 Muted" : "🔊 Sound";
   }
-  if (previewTimer){
-    clearInterval(previewTimer);
-    previewTimer = null;
-  }
-  if (activePreviewBtn){
-    activePreviewBtn.textContent = "▶ Preview";
-    activePreviewBtn.removeAttribute("aria-pressed");
-  }
-  if (activeWavebox){
-    activeWavebox.classList.remove("playing");
-    activeWavebox.classList.add("idle");
-  }
-  if (activeTimeEl){
-    activeTimeEl.textContent = `0:00 / ${fmtTime(PREVIEW_SECONDS)}`;
-  }
-  activePreviewBtn = null;
-  activeWavebox = null;
-  activeTimeEl = null;
 }
 
-function ensureWaveBars(wavebox){
+/**
+ * LOGIC FIX #1:
+ * If hero video is playing AND unmuted, starting any preview mutes the video immediately.
+ */
+function maybeMuteVideoBecausePreviewStarted() {
+  if (!heroVideoEl) return;
+  const videoIsPlaying = !heroVideoEl.paused && !heroVideoEl.ended;
+  const videoIsUnmuted = heroVideoEl.muted === false;
+
+  if (videoIsPlaying && videoIsUnmuted) {
+    setHeroMuted(true);
+  }
+}
+
+/**
+ * LOGIC FIX #2:
+ * If a preview is playing and user unmutes video, mute preview until preview completes,
+ * then restore previews to default unmuted state.
+ */
+function maybeMutePreviewBecauseVideoUnmuted() {
+  if (!isPreviewPlaying()) return;
+
+  // Mute preview audio until it ends
+  if (previewAudio) {
+    previewAudio.muted = true;
+    previewMutedByVideo = true;
+  }
+}
+
+/** =========================
+ *  PREVIEW CONTROL
+ *  ========================= */
+function ensureWaveBars(wavebox) {
   if (wavebox.dataset.ready === "1") return;
   wavebox.innerHTML = "";
-  for (let i = 0; i < 24; i++){
+  for (let i = 0; i < 24; i++) {
     const bar = document.createElement("span");
     bar.className = "bar";
     bar.style.setProperty("--i", String(i));
@@ -154,14 +187,53 @@ function ensureWaveBars(wavebox){
   wavebox.classList.add("idle");
 }
 
-async function createPayPalLink(product){
+function stopPreview() {
+  // restore "default unmuted state" if we muted preview due to video
+  if (previewAudio && previewMutedByVideo) {
+    previewAudio.muted = false;
+    previewMutedByVideo = false;
+  }
+
+  if (previewAudio) {
+    try { previewAudio.pause(); } catch {}
+    previewAudio = null;
+  }
+
+  if (previewTimer) {
+    clearInterval(previewTimer);
+    previewTimer = null;
+  }
+
+  if (activePreviewBtn) {
+    activePreviewBtn.textContent = "▶ Preview";
+    activePreviewBtn.removeAttribute("aria-pressed");
+  }
+
+  if (activeWavebox) {
+    activeWavebox.classList.remove("playing");
+    activeWavebox.classList.add("idle");
+  }
+
+  if (activeTimeEl) {
+    activeTimeEl.textContent = `0:00 / ${fmtTime(PREVIEW_SECONDS)}`;
+  }
+
+  activePreviewBtn = null;
+  activeWavebox = null;
+  activeTimeEl = null;
+}
+
+/** =========================
+ *  PAYPAL
+ *  ========================= */
+async function createPayPalLink(product) {
   const res = await fetch(CREATE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(product),
   });
 
-  if (!res.ok){
+  if (!res.ok) {
     const t = await res.text().catch(() => "");
     throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
   }
@@ -172,97 +244,43 @@ async function createPayPalLink(product){
 }
 
 /** =========================
- *  HERO VIDEO — STOP/MUTE (ONLY VIDEO!)
- *  ========================= */
-function stopHeroVideoForTab(tabId){
-  const hero = heroByTabId.get(tabId);
-  if (!hero || !hero.videoEl) return;
-
-  const v = hero.videoEl;
-  try { v.pause(); } catch {}
-  // requirement: changing tabs must mute and stop video
-  v.muted = true;
-
-  // reset to start frame quickly
-  try { v.currentTime = 0; } catch {}
-
-  // update mute button UI if present
-  if (hero.muteBtnEl){
-    hero.muteBtnEl.setAttribute("aria-pressed", "true");
-    hero.muteBtnEl.textContent = "🔇 Muted";
-    hero.muteBtnEl.title = "Unmute video audio";
-  }
-}
-
-function playHeroVideoForTab(tabId){
-  const hero = heroByTabId.get(tabId);
-  if (!hero || !hero.videoEl) return;
-
-  const v = hero.videoEl;
-
-  // always start muted (user can unmute using the button)
-  v.muted = true;
-
-  const p = v.play();
-  if (p && typeof p.catch === "function") p.catch(() => {});
-}
-
-/** =========================
- *  TAB SWITCH
- *  ========================= */
-function setActiveTab(nextId){
-  if (nextId === activeTabId) return;
-
-  // Requirement #2: changing tabs must stop+mute currently playing hero video
-  stopHeroVideoForTab(activeTabId);
-
-  // Good UX: stop any playing preview audio when switching tabs
-  stopPreview();
-
-  activeTabId = nextId;
-
-  // Update tab buttons
-  $all(".tab").forEach((btn) => {
-    const on = btn.dataset.tab === activeTabId;
-    btn.setAttribute("aria-selected", on ? "true" : "false");
-  });
-
-  // Update panels
-  $all(".panel").forEach((p) => {
-    p.classList.toggle("active", p.dataset.panel === activeTabId);
-  });
-
-  // If the new tab has hero video, (re)play it muted
-  playHeroVideoForTab(activeTabId);
-}
-
-/** =========================
  *  RENDER: TABS
  *  ========================= */
-function renderTabs(){
-  const tabsEl = $(".tabs");
-  tabsEl.innerHTML = "";
+function renderTabs() {
+  const nav = $(".tabs");
+  nav.innerHTML = "";
 
   CATALOG.forEach((tab) => {
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = `tab ${tab.themeClass}`;
-    btn.textContent = tab.label;
+    btn.className = "tab";
     btn.dataset.tab = tab.id;
+    btn.textContent = tab.label;
     btn.setAttribute("aria-selected", tab.id === activeTabId ? "true" : "false");
 
-    btn.addEventListener("click", () => setActiveTab(tab.id));
-    tabsEl.appendChild(btn);
+    btn.addEventListener("click", () => {
+      if (tab.id === activeTabId) return;
+
+      // Stop preview when switching tabs
+      stopPreview();
+
+      // Stop and mute current hero video when changing tabs
+      stopHeroVideo();
+
+      activeTabId = tab.id;
+      renderAll();
+    });
+
+    nav.appendChild(btn);
   });
 }
 
 /** =========================
- *  RENDER: PANELS
+ *  RENDER: PANELS / TRACKS
  *  ========================= */
-function renderPanels(){
+function renderPanels() {
   const panelsEl = $(".tab-panels");
   panelsEl.innerHTML = "";
-  heroByTabId.clear();
 
   CATALOG.forEach((tab) => {
     const panel = document.createElement("section");
@@ -274,17 +292,18 @@ function renderPanels(){
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // Hero for BoomBash (tab 3)
-    if (tab.id === "boombash"){
+    // Hero video only on HERO_TAB_ID
+    if (tab.id === HERO_TAB_ID) {
       const heroMount = document.createElement("div");
-      heroMount.id = "boombashHero";
+      heroMount.id = "heroMount";
       panel.appendChild(heroMount);
 
-      const { videoEl, muteBtnEl, cleanupFn } = mountLoopingHeroVideo(heroMount, BOOMBASH_HERO);
-      heroByTabId.set(tab.id, { videoEl, muteBtnEl, cleanupFn });
+      // Mount after in DOM
+      queueMicrotask(() => {
+        mountLoopingHeroVideo(heroMount, HERO_VIDEO);
+      });
     }
 
-    // Tracks
     tab.tracks.forEach((track) => {
       panel.appendChild(renderTrackRow(track));
     });
@@ -292,17 +311,15 @@ function renderPanels(){
     panelsEl.appendChild(panel);
   });
 
-  // wavebars
+  // after render, prep wavebars
   $all(".wavebox").forEach(ensureWaveBars);
 }
 
-/** =========================
- *  RENDER: TRACK ROW
- *  ========================= */
-function renderTrackRow(track){
+function renderTrackRow(track) {
   const row = document.createElement("div");
   row.className = "track";
 
+  // thumbnail
   const thumb = document.createElement("div");
   thumb.className = "thumb";
   thumb.title = "Click to preview";
@@ -311,6 +328,7 @@ function renderTrackRow(track){
   img.alt = `${track.title} cover`;
   thumb.appendChild(img);
 
+  // meta
   const meta = document.createElement("div");
   meta.className = "meta";
   meta.innerHTML = `
@@ -319,6 +337,7 @@ function renderTrackRow(track){
     <p class="price">$${escapeHtml(track.amount)}</p>
   `;
 
+  // preview cluster
   const preview = document.createElement("div");
   preview.className = "preview";
 
@@ -344,6 +363,7 @@ function renderTrackRow(track){
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
+  // buy button
   const buy = document.createElement("div");
   buy.className = "buy";
 
@@ -377,19 +397,21 @@ function renderTrackRow(track){
 
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
-  async function togglePreview(){
-    // If this row is active, stop it
-    if (activePreviewBtn === previewBtn){
+  async function togglePreview() {
+    // if this row is currently active, stop it
+    if (activePreviewBtn === previewBtn) {
       stopPreview();
       return;
     }
 
-    // Stop other preview
+    // stop any other preview
     stopPreview();
 
-    // NOTE: requirement #1 -> do NOT touch hero video mute state here.
-    // The hero video mute button controls ONLY the hero video.
+    // LOGIC FIX #1:
+    // If hero video is playing and unmuted, mute it immediately when preview starts.
+    maybeMuteVideoBecausePreviewStarted();
 
+    // start this preview
     ensureWaveBars(wavebox);
     wavebox.classList.remove("idle");
     wavebox.classList.add("playing");
@@ -404,15 +426,22 @@ function renderTrackRow(track){
     previewAudio = new Audio(audioUrl);
     previewAudio.preload = "auto";
 
+    // default preview audio should be unmuted (unless video-unmute forced muting later)
+    previewAudio.muted = false;
+    previewMutedByVideo = false;
+
     let startedAt = 0;
 
-    previewAudio.addEventListener("ended", () => stopPreview());
+    previewAudio.addEventListener("ended", () => {
+      stopPreview(); // also restores default unmuted state if we muted due to video
+    });
+
     previewAudio.addEventListener("error", () => {
       stopPreview();
       alert(`Preview failed to load:\n${audioUrl}`);
     });
 
-    try{
+    try {
       await previewAudio.play();
       startedAt = performance.now();
 
@@ -424,11 +453,11 @@ function renderTrackRow(track){
 
         timeEl.textContent = `${fmtTime(shown)} / ${fmtTime(PREVIEW_SECONDS)}`;
 
-        if (elapsed >= PREVIEW_SECONDS){
+        if (elapsed >= PREVIEW_SECONDS) {
           stopPreview();
         }
       }, 120);
-    } catch (e){
+    } catch (e) {
       stopPreview();
       console.error(e);
       alert("Browser blocked autoplay. Click Preview again.");
@@ -442,16 +471,32 @@ function renderTrackRow(track){
   row.appendChild(meta);
   row.appendChild(preview);
   row.appendChild(buy);
-
   return row;
 }
 
 /** =========================
- *  HERO VIDEO MOUNT (BoomBash)
- *  - Segment looping
- *  - Mute button ONLY mutes this video element
+ *  HERO VIDEO MOUNT / STOP
  *  ========================= */
-function mountLoopingHeroVideo(containerEl, opts){
+function stopHeroVideo() {
+  if (heroCleanupFn) {
+    try { heroCleanupFn(); } catch {}
+    heroCleanupFn = null;
+  }
+  if (heroVideoEl) {
+    try {
+      heroVideoEl.pause();
+      heroVideoEl.muted = true;
+      heroVideoEl.currentTime = 0;
+    } catch {}
+  }
+  heroVideoEl = null;
+  heroMuteBtnEl = null;
+}
+
+function mountLoopingHeroVideo(containerEl, opts) {
+  // Clean up any previous hero (important when re-rendering)
+  stopHeroVideo();
+
   const {
     src,
     start = 0,
@@ -473,86 +518,94 @@ function mountLoopingHeroVideo(containerEl, opts){
         <source src="${src}" type="video/mp4" />
       </video>
 
-      <div class="hero-caption">
-        <div class="hero-caption-row">
-          <span>${escapeHtml(caption)}</span>
-          <button type="button"
-                  class="mute-btn"
-                  aria-pressed="true"
-                  title="Unmute video audio">
-            🔇 Muted
-          </button>
-        </div>
+      <div class="hero-caption hero-caption-row">
+        <span>${escapeHtml(caption)}</span>
+        <button type="button" class="mute-btn" aria-pressed="false" title="Unmute audio">🔇 Muted</button>
       </div>
     </div>
   `;
 
-  const videoEl = containerEl.querySelector("video.hero-video");
-  const muteBtnEl = containerEl.querySelector("button.mute-btn");
+  const video = containerEl.querySelector("video.hero-video");
+  const muteBtn = containerEl.querySelector("button.mute-btn");
+  if (!video || !muteBtn) return;
+
+  heroVideoEl = video;
+  heroMuteBtnEl = muteBtn;
+
+  // Start muted by default for autoplay policy. User can enable Sound.
+  setHeroMuted(true);
 
   const end = start + duration;
 
-  const seekToStart = () => { try { videoEl.currentTime = start; } catch {} };
+  const seekToStart = () => {
+    try { video.currentTime = start; } catch (_) {}
+  };
 
   const onTimeUpdate = () => {
-    if (videoEl.currentTime >= end){
-      try { videoEl.currentTime = start; } catch {}
-      const p = videoEl.play();
+    // Loop only the segment
+    if (video.currentTime >= end) {
+      video.currentTime = start;
+      const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
     }
   };
 
-  videoEl.addEventListener("loadedmetadata", () => {
-    // Always start muted. User can unmute using the button.
-    videoEl.muted = true;
+  const onLoaded = () => {
     seekToStart();
-
-    const p = videoEl.play();
+    const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
-  });
-
-  videoEl.addEventListener("timeupdate", onTimeUpdate);
-
-  // Mute button affects ONLY this video element (Requirement #1)
-  muteBtnEl.addEventListener("click", () => {
-    // toggle mute state on the video ONLY
-    videoEl.muted = !videoEl.muted;
-
-    if (videoEl.muted){
-      muteBtnEl.setAttribute("aria-pressed", "true");
-      muteBtnEl.textContent = "🔇 Muted";
-      muteBtnEl.title = "Unmute video audio";
-    } else {
-      muteBtnEl.setAttribute("aria-pressed", "false");
-      muteBtnEl.textContent = "🔊 Sound";
-      muteBtnEl.title = "Mute video audio";
-    }
-
-    // keep video playing
-    const p = videoEl.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  });
-
-  // If autoplay gets blocked, click anywhere in the hero to start video (still muted)
-  containerEl.addEventListener("click", () => {
-    const p = videoEl.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  });
-
-  const cleanupFn = () => {
-    videoEl.removeEventListener("timeupdate", onTimeUpdate);
   };
 
-  return { videoEl, muteBtnEl, cleanupFn };
+  video.addEventListener("loadedmetadata", onLoaded);
+  video.addEventListener("timeupdate", onTimeUpdate);
+
+  // Click-to-play fallback
+  containerEl.addEventListener("click", () => {
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+
+  // Mute/unmute button:
+  // LOGIC FIX #2:
+  // If preview is playing and user unmutes video, immediately mute preview until it completes.
+  muteBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+
+    const currentlyMuted = video.muted === true;
+    if (currentlyMuted) {
+      // user wants SOUND on video
+      setHeroMuted(false);
+
+      // If a preview is currently playing, mute preview until completion
+      maybeMutePreviewBecauseVideoUnmuted();
+    } else {
+      // user mutes video
+      setHeroMuted(true);
+    }
+  });
+
+  heroCleanupFn = () => {
+    video.removeEventListener("loadedmetadata", onLoaded);
+    video.removeEventListener("timeupdate", onTimeUpdate);
+  };
+}
+
+/** =========================
+ *  TOP-LEVEL RENDER
+ *  ========================= */
+function renderAll() {
+  renderTabs();
+  renderPanels();
+
+  // Ensure active aria-selected
+  $all(".tab").forEach((btn) => {
+    btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
+  });
 }
 
 /** =========================
  *  INIT
  *  ========================= */
 document.addEventListener("DOMContentLoaded", () => {
-  renderTabs();
-  renderPanels();
-
-  // Start the active tab's hero video (if any) muted
-  playHeroVideoForTab(activeTabId);
+  renderAll();
 });
