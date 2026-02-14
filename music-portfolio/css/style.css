@@ -282,6 +282,32 @@ body{
   .buy{ grid-area: buy; justify-content:flex-start; }
 }
 
+/* ===== Artist 3 hero video ===== */
+.hero-media {
+  width: 100%;
+  max-width: 900px;
+  margin: 14px auto 18px;
+  background: #fff;
+  border: 1px solid rgba(0,0,0,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 26px rgba(0,0,0,0.08);
+}
+
+.hero-media video {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #000;
+}
+
+.hero-media .hero-caption {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #333;
+  border-top: 1px solid rgba(0,0,0,0.08);
+}
+
 @media (max-width: 520px){
   .wavebox{ width: 160px; }
   .preview-btn{ min-width: 102px; }

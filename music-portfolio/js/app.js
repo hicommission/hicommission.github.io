@@ -152,28 +152,42 @@ async function createPayPalLink(product){
 /** =========================
  *  RENDER
  *  ========================= */
-function renderTabs(){
-  const tabsEl = $(".tabs");
-  tabsEl.innerHTML = "";
+function renderTab(tab) {
+  const tabEl = document.getElementById(`tab-${tab.id}`);
+  if (!tabEl) return;
 
-  CATALOG.forEach((tab) => {
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.className = "tab";
-    btn.textContent = tab.label;
-    btn.setAttribute("role", "tab");
-    btn.setAttribute("aria-selected", tab.id === activeTabId ? "true" : "false");
-    btn.dataset.tab = tab.id;
+  // Clear previous content
+  tabEl.innerHTML = "";
 
-    btn.addEventListener("click", () => {
-      if (activeTabId === tab.id) return;
-      stopPreview();
-      activeTabId = tab.id;
-      renderAll();
-    });
+  // 🔥 SPECIAL CASE: Artist3 gets hero video
+  if (tab.id === "artist3") {
+    tabEl.innerHTML = `
+      <div id="artist3Hero"></div>
+      <div class="track-list"></div>
+    `;
 
-    tabsEl.appendChild(btn);
-  });
+    // Mount looping 13s hero video
+    mountLoopingHeroVideo(
+      document.getElementById("artist3Hero"),
+      {
+        src: "assets/BlaKatsPaint_the_TownRedoutput.mov",
+        start: 0,
+        duration: 13,
+        caption: "Preview"
+      }
+    );
+
+    renderTracks(
+      tabEl.querySelector(".track-list"),
+      tab.tracks
+    );
+
+    return;
+  }
+
+  // ✅ Default render path for Artist1 / Artist2
+  tabEl.innerHTML = `<div class="track-list"></div>`;
+  renderTracks(tabEl.querySelector(".track-list"), tab.tracks);
 }
 
 function renderPanels(){
@@ -365,6 +379,80 @@ function renderAll(){
   $all(".tab").forEach((btn) => {
     btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
+}
+
+function mountLoopingHeroVideo(containerEl, opts) {
+  const {
+    src,
+    start = 0,
+    duration = 13,
+    poster = "",
+    caption = "Preview",
+  } = opts;
+
+  // Build DOM
+  containerEl.innerHTML = `
+    <div class="hero-media">
+      <video
+        class="hero-video"
+        ${poster ? `poster="${poster}"` : ""}
+        muted
+        autoplay
+        playsinline
+        preload="metadata"
+      >
+        <source src="${src}" />
+      </video>
+      <div class="hero-caption">${caption}</div>
+    </div>
+  `;
+
+  const video = containerEl.querySelector("video.hero-video");
+  if (!video) return;
+
+  const end = start + duration;
+
+  // Ensure it starts where we want
+  const seekToStart = () => {
+    try { video.currentTime = start; } catch (_) {}
+  };
+
+  // Loop only the segment
+  const onTimeUpdate = () => {
+    if (video.currentTime >= end) {
+      video.currentTime = start;
+      // keep it playing
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    }
+  };
+
+  video.addEventListener("loadedmetadata", () => {
+    // If metadata reports shorter than our window, just loop whole thing
+    if (isFinite(video.duration) && video.duration > 0 && end > video.duration) {
+      // fallback: loop entire video
+      // still seek to start to keep consistent
+      seekToStart();
+    } else {
+      seekToStart();
+    }
+
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+
+  video.addEventListener("timeupdate", onTimeUpdate);
+
+  // If autoplay gets blocked, start on first user click anywhere in the hero
+  containerEl.addEventListener("click", () => {
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+
+  // Return cleanup in case you re-render tabs
+  return () => {
+    video.removeEventListener("timeupdate", onTimeUpdate);
+  };
 }
 
 function escapeHtml(str){

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Learn FAST – Pro Looper</title>
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 0;
+      padding: 16px;
+      background: #f5f5f7;
+      color: #111;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px 24px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+    }
+    h1 {
+      font-size: 20px;
+      margin-top: 0;
+      margin-bottom: 12px;
+      text-align: left;
+    }
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+      margin-bottom: 12px;
+    }
+    button {
+      padding: 8px 12px;
+      font-size: 14px;
+      border-radius: 999px;
+      border: 1px solid #007aff;
+      background: #007aff;
+      color: #fff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button.secondary { background: #fff; color: #007aff; }
+    button:disabled { opacity: 0.5; cursor: default; }
+    .status {
+      font-size: 12px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    /* https://hicommission.github.io mobile fix */
+    #player {
+      width: 100%;
+      max-width: 640px;
+      max-height: 360px;
+      aspect-ratio: 16 / 9;
+      margin: 0 auto 16px;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .loop-controls {
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+    .slider-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 8px;
+    }
+    .slider-row span { font-size: 12px; }
+    input[type="range"] { width: 100%; }
+    .loop-label {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .loop-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ccc;
+    }
+    .loop-indicator.on { background: #34c759; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Learn FAST – Pro Looper</h1>
+
+    <div class="button-row">
+      <button id="playBtn" disabled>▶ Play</button>
+      <button id="loopBtn" class="secondary" disabled>🔁 Loop OFF</button>
+    </div>
+
+    <div class="status" id="statusText">Initializing…</div>
+    <div id="player"></div>
+
+    <div class="loop-controls">
+      <div class="slider-row">
+        <span>Loop start (seconds): <span id="startLabel">0.0</span></span>
+        <input id="startSlider" type="range" min="0" max="100" step="0.1" value="0" />
+      </div>
+
+      <div class="slider-row">
+        <span>Loop end (seconds): <span id="endLabel">0.0</span></span>
+        <input id="endSlider" type="range" min="0" max="100" step="0.1" value="10" />
+      </div>
+
+      <div class="loop-label">
+        <div id="loopIndicator" class="loop-indicator"></div>
+        <span id="loopInfo">Loop: disabled</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- YouTube IFrame API -->
+  <script src="https://www.youtube.com/iframe_api" allow="autoplay"></script>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const initialVideoId = params.get("video") || "";
+    let player = null;
+    let playerReady = false;
+    let loopEnabled = false;
+    let loopStart = 0;
+    let loopEnd = 10;
+    let duration = 0;
+
+    const playBtn = document.getElementById('playBtn');
+    const loopBtn = document.getElementById('loopBtn');
+    const statusText = document.getElementById('statusText');
+    const startSlider = document.getElementById('startSlider');
+    const endSlider = document.getElementById('endSlider');
+    const startLabel = document.getElementById('startLabel');
+    const endLabel = document.getElementById('endLabel');
+    const loopIndicator = document.getElementById('loopIndicator');
+    const loopInfo = document.getElementById('loopInfo');
+
+    function updateLoopUI() {
+      loopBtn.textContent = loopEnabled ? "🔁 Loop ON" : "🔁 Loop OFF";
+      loopIndicator.classList.toggle("on", loopEnabled);
+      loopInfo.textContent = loopEnabled
+        ? `Loop: start=${loopStart.toFixed(1)}s • end=${loopEnd.toFixed(1)}s`
+        : "Loop: disabled";
+    }
+
+    playBtn.onclick = () => {
+      if (loopEnabled) player.seekTo(loopStart);
+      player.playVideo();
+    };
+
+    loopBtn.onclick = () => {
+      loopEnabled = !loopEnabled;
+      updateLoopUI();
+    };
+
+    startSlider.oninput = () => {
+      loopStart = Math.min(parseFloat(startSlider.value), loopEnd - 0.1);
+      startLabel.textContent = loopStart.toFixed(1);
+      updateLoopUI();
+    };
+
+    endSlider.oninput = () => {
+      loopEnd = Math.max(parseFloat(endSlider.value), loopStart + 0.1);
+      endLabel.textContent = loopEnd.toFixed(1);
+      updateLoopUI();
+    };
+
+    window.onYouTubeIframeAPIReady = () => {
+      player = new YT.Player('player', {
+        width: '100%',
+        videoId: "",
+        playerVars: {
+          'origin': window.location.origin,
+          'playsinline': 1,
+          'rel': 0,
+          'fs': 0   // Disable fullscreen takeover
+        },
+        events: {
+          onReady: () => {
+            playerReady = true;
+            playBtn.disabled = loopBtn.disabled = false;
+
+            if (initialVideoId) {
+              player.loadVideoById(initialVideoId);
+              statusText.textContent = "Video loaded: " + initialVideoId;
+
+              // 🔥 Required for iOS silent auto-play
+              player.mute();
+              player.playVideo();
+
+              // Retry if blocked on first attempt
+              setTimeout(() => {
+                if (player.getPlayerState() !== YT.PlayerState.PLAYING) {
+                  player.playVideo();
+                }
+              }, 300);
+            } else {
+              statusText.textContent = "No video provided.";
+            }
+          },
+          onStateChange: (e) => {
+            if (e.data === YT.PlayerState.PLAYING) {
+              duration = player.getDuration();
+              startSlider.max = endSlider.max = duration;
+            }
+          }
+        }
+      });
+
+      // Loop enforcement
+      setInterval(() => {
+        if (playerReady && loopEnabled && player.getPlayerState() === YT.PlayerState.PLAYING) {
+          if (player.getCurrentTime() >= loopEnd) {
+            player.seekTo(loopStart);
+          }
+        }
+      }, 200);
+    };
+  </script>
+</body>
+</html>
