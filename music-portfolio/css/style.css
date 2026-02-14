@@ -1,3 +1,4 @@
+/* music-portfolio/css/style.css (FULL DROP-IN REPLACEMENT) */
 :root{
   --bg: #f2f4f7;
   --card: #ffffff;
@@ -82,12 +83,8 @@ body{
   overflow: hidden;
 }
 
-.panel{
-  display:none;
-}
-.panel.active{
-  display:block;
-}
+.panel{ display:none; }
+.panel.active{ display:block; }
 
 .panel-header{
   padding: 14px 16px;
@@ -108,7 +105,6 @@ body{
   align-items:center;
   border-bottom: 1px solid rgba(0,0,0,.06);
 }
-
 .track:last-child{ border-bottom:0; }
 
 .thumb{
@@ -121,7 +117,6 @@ body{
   cursor:pointer;
   user-select:none;
 }
-
 .thumb img{
   width:100%;
   height:100%;
@@ -129,9 +124,7 @@ body{
   display:block;
 }
 
-.meta{
-  min-width:0;
-}
+.meta{ min-width:0; }
 .meta .name{
   font-weight: 900;
   margin: 0;
@@ -201,13 +194,11 @@ body{
   transform-origin: bottom;
 }
 
-/* pulsing placeholder when idle */
 .wavebox.idle .bar{
   animation: idlePulse 1.2s ease-in-out infinite;
   animation-delay: calc(var(--i) * 25ms);
 }
 
-/* animated when playing */
 .wavebox.playing .bar{
   animation: playingPulse .22s ease-in-out infinite;
   animation-delay: calc(var(--i) * 14ms);
@@ -218,7 +209,6 @@ body{
   0%,100%{ transform: scaleY(.55); opacity:.55; }
   50%{ transform: scaleY(1.2); opacity:.85; }
 }
-
 @keyframes playingPulse{
   0%,100%{ transform: scaleY(.45); opacity:.65; }
   50%{ transform: scaleY(1.7); opacity: 1; }
@@ -236,7 +226,6 @@ body{
   display:flex;
   justify-content:flex-end;
 }
-
 .buy-btn{
   appearance:none;
   border:0;
@@ -250,7 +239,6 @@ body{
   min-width: 170px;
   box-shadow: 0 12px 22px rgba(76,175,80,.25);
 }
-
 .buy-btn:hover{ background: var(--btnGreenHover); }
 .buy-btn:active{ transform: translateY(1px); }
 
@@ -264,8 +252,8 @@ body{
 
 /* ===== Tab-specific themes ===== */
 .theme-blakats{ --accent:#3f51b5; --accent2:#2f3f9a; --tabText:#fff; }
-.theme-artist2{ --accent:#b45309; --accent2:#92400e; --tabText:#fff; }
-.theme-artist3{ --accent:#0f766e; --accent2:#115e59; --tabText:#fff; }
+.theme-1gnm   { --accent:#b45309; --accent2:#92400e; --tabText:#fff; }
+.theme-boombash{ --accent:#0f766e; --accent2:#115e59; --tabText:#fff; }
 
 /* ===== Responsive ===== */
 @media (max-width: 980px){
@@ -282,7 +270,7 @@ body{
   .buy{ grid-area: buy; justify-content:flex-start; }
 }
 
-/* ===== Artist 3 hero video ===== */
+/* ===== Artist 3 hero video (BoomBash) ===== */
 .hero-media {
   width: 100%;
   max-width: 900px;
@@ -292,44 +280,6 @@ body{
   border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 10px 26px rgba(0,0,0,0.08);
-}
-
-/* ===== Artist 3 hero mute button ===== */
-.hero-controls {
-  position: absolute;
-  bottom: 12px;
-  right: 12px;
-  display: flex;
-  gap: 8px;
-  z-index: 3;
-}
-
-.mute-btn {
-  appearance: none;
-  border: 0;
-  cursor: pointer;
-  background: rgba(0,0,0,0.65);
-  color: #fff;
-  font-weight: 900;
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  line-height: 1;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-  transition: background 0.15s ease, transform 0.1s ease;
-}
-
-.mute-btn:hover {
-  background: rgba(0,0,0,0.8);
-  transform: translateY(-1px);
-}
-
-.mute-btn:active {
-  transform: translateY(0);
-}
-
-.mute-btn[aria-pressed="false"] {
-  background: rgba(15,118,110,0.9); /* matches Artist3 theme */
 }
 
 .hero-media video {
@@ -346,7 +296,35 @@ body{
   border-top: 1px solid rgba(0,0,0,0.08);
 }
 
+/* caption row w/ mute button */
+.hero-caption-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+}
+
+.mute-btn{
+  appearance:none;
+  border: 1px solid rgba(0,0,0,.12);
+  background: rgba(17,24,39,.06);
+  color: rgba(17,24,39,.92);
+  font-weight: 900;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  gap: 8px;
+}
+.mute-btn:hover{ filter: brightness(1.02); }
+.mute-btn:active{ transform: translateY(1px); }
+.mute-btn[aria-pressed="true"]{
+  background: rgba(17,24,39,.10);
+}
+
 @media (max-width: 520px){
   .wavebox{ width: 160px; }
   .preview-btn{ min-width: 102px; }
+  .hero-caption-row{ flex-direction:column; align-items:flex-start; }
 }
