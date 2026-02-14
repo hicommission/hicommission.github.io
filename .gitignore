@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# backups & scripts
+_backups/
+saveauto.sh
+savealltogit.sh
+savetogit.sh
+
+# videos / demos
+*.mov
+VideoOrganizer_Demo.mp4
+
+# old assets
+music-portfolio/assets/Old_previews/
