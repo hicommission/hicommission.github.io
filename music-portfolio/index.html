@@ -1,181 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>CliqueTraxx Music Downloads Site</title>
-    <link rel="stylesheet" href="css/style.css">
-    <title>BlaKats Official Music Downloads | CliqueTraxx</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<meta name="description" content="Download official BlaKats music albums directly from CliqueTraxx. Secure instant MP3 downloads. Independent artist distribution.">
+  <title>BlaKats Official Music Downloads | CliqueTraxx</title>
+  <meta name="description" content="Download official BlaKats music albums directly from CliqueTraxx. Secure instant MP3 downloads. 30-second previews." />
+  <meta name="keywords" content="BlaKats, CliqueTraxx, MP3 downloads, independent music, reggae music, digital album download" />
+  <meta name="author" content="BlaKats" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://hicommission.github.io/music-portfolio/" />
 
-<meta name="keywords" content="BlaKats, CliqueTraxx, MP3 downloads, independent music, reggae music, digital album download">
-
-<meta name="author" content="BlaKats">
-
-<meta name="robots" content="index, follow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="canonical" href="https://hicommission.github.io/music-portfolio/">
-
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-    <div class="container">
-        <h1>BlaKats Music Downloads Site</h1>
-        <div class="tabs">
-            <button class="tab active" data-tab="pop">BlaKats</button>
-            <!--button class="tab" data-tab="rock">1GNM</button>
-            <button class="tab" data-tab="jazz">Alpha Omega</button-->
-        </div>
-        <div class="tab-content" id="tab-pop"></div>
-        <div class="tab-content hidden" id="tab-rock"></div>
-        <div class="tab-content hidden" id="tab-jazz"></div>
+  <div class="container">
+    <h1>BlaKats Music Downloads Site</h1>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="pop">BlaKats</button>
+      <!-- future tabs if you want -->
+      <!-- <button class="tab" data-tab="rock">1GNM</button> -->
     </div>
 
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
+    <!-- JS injects the rows into these -->
+    <div class="tab-content" id="tab-pop"></div>
+    <div class="tab-content hidden" id="tab-rock"></div>
+    <div class="tab-content hidden" id="tab-jazz"></div>
   </div>
-</div>
 
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-<div class="preview-wrap">
-  <button class="preview-btn"
-          data-audio="assets/previews/${track.sku}_preview.mp3"
-          type="button">
-    ▶ Preview
-  </button>
-
-  <div class="wavebox" aria-hidden="true">
-    ${Array.from({length:24}).map((_,i)=>`<span class="bar" data-i="${i}"></span>`).join("")}
-  </div>
-</div>
-
-    <script src="js/app.js"></script>
-    
+  <script src="js/app.js"></script>
 </body>
 </html>

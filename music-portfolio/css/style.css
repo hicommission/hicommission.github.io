@@ -1,140 +1,226 @@
+/* ===== Base ===== */
 body {
-    font-family: Arial, sans-serif;
-    background: #f6f6f6;
-    margin: 0;
-    padding: 0;
+  margin: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #f2f2f2;
+  color: #111;
 }
+
 .container {
-    max-width: 800px;
-    margin: 40px auto;
-    background: #fff;
-    padding: 24px;
-    border-radius: 8px;
-    box-shadow: 0 0 12px rgba(0,0,0,0.07);
+  max-width: 980px;
+  margin: 28px auto;
+  background: #fff;
+  padding: 28px;
+  border-radius: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
+
+h1 {
+  margin: 0 0 18px 0;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+/* Tabs */
 .tabs {
-    display: flex;
-    margin-bottom: 16px;
+  margin: 10px 0 18px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #3f51b5;
 }
+
 .tab {
-    flex: 1;
-    padding: 12px;
-    cursor: pointer;
-    background: #ececec;
-    border: none;
-    outline: none;
-    font-size: 1rem;
-    transition: background 0.2s;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  padding: 12px 16px;
+  font-weight: 700;
+  cursor: pointer;
 }
+
 .tab.active {
-    background: #3f51b5;
-    color: #fff;
-}
-.tab-content {
-    display: block;
-}
-.tab-content.hidden {
-    display: none;
-}
-.music-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 18px;
-    padding: 12px;
-    border-bottom: 1px solid #e0e0e0;
-}
-.music-item img {
-    width: 60px;
-    height: 60px;
-    margin-right: 18px;
-    border-radius: 4px;
-    object-fit: cover;
-}
-.music-details {
-    flex: 1;
-}
-.music-title {
-    font-weight: bold;
+  background: rgba(255,255,255,0.18);
 }
 
-/* ===========================
-   Preview Waveform Placeholder
-   =========================== */
+.tab-content.hidden { display: none; }
 
-.preview-wrap{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  min-width:260px;
+/* ===== Track list ===== */
+.track-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.preview-btn{
-  padding:10px 14px;
-  border-radius:8px;
-  border:0;
-  background:#3d3d3d;
-  color:#fff;
-  font-weight:700;
-  cursor:pointer;
-  white-space:nowrap;
-}
-.preview-btn:hover{ background:#262626; }
-.preview-btn:active{ transform:translateY(1px); }
-
-.wavebox{
-  position:relative;
-  height:42px;
-  width:280px;
-  border-radius:10px;
-  background:linear-gradient(180deg,#f6f6f6,#efefef);
-  border:1px solid rgba(0,0,0,0.08);
-  overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,0.10);
+.track-row {
+  display: grid;
+  grid-template-columns: 1fr 260px 190px;
+  align-items: center;
+  gap: 18px;
+  padding: 14px 10px;
+  border-bottom: 1px solid #e8e8e8;
 }
 
-/* 24 bars */
-.wavebox .bar{
-  position:absolute;
-  bottom:8px;
-  width:6px;
-  border-radius:6px;
-  background:linear-gradient(180deg,#5a5a5a,#2d2d2d);
-  opacity:0.55;
-  transform-origin:bottom;
-  transform:scaleY(0.25);
+@media (max-width: 920px) {
+  .track-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .track-right { justify-self: start; }
 }
 
-/* When playing: bars animate */
-.wavebox.playing .bar{
-  opacity:0.95;
-  animation: wavePulse 900ms ease-in-out infinite;
+/* Left */
+.track-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
 }
 
-/* Optional subtle glow when playing */
-.wavebox.playing::after{
-  content:"";
-  position:absolute;
-  inset:-40%;
-  background:radial-gradient(circle at 50% 50%, rgba(76,175,80,0.18), transparent 60%);
-  animation: glow 1200ms ease-in-out infinite;
+.track-cover {
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: #ddd;
+  flex: 0 0 auto;
 }
 
-@keyframes wavePulse{
-  0%   { transform:scaleY(0.18); }
-  50%  { transform:scaleY(1.00); }
-  100% { transform:scaleY(0.22); }
+.track-meta { min-width: 0; }
+
+.track-title {
+  font-weight: 900;
+  font-size: 16px;
+  line-height: 1.2;
 }
 
-@keyframes glow{
-  0%,100%{ opacity:0.35; transform:scale(0.98); }
-  50%    { opacity:0.75; transform:scale(1.02); }
+.track-artist {
+  font-weight: 700;
+  margin-top: 2px;
 }
 
-.download-btn {
-    background: #4caf50;
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
+.track-price {
+  font-size: 13px;
+  opacity: 0.85;
+  margin-top: 2px;
+}
+
+/* Right buy button */
+.track-right {
+  justify-self: end;
+}
+
+.buy-btn {
+  background: #58a85b;
+  color: #fff;
+  border: 0;
+  padding: 12px 18px;
+  border-radius: 5px;
+  font-weight: 800;
+  cursor: pointer;
+  min-width: 160px;
+}
+
+.buy-btn:hover { filter: brightness(0.98); }
+.buy-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+/* ===== Preview UI ===== */
+.track-preview {
+  justify-self: center;
+}
+
+.preview-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 10px;
+  row-gap: 6px;
+  align-items: center;
+  width: 260px;
+}
+
+.preview-btn {
+  grid-column: 1 / 2;
+  grid-row: 1 / 2;
+
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  padding: 8px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.preview-btn:hover { background: #f7f7f7; }
+
+/* Placeholder pulsing waveform */
+.wavebox {
+  grid-column: 2 / 3;
+  grid-row: 1 / 2;
+
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  background: linear-gradient(180deg, #fafafa, #f1f1f1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px;
+  overflow: hidden;
+}
+
+.wavebox .bar {
+  width: 4px;
+  height: 10px;
+  border-radius: 2px;
+  background: #3f51b5;
+  opacity: 0.35;
+  transform-origin: bottom;
+}
+
+/* Only animate while playing */
+.track-row.is-playing .wavebox .bar {
+  opacity: 0.9;
+  animation: wavePulse 650ms ease-in-out infinite;
+  animation-delay: calc(var(--i) * 20ms);
+}
+
+/* Create stagger without JS by using nth-child */
+.wavebox .bar:nth-child(1)  { --i: 1; }
+.wavebox .bar:nth-child(2)  { --i: 2; }
+.wavebox .bar:nth-child(3)  { --i: 3; }
+.wavebox .bar:nth-child(4)  { --i: 4; }
+.wavebox .bar:nth-child(5)  { --i: 5; }
+.wavebox .bar:nth-child(6)  { --i: 6; }
+.wavebox .bar:nth-child(7)  { --i: 7; }
+.wavebox .bar:nth-child(8)  { --i: 8; }
+.wavebox .bar:nth-child(9)  { --i: 9; }
+.wavebox .bar:nth-child(10) { --i: 10; }
+.wavebox .bar:nth-child(11) { --i: 11; }
+.wavebox .bar:nth-child(12) { --i: 12; }
+.wavebox .bar:nth-child(13) { --i: 13; }
+.wavebox .bar:nth-child(14) { --i: 14; }
+.wavebox .bar:nth-child(15) { --i: 15; }
+.wavebox .bar:nth-child(16) { --i: 16; }
+.wavebox .bar:nth-child(17) { --i: 17; }
+.wavebox .bar:nth-child(18) { --i: 18; }
+.wavebox .bar:nth-child(19) { --i: 19; }
+.wavebox .bar:nth-child(20) { --i: 20; }
+.wavebox .bar:nth-child(21) { --i: 21; }
+.wavebox .bar:nth-child(22) { --i: 22; }
+.wavebox .bar:nth-child(23) { --i: 23; }
+.wavebox .bar:nth-child(24) { --i: 24; }
+
+@keyframes wavePulse {
+  0%   { transform: scaleY(0.35); }
+  50%  { transform: scaleY(1.35); }
+  100% { transform: scaleY(0.45); }
+}
+
+.preview-time {
+  grid-column: 2 / 3;
+  grid-row: 2 / 3;
+  font-size: 12px;
+  opacity: 0.7;
 }
