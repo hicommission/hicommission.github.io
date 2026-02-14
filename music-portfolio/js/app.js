@@ -1,301 +1,384 @@
-(() => {
-  // ============================
-  // CONFIG
-  // ============================
-  const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-  const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+/* ============================================================
+   music-portfolio/js/app.js
+   Tabbed multi-artist catalog with:
+   - Clickable thumbnails (play/pause preview)
+   - 30s preview w/ placeholder waveform + timer
+   - Buy button -> POST create -> redirect to PayPal
+   ============================================================ */
 
-  // 30s preview behavior
-  const PREVIEW_MAX_SECONDS = 30;
+/** =========================
+ *  CONFIG
+ *  ========================= */
+const CLOUDFLARE_BASE = "https://cliquetraxx.com";
+const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
 
-  // Your 12 tracks (EDIT TITLES if needed)
-  const TRACKS = [
-    { sku: "blakats_cd_01", title: "01. Can't Take It Back (Remix)", artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_02", title: "02. Don't Feed The Animals",     artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_03", title: "03. Wild Cherry",                artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_04", title: "04. Memories",                   artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_05", title: "05. Tonite",                     artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_06", title: "06. Ask Me Nicely",              artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_07", title: "07. Pure Heart",                 artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_08", title: "08. Perfect Time For Love",      artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_09", title: "09. Hold Me Close",              artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_10", title: "10. (Track 10)",                 artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_11", title: "11. (Track 11)",                 artist: "BlaKats", amount: "0.10" },
-    { sku: "blakats_cd_12", title: "12. (Track 12)",                 artist: "BlaKats", amount: "0.10" },
-  ];
+// Preview length (seconds)
+const PREVIEW_SECONDS = 30;
 
-  // Preview mp3 location
-  function previewUrlForSku(sku) {
-    return `assets/previews/${sku}_preview.mp3`;
+// Where previews live (GitHub Pages)
+const PREVIEW_BASE = "assets/previews";
+
+/** =========================
+ *  CATALOG (EDIT THIS)
+ *  Each tab has:
+ *    id, label, themeClass, tracks[]
+ *  Each track:
+ *    sku (must match your payment/download backend),
+ *    title, artist, amount, thumb, previewFile
+ *  ========================= */
+const CATALOG = [
+  {
+    id: "blakats",
+    label: "BlaKats",
+    themeClass: "theme-blakats",
+    tracks: [
+      { sku: "blakats_cd_01", title: "01. Can't Take It Back (Remix)", artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_01_preview.mp3" },
+      { sku: "blakats_cd_02", title: "02. Don't Feed The Animals",      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_02_preview.mp3" },
+      { sku: "blakats_cd_03", title: "03. Wild Cherry",                 artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
+      { sku: "blakats_cd_04", title: "04. Memories",                    artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
+      { sku: "blakats_cd_05", title: "05. Tonite",                      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_05_preview.mp3" },
+      { sku: "blakats_cd_06", title: "06. Ask Me Nicely",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_06_preview.mp3" },
+      { sku: "blakats_cd_07", title: "07. Pure Heart",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_07_preview.mp3" },
+      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",        artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
+      { sku: "blakats_cd_09", title: "09. Hold Me Close",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_09_preview.mp3" },
+      { sku: "blakats_cd_10", title: "10. (Track 10)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_10_preview.mp3" },
+      { sku: "blakats_cd_11", title: "11. (Track 11)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_11_preview.mp3" },
+      { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
+    ],
+  },
+
+  {
+    id: "artist2",
+    label: "Artist2",
+    themeClass: "theme-artist2",
+    tracks: [
+      // Replace these with your real Artist2 tracks:
+      { sku: "artist2_track_01", title: "01. Sample Track One", artist: "Artist2", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_01_preview.mp3" },
+      { sku: "artist2_track_02", title: "02. Sample Track Two", artist: "Artist2", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
+    ],
+  },
+
+  {
+    id: "artist3",
+    label: "Artist3",
+    themeClass: "theme-artist3",
+    tracks: [
+      // Replace these with your real Artist3 tracks:
+      { sku: "artist3_track_01", title: "01. Sample Track One", artist: "Artist3", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
+      { sku: "artist3_track_02", title: "02. Sample Track Two", artist: "Artist3", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
+    ],
+  },
+];
+
+/** =========================
+ *  STATE
+ *  ========================= */
+let activeTabId = CATALOG[0]?.id || "blakats";
+let audio = null;
+let audioTimer = null;
+let activePreviewBtn = null;
+let activeWavebox = null;
+let activeTimeEl = null;
+
+/** =========================
+ *  HELPERS
+ *  ========================= */
+function $(sel, root = document){ return root.querySelector(sel); }
+function $all(sel, root = document){ return Array.from(root.querySelectorAll(sel)); }
+
+function fmtTime(seconds){
+  const s = Math.max(0, Math.floor(seconds));
+  const mm = Math.floor(s / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
+function stopPreview(){
+  if (audio){
+    try { audio.pause(); } catch {}
+    audio = null;
   }
-
-  // Optional: cover image (if you have one per track, swap this function)
-  function coverForSku(_sku) {
-    // If you have a single cover thumbnail, point it here. Otherwise use your current one.
-    // Keeping a safe default path that already exists in your repo is best.
-    return "assets/pop-cover.jpg"; // change if you want
+  if (audioTimer){
+    clearInterval(audioTimer);
+    audioTimer = null;
   }
-
-  // ============================
-  // PAYPAL CREATE
-  // ============================
-  async function createPayPalLink(product) {
-    const res = await fetch(CREATE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(product),
-    });
-
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
-    }
-
-    const data = await res.json();
-    if (!data || !data.url) throw new Error("create failed: missing url");
-    return data.url;
+  if (activePreviewBtn){
+    activePreviewBtn.textContent = "▶ Preview";
+    activePreviewBtn.removeAttribute("aria-pressed");
   }
-
-  // ============================
-  // RENDER
-  // ============================
-  const tabPop = document.getElementById("tab-pop");
-
-  function render() {
-    if (!tabPop) return;
-
-    tabPop.innerHTML = `
-      <div class="track-list">
-        ${TRACKS.map((t) => trackRowHTML(t)).join("")}
-      </div>
-    `;
+  if (activeWavebox){
+    activeWavebox.classList.remove("playing");
+    activeWavebox.classList.add("idle");
   }
-
-  function trackRowHTML(track) {
-    const bars = Array.from({ length: 24 })
-      .map((_, i) => `<span class="bar" data-i="${i}"></span>`)
-      .join("");
-
-    return `
-      <div class="track-row" data-sku="${track.sku}">
-        <div class="track-left">
-          <img class="track-cover" src="${coverForSku(track.sku)}" alt="cover"/>
-          <div class="track-meta">
-            <div class="track-title">${escapeHtml(track.title)}</div>
-            <div class="track-artist">${escapeHtml(track.artist)}</div>
-            <div class="track-price">$${escapeHtml(track.amount)}</div>
-          </div>
-        </div>
-
-        <div class="track-preview">
-          <div class="preview-wrap">
-            <button class="preview-btn"
-              type="button"
-              data-audio="${previewUrlForSku(track.sku)}"
-              aria-label="Preview ${escapeHtml(track.title)}">
-              ▶ Preview
-            </button>
-
-            <div class="wavebox" aria-hidden="true">
-              ${bars}
-            </div>
-
-            <div class="preview-time" aria-hidden="true">0:00 / 0:30</div>
-          </div>
-        </div>
-
-        <div class="track-right">
-          <button class="buy-btn" type="button" data-sku="${track.sku}">
-            Buy &amp; Download
-          </button>
-        </div>
-      </div>
-    `;
+  if (activeTimeEl){
+    activeTimeEl.textContent = `0:00 / ${fmtTime(PREVIEW_SECONDS)}`;
   }
+  activePreviewBtn = null;
+  activeWavebox = null;
+  activeTimeEl = null;
+}
 
-  function escapeHtml(s) {
-    return String(s)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+function ensureWaveBars(wavebox){
+  // render 24 bars once (no template literals in HTML)
+  if (wavebox.dataset.ready === "1") return;
+  wavebox.innerHTML = "";
+  for (let i = 0; i < 24; i++){
+    const bar = document.createElement("span");
+    bar.className = "bar";
+    bar.style.setProperty("--i", String(i));
+    wavebox.appendChild(bar);
   }
+  wavebox.dataset.ready = "1";
+  wavebox.classList.add("idle");
+}
 
-  // ============================
-  // PREVIEW PLAYER (single shared audio)
-  // ============================
-  const audio = new Audio();
-  audio.preload = "metadata";
-
-  let activeRow = null;          // .track-row element
-  let tickTimer = null;          // interval for updating UI
-  let stopTimer = null;          // timeout to stop at 30s
-
-  function stopPreview() {
-    clearInterval(tickTimer);
-    tickTimer = null;
-    clearTimeout(stopTimer);
-    stopTimer = null;
-
-    audio.pause();
-    audio.currentTime = 0;
-
-    if (activeRow) {
-      setRowPlaying(activeRow, false);
-      setRowTime(activeRow, 0);
-    }
-    activeRow = null;
-  }
-
-  function setRowPlaying(rowEl, playing) {
-    const btn = rowEl.querySelector(".preview-btn");
-    const wave = rowEl.querySelector(".wavebox");
-    if (!btn || !wave) return;
-
-    btn.textContent = playing ? "⏸ Pause" : "▶ Preview";
-    rowEl.classList.toggle("is-playing", playing);
-    wave.classList.toggle("is-active", playing);
-  }
-
-  function setRowTime(rowEl, seconds) {
-    const timeEl = rowEl.querySelector(".preview-time");
-    if (!timeEl) return;
-    const clamped = Math.max(0, Math.min(PREVIEW_MAX_SECONDS, seconds));
-    timeEl.textContent = `${fmtTime(clamped)} / 0:30`;
-  }
-
-  function fmtTime(s) {
-    const m = Math.floor(s / 60);
-    const r = Math.floor(s % 60);
-    return `${m}:${String(r).padStart(2, "0")}`;
-  }
-
-  function startUIUpdater(rowEl) {
-    clearInterval(tickTimer);
-    tickTimer = setInterval(() => {
-      if (!activeRow) return;
-      setRowTime(activeRow, audio.currentTime || 0);
-    }, 200);
-  }
-
-  function armAutoStop() {
-    clearTimeout(stopTimer);
-    // Stop exactly at PREVIEW_MAX_SECONDS relative to now
-    const remaining = Math.max(0, (PREVIEW_MAX_SECONDS - (audio.currentTime || 0)) * 1000);
-    stopTimer = setTimeout(() => stopPreview(), remaining);
-  }
-
-  async function togglePreview(rowEl, audioUrl) {
-    // If clicking same row and currently playing -> pause
-    if (activeRow === rowEl && !audio.paused) {
-      audio.pause();
-      setRowPlaying(rowEl, false);
-      clearInterval(tickTimer);
-      tickTimer = null;
-      clearTimeout(stopTimer);
-      stopTimer = null;
-      return;
-    }
-
-    // If clicking same row but paused -> resume
-    if (activeRow === rowEl && audio.paused) {
-      await audio.play().catch(() => {});
-      setRowPlaying(rowEl, true);
-      startUIUpdater(rowEl);
-      armAutoStop();
-      return;
-    }
-
-    // Switching rows -> stop prior, start new
-    stopPreview();
-    activeRow = rowEl;
-
-    audio.src = audioUrl;
-    audio.currentTime = 0;
-
-    // Update UI immediately
-    setRowTime(rowEl, 0);
-    setRowPlaying(rowEl, true);
-
-    // Play
-    await audio.play().catch((e) => {
-      console.error("Preview play failed:", e);
-      setRowPlaying(rowEl, false);
-      activeRow = null;
-    });
-
-    if (activeRow) {
-      startUIUpdater(rowEl);
-      armAutoStop();
-    }
-  }
-
-  audio.addEventListener("ended", () => {
-    stopPreview();
+async function createPayPalLink(product){
+  const res = await fetch(CREATE_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(product),
   });
 
-  // ============================
-  // EVENTS
-  // ============================
-  document.addEventListener("click", async (e) => {
-    const previewBtn = e.target.closest(".preview-btn");
-    if (previewBtn) {
-      const row = previewBtn.closest(".track-row");
-      const url = previewBtn.getAttribute("data-audio");
-      if (row && url) {
-        await togglePreview(row, url);
-      }
-      return;
-    }
+  if (!res.ok){
+    const t = await res.text().catch(() => "");
+    throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
+  }
 
-    const buyBtn = e.target.closest(".buy-btn");
-    if (buyBtn) {
-      const sku = buyBtn.getAttribute("data-sku");
-      const track = TRACKS.find((t) => t.sku === sku);
-      if (!track) return;
+  const data = await res.json();
+  if (!data || !data.url) throw new Error("create failed: missing url");
+  return data.url;
+}
 
-      // Prevent preview audio continuing during checkout
+/** =========================
+ *  RENDER
+ *  ========================= */
+function renderTabs(){
+  const tabsEl = $(".tabs");
+  tabsEl.innerHTML = "";
+
+  CATALOG.forEach((tab) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tab";
+    btn.textContent = tab.label;
+    btn.setAttribute("role", "tab");
+    btn.setAttribute("aria-selected", tab.id === activeTabId ? "true" : "false");
+    btn.dataset.tab = tab.id;
+
+    btn.addEventListener("click", () => {
+      if (activeTabId === tab.id) return;
       stopPreview();
+      activeTabId = tab.id;
+      renderAll();
+    });
 
-      buyBtn.disabled = true;
-      buyBtn.textContent = "Loading…";
+    tabsEl.appendChild(btn);
+  });
+}
 
-      try {
-        const paypalUrl = await createPayPalLink({
-          sku: track.sku,
-          title: track.title,
-          amount: track.amount,
-        });
-        window.location.href = paypalUrl;
-      } catch (err) {
-        console.error(err);
-        buyBtn.disabled = false;
-        buyBtn.textContent = "Buy & Download";
-        alert("Payment link failed to generate. Please try again.");
-      }
+function renderPanels(){
+  const panelsEl = $(".tab-panels");
+  panelsEl.innerHTML = "";
+
+  CATALOG.forEach((tab) => {
+    const panel = document.createElement("section");
+    panel.className = `panel ${tab.themeClass} ${tab.id === activeTabId ? "active" : ""}`;
+    panel.dataset.panel = tab.id;
+
+    // Header bar inside panel
+    const header = document.createElement("div");
+    header.className = "panel-header";
+    header.textContent = tab.label;
+    panel.appendChild(header);
+
+    // Rows
+    tab.tracks.forEach((track) => {
+      panel.appendChild(renderTrackRow(track, tab));
+    });
+
+    panelsEl.appendChild(panel);
+  });
+
+  // after render, prep wavebars
+  $all(".wavebox").forEach(ensureWaveBars);
+}
+
+function renderTrackRow(track, tab){
+  const row = document.createElement("div");
+  row.className = "track";
+
+  // thumbnail (click toggles preview)
+  const thumb = document.createElement("div");
+  thumb.className = "thumb";
+  thumb.title = "Click to preview";
+  const img = document.createElement("img");
+  img.src = track.thumb;
+  img.alt = `${track.title} cover`;
+  thumb.appendChild(img);
+
+  // meta
+  const meta = document.createElement("div");
+  meta.className = "meta";
+  meta.innerHTML = `
+    <p class="name">${escapeHtml(track.title)}</p>
+    <p class="artist">${escapeHtml(track.artist)}</p>
+    <p class="price">$${escapeHtml(track.amount)}</p>
+  `;
+
+  // preview cluster
+  const preview = document.createElement("div");
+  preview.className = "preview";
+
+  const previewBtn = document.createElement("button");
+  previewBtn.type = "button";
+  previewBtn.className = "preview-btn";
+  previewBtn.textContent = "▶ Preview";
+
+  const previewBoxWrap = document.createElement("div");
+  previewBoxWrap.className = "preview-boxwrap";
+
+  const wavebox = document.createElement("div");
+  wavebox.className = "wavebox";
+  wavebox.setAttribute("aria-hidden", "true");
+
+  const timeEl = document.createElement("div");
+  timeEl.className = "time";
+  timeEl.textContent = `0:00 / ${fmtTime(PREVIEW_SECONDS)}`;
+
+  previewBoxWrap.appendChild(wavebox);
+  previewBoxWrap.appendChild(timeEl);
+
+  preview.appendChild(previewBtn);
+  preview.appendChild(previewBoxWrap);
+
+  // buy button
+  const buy = document.createElement("div");
+  buy.className = "buy";
+
+  const buyBtn = document.createElement("button");
+  buyBtn.type = "button";
+  buyBtn.className = "buy-btn";
+  buyBtn.textContent = "Buy & Download";
+
+  buyBtn.addEventListener("click", async () => {
+    buyBtn.disabled = true;
+    const old = buyBtn.textContent;
+    buyBtn.textContent = "Loading…";
+
+    try {
+      const product = {
+        sku: track.sku,
+        title: `${track.artist} — ${track.title}`,
+        amount: track.amount,
+      };
+      const paypalUrl = await createPayPalLink(product);
+      window.location.href = paypalUrl;
+    } catch (err) {
+      console.error(err);
+      alert("Could not generate payment link. Please try again.");
+      buyBtn.disabled = false;
+      buyBtn.textContent = old;
     }
   });
 
-  // Tabs (kept simple)
-  document.addEventListener("click", (e) => {
-    const tab = e.target.closest(".tab");
-    if (!tab) return;
+  buy.appendChild(buyBtn);
 
-    // stop audio if switching
+  // preview handlers (button + thumb)
+  const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
+
+  async function togglePreview(){
+    // if this row is currently active, stop it
+    if (activePreviewBtn === previewBtn){
+      stopPreview();
+      return;
+    }
+
+    // stop any other preview
     stopPreview();
 
-    document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
-    tab.classList.add("active");
+    // start this one
+    ensureWaveBars(wavebox);
+    wavebox.classList.remove("idle");
+    wavebox.classList.add("playing");
 
-    const name = tab.getAttribute("data-tab");
-    document.querySelectorAll(".tab-content").forEach((c) => c.classList.add("hidden"));
-    const panel = document.getElementById(`tab-${name}`);
-    if (panel) panel.classList.remove("hidden");
+    previewBtn.textContent = "⏸ Pause";
+    previewBtn.setAttribute("aria-pressed", "true");
+
+    activePreviewBtn = previewBtn;
+    activeWavebox = wavebox;
+    activeTimeEl = timeEl;
+
+    audio = new Audio(audioUrl);
+    audio.preload = "auto";
+
+    let startedAt = 0;
+
+    audio.addEventListener("ended", () => {
+      stopPreview();
+    });
+
+    audio.addEventListener("error", () => {
+      stopPreview();
+      alert(`Preview failed to load:\n${audioUrl}`);
+    });
+
+    try{
+      await audio.play();
+      startedAt = performance.now();
+
+      audioTimer = setInterval(() => {
+        if (!audio) return;
+
+        const elapsed = (performance.now() - startedAt) / 1000;
+        const shown = Math.min(PREVIEW_SECONDS, elapsed);
+
+        timeEl.textContent = `${fmtTime(shown)} / ${fmtTime(PREVIEW_SECONDS)}`;
+
+        if (elapsed >= PREVIEW_SECONDS){
+          stopPreview();
+        }
+      }, 120);
+    } catch (e){
+      stopPreview();
+      console.error(e);
+      alert("Browser blocked autoplay. Click Preview again.");
+    }
+  }
+
+  previewBtn.addEventListener("click", togglePreview);
+  thumb.addEventListener("click", togglePreview);
+
+  // assemble
+  row.appendChild(thumb);
+  row.appendChild(meta);
+  row.appendChild(preview);
+  row.appendChild(buy);
+
+  return row;
+}
+
+function renderAll(){
+  renderTabs();
+  renderPanels();
+
+  // set tab aria-selected after render
+  $all(".tab").forEach((btn) => {
+    btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
+}
 
-  // ============================
-  // INIT
-  // ============================
-  render();
-})();
+function escapeHtml(str){
+  return String(str)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/** =========================
+ *  INIT
+ *  ========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  renderAll();
+});
