@@ -233,18 +233,18 @@ p {
   }  
   
   /* Center the entire red-box section (section-cant-2) inside the same 2/4 grid columns */
-#section-cant-2 .cant2-wrap {
+/* #section-cant-2 .cant2-wrap {
   width: 100%;
-}
+} */
 
 /* Layout inside the centered area */
-#section-cant-2 .cant2-wrap {
+/* #section-cant-2 .cant2-wrap {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
   padding: 2em 0;
-}
+} */
 
 /* Keep the left text from pushing everything weird */
 /* #section-cant-2 .cant2-left {
