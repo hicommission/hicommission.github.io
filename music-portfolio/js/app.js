@@ -1,11 +1,10 @@
 /* ============================================================
    music-portfolio/js/app.js
    Tabbed multi-artist catalog with:
-   - Tabs rendered in JS (no missing functions)
    - Clickable thumbnails (toggle preview)
-   - 30s preview w/ waveform + timer
-   - Buy -> POST /api/paypal/create -> redirect to PayPal (same tab)
-   - Artist3: hero video loops 13s segment ABOVE the tracks
+   - 30s preview w/ placeholder waveform + timer
+   - Buy button -> POST create -> redirect to PayPal
+   - Artist3 hero video (13s loop segment)
    ============================================================ */
 
 /** =========================
@@ -14,23 +13,11 @@
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
 
-// Preview length (seconds)
 const PREVIEW_SECONDS = 30;
-
-// Where previews live (GitHub Pages)
-const PREVIEW_BASE = "assets/previews";
-
-// Artist3 hero video (MP4 recommended on GitHub Pages)
-const ARTIST3_HERO = {
-  src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
-  start: 0,
-  duration: 13,
-  poster: "assets/pop-cover.jpg",
-  caption: "Artist3 — Paint The Town Red (13s loop)",
-};
+const PREVIEW_BASE = "assets/previews"; // relative to /music-portfolio/
 
 /** =========================
- *  CATALOG
+ *  CATALOG (EDIT THIS)
  *  ========================= */
 const CATALOG = [
   {
@@ -52,7 +39,6 @@ const CATALOG = [
       { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
     ],
   },
-
   {
     id: "artist2",
     label: "Artist2",
@@ -62,7 +48,6 @@ const CATALOG = [
       { sku: "artist2_track_02", title: "02. Sample Track Two", artist: "Artist2", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
   },
-
   {
     id: "artist3",
     label: "Artist3",
@@ -74,11 +59,21 @@ const CATALOG = [
   },
 ];
 
+// Artist3 hero video config (use the loop mp4 you generated)
+const ARTIST3_HERO = {
+  src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
+  start: 0,
+  duration: 13,
+  poster: "assets/pop-cover.jpg",
+  caption: "Artist3 — Paint The Town Red (13s loop)",
+};
+
 /** =========================
  *  STATE
  *  ========================= */
 let activeTabId = CATALOG[0]?.id || "blakats";
 
+// preview state (only one preview at a time)
 let audio = null;
 let audioTimer = null;
 let activePreviewBtn = null;
@@ -88,15 +83,8 @@ let activeTimeEl = null;
 /** =========================
  *  DOM HELPERS
  *  ========================= */
-function $(sel, root = document){ return root.querySelector(sel); }
-function $all(sel, root = document){ return Array.from(root.querySelectorAll(sel)); }
-
-function fmtTime(seconds){
-  const s = Math.max(0, Math.floor(seconds));
-  const mm = Math.floor(s / 60);
-  const ss = String(s % 60).padStart(2, "0");
-  return `${mm}:${ss}`;
-}
+function $(sel, root = document) { return root.querySelector(sel); }
+function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
 function escapeHtml(str){
   return String(str)
@@ -107,8 +95,15 @@ function escapeHtml(str){
     .replaceAll("'","&#039;");
 }
 
+function fmtTime(seconds){
+  const s = Math.max(0, Math.floor(seconds));
+  const mm = Math.floor(s / 60);
+  const ss = String(s % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
+
 /** =========================
- *  AUDIO PREVIEW
+ *  PREVIEW CONTROL
  *  ========================= */
 function stopPreview(){
   if (audio){
@@ -122,7 +117,6 @@ function stopPreview(){
   if (activePreviewBtn){
     activePreviewBtn.textContent = "▶ Preview";
     activePreviewBtn.removeAttribute("aria-pressed");
-    activePreviewBtn.disabled = false;
   }
   if (activeWavebox){
     activeWavebox.classList.remove("playing");
@@ -137,7 +131,7 @@ function stopPreview(){
 }
 
 function ensureWaveBars(wavebox){
-  if (!wavebox || wavebox.dataset.ready === "1") return;
+  if (wavebox.dataset.ready === "1") return;
   wavebox.innerHTML = "";
   for (let i = 0; i < 24; i++){
     const bar = document.createElement("span");
@@ -150,7 +144,7 @@ function ensureWaveBars(wavebox){
 }
 
 /** =========================
- *  PAYPAL CREATE
+ *  PAYPAL
  *  ========================= */
 async function createPayPalLink(product){
   const res = await fetch(CREATE_URL, {
@@ -170,57 +164,6 @@ async function createPayPalLink(product){
 }
 
 /** =========================
- *  HERO VIDEO (Artist3)
- *  loops segment [start, start+duration)
- *  ========================= */
-function mountLoopingHeroVideo(containerEl, opts){
-  if (!containerEl) return;
-
-  const { src, start = 0, duration = 13, poster = "", caption = "" } = opts;
-  const end = start + duration;
-
-  containerEl.innerHTML = `
-    <div class="hero-media">
-      <video
-        class="artist-video"
-        autoplay
-        muted
-        playsinline
-        preload="metadata"
-        ${poster ? `poster="${poster}"` : ""}
-      >
-        <source src="${src}" type="video/mp4">
-      </video>
-      <div class="hero-caption">${escapeHtml(caption)}</div>
-    </div>
-  `;
-
-  const video = containerEl.querySelector("video");
-  if (!video) return;
-
-  const safePlay = () => {
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  };
-
-  video.addEventListener("loadedmetadata", () => {
-    try { video.currentTime = start; } catch {}
-    safePlay();
-  });
-
-  video.addEventListener("timeupdate", () => {
-    if (!isFinite(video.currentTime)) return;
-    if (video.currentTime >= end){
-      try { video.currentTime = start; } catch {}
-      safePlay();
-    }
-  });
-
-  // If autoplay blocked, click starts it
-  containerEl.addEventListener("click", safePlay);
-}
-
-/** =========================
  *  RENDER: TABS
  *  ========================= */
 function renderTabs(){
@@ -231,17 +174,19 @@ function renderTabs(){
 
   CATALOG.forEach((tab) => {
     const btn = document.createElement("button");
+    btn.className = "tab";
     btn.type = "button";
-    btn.className = `tab ${tab.themeClass}`;
-    btn.textContent = tab.label;
     btn.dataset.tab = tab.id;
+    btn.textContent = tab.label;
+
+    btn.setAttribute("role", "tab");
     btn.setAttribute("aria-selected", tab.id === activeTabId ? "true" : "false");
 
     btn.addEventListener("click", () => {
       if (activeTabId === tab.id) return;
-      stopPreview();               // stop preview when switching tabs
+      stopPreview();           // stop any playing preview when switching tabs
       activeTabId = tab.id;
-      renderAll();                 // re-render
+      renderAll();
     });
 
     tabsEl.appendChild(btn);
@@ -249,7 +194,7 @@ function renderTabs(){
 }
 
 /** =========================
- *  RENDER: PANELS + TRACKS
+ *  RENDER: PANELS + ROWS
  *  ========================= */
 function renderPanels(){
   const panelsEl = $(".tab-panels");
@@ -262,22 +207,18 @@ function renderPanels(){
     panel.className = `panel ${tab.themeClass} ${tab.id === activeTabId ? "active" : ""}`;
     panel.dataset.panel = tab.id;
 
-    // Header
     const header = document.createElement("div");
     header.className = "panel-header";
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // Artist3 hero video BEFORE tracks
-    if (tab.id === "artist3"){
+    // Artist3: hero video before track rows
+    if (tab.id === "artist3") {
       const heroMount = document.createElement("div");
-      heroMount.id = "artist3Hero";
       panel.appendChild(heroMount);
-
       mountLoopingHeroVideo(heroMount, ARTIST3_HERO);
     }
 
-    // Tracks
     tab.tracks.forEach((track) => {
       panel.appendChild(renderTrackRow(track));
     });
@@ -285,7 +226,7 @@ function renderPanels(){
     panelsEl.appendChild(panel);
   });
 
-  // ensure wave bars exist
+  // ensure wave bars exist after render
   $all(".wavebox").forEach(ensureWaveBars);
 }
 
@@ -293,7 +234,7 @@ function renderTrackRow(track){
   const row = document.createElement("div");
   row.className = "track";
 
-  // thumbnail (click toggles preview)
+  // thumbnail
   const thumb = document.createElement("div");
   thumb.className = "thumb";
   thumb.title = "Click to preview";
@@ -337,7 +278,7 @@ function renderTrackRow(track){
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
-  // buy button
+  // buy
   const buy = document.createElement("div");
   buy.className = "buy";
 
@@ -358,7 +299,7 @@ function renderTrackRow(track){
         amount: track.amount,
       };
       const paypalUrl = await createPayPalLink(product);
-      window.location.href = paypalUrl; // SAME TAB
+      window.location.href = paypalUrl;
     } catch (err) {
       console.error(err);
       alert("Could not generate payment link. Please try again.");
@@ -369,7 +310,7 @@ function renderTrackRow(track){
 
   buy.appendChild(buyBtn);
 
-  // preview handlers (button + thumb)
+  // preview handlers
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
   async function togglePreview(){
@@ -382,6 +323,7 @@ function renderTrackRow(track){
     // stop any other preview
     stopPreview();
 
+    // start this one
     ensureWaveBars(wavebox);
     wavebox.classList.remove("idle");
     wavebox.classList.add("playing");
@@ -423,7 +365,7 @@ function renderTrackRow(track){
     } catch (e){
       stopPreview();
       console.error(e);
-      alert("Click Preview again (browser blocked autoplay).");
+      alert("Browser blocked playback. Click Preview again.");
     }
   }
 
@@ -440,13 +382,73 @@ function renderTrackRow(track){
 }
 
 /** =========================
+ *  HERO VIDEO (13s segment loop)
+ *  ========================= */
+function mountLoopingHeroVideo(containerEl, opts) {
+  const {
+    src,
+    start = 0,
+    duration = 13,
+    poster = "",
+    caption = "Preview",
+  } = opts;
+
+  containerEl.innerHTML = `
+    <div class="hero-media">
+      <video
+        class="hero-video"
+        ${poster ? `poster="${poster}"` : ""}
+        muted
+        autoplay
+        playsinline
+        preload="metadata"
+      >
+        <source src="${src}" type="video/mp4" />
+      </video>
+      <div class="hero-caption">${escapeHtml(caption)}</div>
+    </div>
+  `;
+
+  const video = containerEl.querySelector("video.hero-video");
+  if (!video) return;
+
+  const end = start + duration;
+
+  const seekToStart = () => {
+    try { video.currentTime = start; } catch (_) {}
+  };
+
+  const onTimeUpdate = () => {
+    if (video.currentTime >= end) {
+      video.currentTime = start;
+      const p = video.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    }
+  };
+
+  video.addEventListener("loadedmetadata", () => {
+    seekToStart();
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+
+  video.addEventListener("timeupdate", onTimeUpdate);
+
+  // fallback: if autoplay blocked, click to start
+  containerEl.addEventListener("click", () => {
+    const p = video.play();
+    if (p && typeof p.catch === "function") p.catch(() => {});
+  });
+}
+
+/** =========================
  *  MAIN RENDER
  *  ========================= */
 function renderAll(){
   renderTabs();
   renderPanels();
 
-  // ensure aria-selected is correct after re-render
+  // refresh aria-selected after render
   $all(".tab").forEach((btn) => {
     btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
