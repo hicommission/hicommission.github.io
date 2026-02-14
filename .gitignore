@@ -14,3 +14,6 @@ VideoOrganizer_Demo.mp4
 
 # old assets
 music-portfolio/assets/Old_previews/
+# temp video artifacts
+music-portfolio/assets/_*.mp4
+music-portfolio/assets/noaudio_*.mp4
