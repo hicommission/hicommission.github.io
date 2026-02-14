@@ -247,15 +247,15 @@ p {
 }
 
 /* Keep the left text from pushing everything weird */
-#section-cant-2 .cant2-left {
+/* #section-cant-2 .cant2-left {
   flex: 1 1 auto;
   text-align: left;
-}
+} */
 
 /* Keep the button card from drifting */
-#section-cant-2 .cant2-right {
+/* #section-cant-2 .cant2-right {
   flex: 0 0 auto;
-}
+} */
 
 /* Mobile: stack nicely */
 /* @media (max-width: 699px) {
