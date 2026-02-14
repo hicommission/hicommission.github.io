@@ -258,7 +258,7 @@ p {
 }
 
 /* Mobile: stack nicely */
-@media (max-width: 699px) {
+/* @media (max-width: 699px) {
   #section-cant-2 .cant2-wrap {
     flex-direction: column;
     align-items: flex-start;
@@ -269,7 +269,7 @@ p {
   #section-cant-2 .cant2-right .btn {
     display: inline-block;
   }
-}
+} */
 
   #section-d-d {
     display: flex;
