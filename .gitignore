@@ -1,6 +1,5 @@
 # macOS
 .DS_Store
-**/.DS_Store
 
 # backups & scripts
 _backups/
@@ -8,16 +7,15 @@ saveauto.sh
 savealltogit.sh
 savetogit.sh
 
-# videos / demos
+# raw / source videos (DO NOT COMMIT)
 *.mov
 VideoOrganizer_Demo.mp4
+music-portfolio/assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4
+
+# temp / derived video artifacts
+music-portfolio/assets/_*.mp4
+music-portfolio/assets/noaudio_*.mp4
 
 # old assets
 music-portfolio/assets/Old_previews/
-# temp video artifacts
-music-portfolio/assets/_*.mp4
-music-portfolio/assets/noaudio_*.mp4
-.DS_Store
-*.mp4
-.DS_Store
-music-portfolio/assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4
+music-portfolio/assets/BLAKATS_VIDEO_WEB.mp4
