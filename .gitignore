@@ -17,3 +17,7 @@ music-portfolio/assets/Old_previews/
 # temp video artifacts
 music-portfolio/assets/_*.mp4
 music-portfolio/assets/noaudio_*.mp4
+.DS_Store
+*.mp4
+.DS_Store
+music-portfolio/assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4

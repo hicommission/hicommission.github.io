@@ -4,7 +4,7 @@
    - Clickable thumbnails (play/pause preview)
    - 30s preview w/ placeholder waveform + timer
    - Buy button -> POST create -> redirect to PayPal
-   - Hero video for Tab 3 with 13s loop + mute/unmute button
+   - Hero video for configured tabs with segment loop + mute/unmute button
    - LOGIC FIXES:
      1) If video is playing AND unmuted, starting ANY preview will immediately mute the video.
      2) If a preview is playing AND user unmutes video, the preview audio is immediately muted
@@ -70,14 +70,27 @@ const CATALOG = [
   },
 ];
 
-// Hero video config (Tab 3)
-const HERO_TAB_ID = "boombash";
-const HERO_VIDEO = {
-  src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
-  start: 0,
-  duration: 13,
-  poster: "assets/pop-cover.jpg",
-  caption: "BoomBash — Paint The Town Red (13s loop)",
+/** =========================
+ *  HERO VIDEO CONFIG (MULTI TAB)
+ *  =========================
+ *  BlaKats now gets the SAME hero-video UX as BoomBash.
+ *  Your uploaded file is: assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4
+ */
+const HERO_VIDEOS = {
+  blakats: {
+    src: "assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4",
+    start: 0,
+    duration: 13,
+    poster: "assets/pop-cover.jpg",
+    caption: "BlaKats — Video (13s loop)",
+  },
+  boombash: {
+    src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
+    start: 0,
+    duration: 13,
+    poster: "assets/pop-cover.jpg",
+    caption: "BoomBash — Paint The Town Red (13s loop)",
+  },
 };
 
 /** =========================
@@ -292,15 +305,16 @@ function renderPanels() {
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // Hero video only on HERO_TAB_ID
-    if (tab.id === HERO_TAB_ID) {
+    // Hero video for any tab configured in HERO_VIDEOS
+    const heroCfg = HERO_VIDEOS[tab.id];
+    if (heroCfg) {
       const heroMount = document.createElement("div");
       heroMount.id = "heroMount";
       panel.appendChild(heroMount);
 
       // Mount after in DOM
       queueMicrotask(() => {
-        mountLoopingHeroVideo(heroMount, HERO_VIDEO);
+        mountLoopingHeroVideo(heroMount, heroCfg);
       });
     }
 
