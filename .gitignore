@@ -19,3 +19,11 @@ music-portfolio/assets/noaudio_*.mp4
 # old assets
 music-portfolio/assets/Old_previews/
 music-portfolio/assets/BLAKATS_VIDEO_WEB.mp4
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Large videos (do NOT commit)
+music-portfolio/assets/BLAKATS_VIDEO_WEB.mp4
+music-portfolio/assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4

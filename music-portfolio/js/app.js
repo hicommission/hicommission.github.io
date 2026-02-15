@@ -78,7 +78,7 @@ const CATALOG = [
  */
 const HERO_VIDEOS = {
   blakats: {
-    src: "assets/BLAKATS VIDEO FOR WEBSITE DONE.mp4",
+    src: "assets/BLAKATS_VIDEO_WEB_SMALL.mp4",
     start: 0,
     duration: 13,
     poster: "assets/pop-cover.jpg",
