@@ -124,6 +124,11 @@ body{
   display:block;
 }
 
+/* 1GNM ONLY: shift thumbnail crop upward so the hat/head stays visible */
+.theme-1gnm .thumb img{
+  object-position: center 20%;
+}
+
 .meta{ min-width:0; }
 .meta .name{
   font-weight: 900;
