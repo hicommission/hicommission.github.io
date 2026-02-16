@@ -129,6 +129,17 @@ body{
   object-position: center top;  /* same as center 0% */
 }
 
+/* =========================================================
+   1GNM ONLY — reframe thumbnail so the hat is visible
+   ========================================================= */
+.theme-1gnm .thumb img{
+  object-fit: cover;
+  object-position: center top;
+  transform: scale(1.18) translateY(-6%);
+  transform-origin: top center;
+}
+
+
 .meta{ min-width:0; }
 .meta .name{
   font-weight: 900;
