@@ -124,9 +124,9 @@ body{
   display:block;
 }
 
-/* 1GNM ONLY: shift thumbnail crop upward so the hat/head stays visible */
+/* 1GNM ONLY: force crop to the very top so the hat is visible */
 .theme-1gnm .thumb img{
-  object-position: center 5%;
+  object-position: center top;  /* same as center 0% */
 }
 
 .meta{ min-width:0; }
