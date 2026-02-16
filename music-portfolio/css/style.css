@@ -124,19 +124,16 @@ body{
   display:block;
 }
 
-/* 1GNM ONLY: force crop to the very top so the hat is visible */
-.theme-1gnm .thumb img{
-  object-position: center top;  /* same as center 0% */
-}
-
 /* =========================================================
-   1GNM ONLY — reframe thumbnail so the hat is visible
+   1GNM ONLY — FINAL thumbnail framing (hat fully visible)
    ========================================================= */
 .theme-1gnm .thumb img{
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   object-position: center top;
-  transform: scale(1.18) translateY(-6%);
   transform-origin: top center;
+  transform: scale(1.35) translateY(-22%);
 }
 
 
