@@ -6,13 +6,15 @@
    - Buy button -> POST create -> redirect to PayPal
    - Hero video for BoomBash with 13s loop + mute/unmute button
    - Hero video for BlaKats with mute/unmute button (audio on click)
-   - LOGIC FIXES:
+   - LOGIC:
      BoomBash:
        1) If video is playing AND unmuted, starting ANY preview will immediately mute the video.
-       2) If a preview is playing AND user unmutes BoomBash video, the preview audio is muted until preview completes.
+       2) If a preview is playing AND user unmutes BoomBash video, the preview audio is immediately muted
+          until preview completes; then previews return to default (unmuted) state.
      BlaKats:
-       - Starting ANY preview will immediately mute BlaKats hero video if it is unmuted.
-       - BlaKats mute/unmute does NOT affect preview audio.
+       1) Starting ANY preview will immediately mute BlaKats hero video if it is unmuted.
+       2) If a preview is playing AND user unmutes BlaKats hero video, the preview audio is muted
+          until preview completes; then previews return to default (unmuted) state.
    ============================================================ */
 
 /** =========================
@@ -86,7 +88,7 @@ const HERO_VIDEO = {
   caption: "BoomBash — Paint The Town Red (13s loop)",
 };
 
-// BlaKats hero
+// BlaKats hero (with audio on unmute)
 const BLAKATS_HERO_TAB_ID = "blakats";
 const BLAKATS_HERO_VIDEO = {
   src: "assets/BLAKATS_VIDEO_WEB_SMALL.mp4",
@@ -108,18 +110,21 @@ let activePreviewBtn = null;
 let activeWavebox = null;
 let activeTimeEl = null;
 
-// BoomBash hero state
+// BoomBash hero state (UNCHANGED)
 let heroVideoEl = null;
 let heroMuteBtnEl = null;
 let heroCleanupFn = null;
 
-// BlaKats hero state
+// BlaKats hero state (separate)
 let blakatsHeroVideoEl = null;
 let blakatsHeroMuteBtnEl = null;
 let blakatsHeroCleanupFn = null;
 
-// BoomBash logic fix #2 state
+// BoomBash logic fix #2 flag (UNCHANGED)
 let previewMutedByVideo = false;
+
+// BlaKats: mute-preview-while-video-unmuted flag (NEW, BlaKats only)
+let previewMutedByBlakatsVideo = false;
 
 /** =========================
  *  HELPERS
@@ -148,12 +153,13 @@ function isPreviewPlaying() {
 }
 
 /** =========================
- *  VIDEO MUTING / UI (BoomBash)
+ *  VIDEO MUTING / UI (BoomBash)  <-- UNCHANGED
  *  ========================= */
 function setHeroMuted(muted) {
   if (!heroVideoEl) return;
   heroVideoEl.muted = !!muted;
 
+  // Update button label/state if present
   if (heroMuteBtnEl) {
     heroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
     heroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
@@ -161,15 +167,29 @@ function setHeroMuted(muted) {
   }
 }
 
+/**
+ * LOGIC FIX #1 (BoomBash):
+ * If hero video is playing AND unmuted, starting any preview mutes the video immediately.
+ */
 function maybeMuteVideoBecausePreviewStarted() {
   if (!heroVideoEl) return;
   const videoIsPlaying = !heroVideoEl.paused && !heroVideoEl.ended;
   const videoIsUnmuted = heroVideoEl.muted === false;
-  if (videoIsPlaying && videoIsUnmuted) setHeroMuted(true);
+
+  if (videoIsPlaying && videoIsUnmuted) {
+    setHeroMuted(true);
+  }
 }
 
+/**
+ * LOGIC FIX #2 (BoomBash):
+ * If a preview is playing and user unmutes video, mute preview until preview completes,
+ * then restore previews to default unmuted state.
+ */
 function maybeMutePreviewBecauseVideoUnmuted() {
   if (!isPreviewPlaying()) return;
+
+  // Mute preview audio until it ends
   if (previewAudio) {
     previewAudio.muted = true;
     previewMutedByVideo = true;
@@ -190,12 +210,24 @@ function setBlakatsHeroMuted(muted) {
   }
 }
 
-// NEW: BlaKats requirement — starting any preview must auto-mute BlaKats hero if unmuted.
+// BlaKats: If hero video is playing AND unmuted, starting any preview mutes it immediately.
 function maybeMuteBlakatsVideoBecausePreviewStarted() {
   if (!blakatsHeroVideoEl) return;
   const videoIsPlaying = !blakatsHeroVideoEl.paused && !blakatsHeroVideoEl.ended;
   const videoIsUnmuted = blakatsHeroVideoEl.muted === false;
-  if (videoIsPlaying && videoIsUnmuted) setBlakatsHeroMuted(true);
+
+  if (videoIsPlaying && videoIsUnmuted) {
+    setBlakatsHeroMuted(true);
+  }
+}
+
+// BlaKats: If a preview is playing and user unmutes BlaKats video, mute preview until it completes.
+function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
+  if (!isPreviewPlaying()) return;
+  if (previewAudio) {
+    previewAudio.muted = true;
+    previewMutedByBlakatsVideo = true;
+  }
 }
 
 /** =========================
@@ -215,9 +247,16 @@ function ensureWaveBars(wavebox) {
 }
 
 function stopPreview() {
+  // Restore default unmuted state if we muted preview due to BoomBash (UNCHANGED behavior)
   if (previewAudio && previewMutedByVideo) {
     previewAudio.muted = false;
     previewMutedByVideo = false;
+  }
+
+  // Restore default unmuted state if we muted preview due to BlaKats (NEW, BlaKats-only)
+  if (previewAudio && previewMutedByBlakatsVideo) {
+    previewAudio.muted = false;
+    previewMutedByBlakatsVideo = false;
   }
 
   if (previewAudio) {
@@ -327,7 +366,7 @@ function renderPanels() {
       });
     }
 
-    // BoomBash hero
+    // BoomBash hero (UNCHANGED)
     if (tab.id === HERO_TAB_ID) {
       const heroMount = document.createElement("div");
       heroMount.id = "heroMount";
@@ -345,6 +384,7 @@ function renderPanels() {
     panelsEl.appendChild(panel);
   });
 
+  // after render, prep wavebars
   $all(".wavebox").forEach(ensureWaveBars);
 }
 
@@ -352,6 +392,7 @@ function renderTrackRow(track) {
   const row = document.createElement("div");
   row.className = "track";
 
+  // thumbnail
   const thumb = document.createElement("div");
   thumb.className = "thumb";
   thumb.title = "Click to preview";
@@ -360,6 +401,7 @@ function renderTrackRow(track) {
   img.alt = `${track.title} cover`;
   thumb.appendChild(img);
 
+  // meta
   const meta = document.createElement("div");
   meta.className = "meta";
   meta.innerHTML = `
@@ -368,6 +410,7 @@ function renderTrackRow(track) {
     <p class="price">$${escapeHtml(track.amount)}</p>
   `;
 
+  // preview cluster
   const preview = document.createElement("div");
   preview.className = "preview";
 
@@ -393,6 +436,7 @@ function renderTrackRow(track) {
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
+  // buy button
   const buy = document.createElement("div");
   buy.className = "buy";
 
@@ -407,7 +451,11 @@ function renderTrackRow(track) {
     buyBtn.textContent = "Loading…";
 
     try {
-      const product = { sku: track.sku, title: `${track.artist} — ${track.title}`, amount: track.amount };
+      const product = {
+        sku: track.sku,
+        title: `${track.artist} — ${track.title}`,
+        amount: track.amount,
+      };
       const paypalUrl = await createPayPalLink(product);
       window.location.href = paypalUrl;
     } catch (err) {
@@ -423,6 +471,7 @@ function renderTrackRow(track) {
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
   async function togglePreview() {
+    // if this row is currently active, stop it
     if (activePreviewBtn === previewBtn) {
       stopPreview();
       return;
@@ -431,12 +480,12 @@ function renderTrackRow(track) {
     // stop any other preview
     stopPreview();
 
-    // BoomBash requirement: starting any preview mutes BoomBash hero if it was unmuted
+    // BoomBash LOGIC FIX #1 (UNCHANGED)
     if (activeTabId === HERO_TAB_ID) {
       maybeMuteVideoBecausePreviewStarted();
     }
 
-    // BlaKats requirement: starting any preview mutes BlaKats hero if it was unmuted
+    // BlaKats: starting preview must mute BlaKats hero if unmuted
     if (activeTabId === BLAKATS_HERO_TAB_ID) {
       maybeMuteBlakatsVideoBecausePreviewStarted();
     }
@@ -456,17 +505,21 @@ function renderTrackRow(track) {
     previewAudio = new Audio(audioUrl);
     previewAudio.preload = "auto";
 
-    // previews default to unmuted (BlaKats video never changes this)
+    // default preview audio should be unmuted
     previewAudio.muted = false;
-    previewMutedByVideo = false;
+    previewMutedByVideo = false;          // BoomBash flag (UNCHANGED)
+    previewMutedByBlakatsVideo = false;   // BlaKats flag
 
-    let startedAt = 0;
+    previewAudio.addEventListener("ended", () => {
+      stopPreview(); // restores default unmuted state if we muted due to video
+    });
 
-    previewAudio.addEventListener("ended", () => stopPreview());
     previewAudio.addEventListener("error", () => {
       stopPreview();
       alert(`Preview failed to load:\n${audioUrl}`);
     });
+
+    let startedAt = 0;
 
     try {
       await previewAudio.play();
@@ -477,9 +530,12 @@ function renderTrackRow(track) {
 
         const elapsed = (performance.now() - startedAt) / 1000;
         const shown = Math.min(PREVIEW_SECONDS, elapsed);
+
         timeEl.textContent = `${fmtTime(shown)} / ${fmtTime(PREVIEW_SECONDS)}`;
 
-        if (elapsed >= PREVIEW_SECONDS) stopPreview();
+        if (elapsed >= PREVIEW_SECONDS) {
+          stopPreview();
+        }
       }, 120);
     } catch (e) {
       stopPreview();
@@ -499,7 +555,7 @@ function renderTrackRow(track) {
 }
 
 /** =========================
- *  HERO VIDEO (BoomBash)
+ *  HERO VIDEO MOUNT / STOP (BoomBash)  <-- UNCHANGED
  *  ========================= */
 function stopHeroVideo() {
   if (heroCleanupFn) {
@@ -518,9 +574,16 @@ function stopHeroVideo() {
 }
 
 function mountLoopingHeroVideo(containerEl, opts) {
+  // Clean up any previous hero (important when re-rendering)
   stopHeroVideo();
 
-  const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
+  const {
+    src,
+    start = 0,
+    duration = 13,
+    poster = "",
+    caption = "Preview",
+  } = opts;
 
   containerEl.innerHTML = `
     <div class="hero-media">
@@ -549,13 +612,17 @@ function mountLoopingHeroVideo(containerEl, opts) {
   heroVideoEl = video;
   heroMuteBtnEl = muteBtn;
 
+  // Start muted by default for autoplay policy. User can enable Sound.
   setHeroMuted(true);
 
   const end = start + duration;
 
-  const seekToStart = () => { try { video.currentTime = start; } catch {} };
+  const seekToStart = () => {
+    try { video.currentTime = start; } catch (_) {}
+  };
 
   const onTimeUpdate = () => {
+    // Loop only the segment
     if (video.currentTime >= end) {
       video.currentTime = start;
       const p = video.play();
@@ -572,24 +639,31 @@ function mountLoopingHeroVideo(containerEl, opts) {
   video.addEventListener("loadedmetadata", onLoaded);
   video.addEventListener("timeupdate", onTimeUpdate);
 
+  // Click-to-play fallback
   containerEl.addEventListener("click", () => {
     const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   });
 
-  // BoomBash mute/unmute:
-  // If preview is playing and user unmutes BoomBash video, mute preview until it completes.
+  // Mute/unmute button:
+  // LOGIC FIX #2 (BoomBash)
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
 
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
+      // user wants SOUND on video
       setHeroMuted(false);
+
+      // ensure audio engages on gesture
       video.volume = 1;
       const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
+
+      // If a preview is currently playing, mute preview until completion
       maybeMutePreviewBecauseVideoUnmuted();
     } else {
+      // user mutes video
       setHeroMuted(true);
     }
   });
@@ -601,7 +675,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
 }
 
 /** =========================
- *  HERO VIDEO (BlaKats)
+ *  HERO VIDEO MOUNT / STOP (BlaKats)
  *  ========================= */
 function stopBlakatsHeroVideo() {
   if (blakatsHeroCleanupFn) {
@@ -622,7 +696,13 @@ function stopBlakatsHeroVideo() {
 function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   stopBlakatsHeroVideo();
 
-  const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
+  const {
+    src,
+    start = 0,
+    duration = 13,
+    poster = "",
+    caption = "Preview",
+  } = opts;
 
   containerEl.innerHTML = `
     <div class="hero-media">
@@ -651,12 +731,14 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   blakatsHeroVideoEl = video;
   blakatsHeroMuteBtnEl = muteBtn;
 
-  // Start muted for autoplay; user gesture will enable sound.
+  // Start muted by default for autoplay policy. User can enable Sound.
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
 
-  const seekToStart = () => { try { video.currentTime = start; } catch {} };
+  const seekToStart = () => {
+    try { video.currentTime = start; } catch (_) {}
+  };
 
   const onTimeUpdate = () => {
     if (video.currentTime >= end) {
@@ -681,18 +763,26 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
     if (p && typeof p.catch === "function") p.catch(() => {});
   });
 
-  // BlaKats mute/unmute:
-  // IMPORTANT: does NOT touch preview audio at all.
+  // BlaKats mute/unmute button:
+  // When user unmutes, ALSO mute any currently-playing preview until it completes.
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
 
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
+      // user wants SOUND on BlaKats video
       setBlakatsHeroMuted(false);
-      video.volume = 1; // ensure audible
-      const p = video.play(); // engage audio on gesture
+
+      // ensure audio engages on gesture
+      video.volume = 1;
+      const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
+
+      // NEW BlaKats behavior:
+      // If a preview is playing, mute it until it completes
+      maybeMutePreviewBecauseBlakatsVideoUnmuted();
     } else {
+      // user mutes BlaKats video
       setBlakatsHeroMuted(true);
     }
   });
@@ -710,6 +800,7 @@ function renderAll() {
   renderTabs();
   renderPanels();
 
+  // Ensure active aria-selected
   $all(".tab").forEach((btn) => {
     btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
