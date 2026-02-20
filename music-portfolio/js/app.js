@@ -39,14 +39,9 @@ const PREVIEW_BASE = "assets/previews";
  */
 const STRIPE_LINKS = {
   // BlaKats
-  // "blakats_cd_01": "https://buy.stripe.com/REPLACE_ME",
-  // "blakats_cd_02": "https://buy.stripe.com/REPLACE_ME",
+  
+  "blakats_cd_01": "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 
-  // 1GNM
-  // "1gnm_track_01": "https://buy.stripe.com/REPLACE_ME",
-
-  // BoomBash
-  // "boombash_track_01": "https://buy.stripe.com/REPLACE_ME",
 };
 
 /** =========================
