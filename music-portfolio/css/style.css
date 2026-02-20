@@ -140,6 +140,20 @@ body{
   transform: translateY(8%);    /* <-- moves guitarist DOWN */
 }
 
+/* ===== Stripe button (patch) ===== */
+.buy{
+  gap: 10px;               /* space between PayPal + Stripe buttons */
+  flex-wrap: wrap;         /* prevents overflow on smaller widths */
+}
+
+.buy-btn.stripe-btn{
+  background: #635bff;     /* Stripe purple */
+  box-shadow: 0 12px 22px rgba(99,91,255,.25);
+}
+
+.buy-btn.stripe-btn:hover{
+  filter: brightness(.95);
+}
 
 .meta{ min-width:0; }
 .meta .name{

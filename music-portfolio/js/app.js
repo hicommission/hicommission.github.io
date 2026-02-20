@@ -4,6 +4,7 @@
    - Clickable thumbnails (play/pause preview)
    - 30s preview w/ placeholder waveform + timer
    - Buy button -> POST create -> redirect to PayPal
+   - Stripe Payment Link option (redirect) in addition to PayPal
    - Hero video for BoomBash with 13s loop + mute/unmute button
    - Hero video for BlaKats with mute/unmute button (audio on click)
    - LOGIC:
@@ -28,6 +29,25 @@ const PREVIEW_SECONDS = 30;
 
 // Where previews live (GitHub Pages)
 const PREVIEW_BASE = "assets/previews";
+
+/** =========================
+ *  STRIPE PAYMENT LINKS (EDIT THIS)
+ *  =========================
+ *  IMPORTANT:
+ *  - Use Stripe Payment Links (buy.stripe.com/...) so pricing is enforced by Stripe.
+ *  - Add one entry per SKU you want to sell via Stripe.
+ */
+const STRIPE_LINKS = {
+  // BlaKats
+  // "blakats_cd_01": "https://buy.stripe.com/REPLACE_ME",
+  // "blakats_cd_02": "https://buy.stripe.com/REPLACE_ME",
+
+  // 1GNM
+  // "1gnm_track_01": "https://buy.stripe.com/REPLACE_ME",
+
+  // BoomBash
+  // "boombash_track_01": "https://buy.stripe.com/REPLACE_ME",
+};
 
 /** =========================
  *  CATALOG (EDIT THIS)
@@ -436,10 +456,11 @@ function renderTrackRow(track) {
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
-  // buy button
+  // buy button cluster
   const buy = document.createElement("div");
   buy.className = "buy";
 
+  // PayPal button (UNCHANGED)
   const buyBtn = document.createElement("button");
   buyBtn.type = "button";
   buyBtn.className = "buy-btn";
@@ -467,6 +488,23 @@ function renderTrackRow(track) {
   });
 
   buy.appendChild(buyBtn);
+
+  // Stripe button (NEW, redirect to Payment Link)
+  const stripeBtn = document.createElement("button");
+  stripeBtn.type = "button";
+  stripeBtn.className = "buy-btn stripe-btn";
+  stripeBtn.textContent = "Pay w/ Stripe";
+
+  stripeBtn.addEventListener("click", () => {
+    const url = STRIPE_LINKS[track.sku];
+    if (!url) {
+      alert("Stripe checkout is not configured for this item yet.");
+      return;
+    }
+    window.location.href = url;
+  });
+
+  buy.appendChild(stripeBtn);
 
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
@@ -778,7 +816,6 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
       const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
 
-      // NEW BlaKats behavior:
       // If a preview is playing, mute it until it completes
       maybeMutePreviewBecauseBlakatsVideoUnmuted();
     } else {
