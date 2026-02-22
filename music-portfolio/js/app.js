@@ -1,28 +1,27 @@
 /* ============================================================
    music-portfolio/js/app.js  (FULL DROP-IN REPLACEMENT)
-   Tabbed multi-artist catalog with:
-   - Clickable thumbnails (play/pause preview)
-   - 30s preview w/ placeholder waveform + timer
-   - Buy button -> POST create -> redirect to PayPal
-   - Stripe Payment Link option (redirect) in addition to PayPal
-   - Hero video for BoomBash with 13s loop + mute/unmute button
-   - Hero video for BlaKats with mute/unmute button (audio on click)
-   - LOGIC:
-     BoomBash:
-       1) If video is playing AND unmuted, starting ANY preview will immediately mute the video.
-       2) If a preview is playing AND user unmutes BoomBash video, the preview audio is immediately muted
-          until preview completes; then previews return to default (unmuted) state.
-     BlaKats:
-       1) Starting ANY preview will immediately mute BlaKats hero video if it is unmuted.
-       2) If a preview is playing AND user unmutes BlaKats hero video, the preview audio is muted
-          until preview completes; then previews return to default (unmuted) state.
+   ✅ Goals:
+   - PayPal works for ALL tracks on ALL tabs
+   - Stripe works for ALL tracks on ALL tabs in ONE of two ways:
+       A) If you provide STRIPE_LINKS[sku] (Payment Link), it will redirect there
+       B) Otherwise it will call your Worker endpoint /api/stripe/create (recommended)
+          which should return { url } for a Checkout Session.
+   - DOES NOT change any preview / hero-video logic
+   - Adds better error reporting so you can see WHY PayPal/Stripe fails
    ============================================================ */
 
 /** =========================
  *  CONFIG
  *  ========================= */
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+
+// PayPal create endpoint (your Worker)
+const PAYPAL_CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+
+// Stripe create endpoint (your Worker) — recommended so Stripe works for ALL SKUs
+// Your Worker should implement POST /api/stripe/create -> { url }
+// If you do NOT have it yet, Stripe will fall back to STRIPE_LINKS[sku] when present.
+const STRIPE_CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 
 // Preview length (seconds)
 const PREVIEW_SECONDS = 30;
@@ -31,17 +30,21 @@ const PREVIEW_SECONDS = 30;
 const PREVIEW_BASE = "assets/previews";
 
 /** =========================
- *  STRIPE PAYMENT LINKS (EDIT THIS)
+ *  STRIPE PAYMENT LINKS (OPTION A)
  *  =========================
- *  IMPORTANT:
- *  - Use Stripe Payment Links (buy.stripe.com/...) so pricing is enforced by Stripe.
- *  - Add one entry per SKU you want to sell via Stripe.
+ * If you are using Stripe Payment Links (buy.stripe.com/...), put them here.
+ * If a SKU is NOT present here, the code will try OPTION B:
+ *   POST /api/stripe/create
  */
 const STRIPE_LINKS = {
   // BlaKats
-  
-  "blakats_cd_01": "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
+  blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 
+  // Add the rest as you create them, OR use /api/stripe/create for everything:
+  // blakats_cd_02: "https://buy.stripe.com/....",
+  // ...
+  // 1gnm_track_01: "https://buy.stripe.com/....",
+  // boombash_track_01: "https://buy.stripe.com/....",
 };
 
 /** =========================
@@ -60,14 +63,13 @@ const CATALOG = [
       { sku: "blakats_cd_05", title: "05. Tonite",                      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_05_preview.mp3" },
       { sku: "blakats_cd_06", title: "06. Ask Me Nicely",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_06_preview.mp3" },
       { sku: "blakats_cd_07", title: "07. Pure Heart",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_07_preview.mp3" },
-      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",        artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
+      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",       artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
       { sku: "blakats_cd_09", title: "09. Hold Me Close",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_09_preview.mp3" },
       { sku: "blakats_cd_10", title: "10. (Track 10)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_10_preview.mp3" },
       { sku: "blakats_cd_11", title: "11. (Track 11)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_11_preview.mp3" },
       { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
     ],
   },
-
   {
     id: "1gnm",
     label: "1GNM",
@@ -77,7 +79,6 @@ const CATALOG = [
       { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
   },
-
   {
     id: "boombash",
     label: "BoomBash",
@@ -125,20 +126,20 @@ let activePreviewBtn = null;
 let activeWavebox = null;
 let activeTimeEl = null;
 
-// BoomBash hero state (UNCHANGED)
+// BoomBash hero state
 let heroVideoEl = null;
 let heroMuteBtnEl = null;
 let heroCleanupFn = null;
 
-// BlaKats hero state (separate)
+// BlaKats hero state
 let blakatsHeroVideoEl = null;
 let blakatsHeroMuteBtnEl = null;
 let blakatsHeroCleanupFn = null;
 
-// BoomBash logic fix #2 flag (UNCHANGED)
+// BoomBash logic fix #2 flag
 let previewMutedByVideo = false;
 
-// BlaKats: mute-preview-while-video-unmuted flag (NEW, BlaKats only)
+// BlaKats: mute-preview-while-video-unmuted flag
 let previewMutedByBlakatsVideo = false;
 
 /** =========================
@@ -167,14 +168,39 @@ function isPreviewPlaying() {
   return !!(previewAudio && !previewAudio.paused && !previewAudio.ended);
 }
 
+function normalizeAmount(amountStr) {
+  const n = Number(String(amountStr || "").trim());
+  if (!Number.isFinite(n) || n <= 0) throw new Error(`Invalid amount: ${amountStr}`);
+  return n.toFixed(2);
+}
+
+async function postJsonExpectJson(url, payload) {
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const raw = await res.text().catch(() => "");
+
+  if (!res.ok) {
+    throw new Error(`${url} failed: HTTP ${res.status} ${raw}`.trim());
+  }
+
+  let data;
+  try { data = JSON.parse(raw); }
+  catch { throw new Error(`${url} returned non-JSON: ${raw}`); }
+
+  return data;
+}
+
 /** =========================
- *  VIDEO MUTING / UI (BoomBash)  <-- UNCHANGED
+ *  VIDEO MUTING / UI (BoomBash)
  *  ========================= */
 function setHeroMuted(muted) {
   if (!heroVideoEl) return;
   heroVideoEl.muted = !!muted;
 
-  // Update button label/state if present
   if (heroMuteBtnEl) {
     heroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
     heroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
@@ -182,10 +208,6 @@ function setHeroMuted(muted) {
   }
 }
 
-/**
- * LOGIC FIX #1 (BoomBash):
- * If hero video is playing AND unmuted, starting any preview mutes the video immediately.
- */
 function maybeMuteVideoBecausePreviewStarted() {
   if (!heroVideoEl) return;
   const videoIsPlaying = !heroVideoEl.paused && !heroVideoEl.ended;
@@ -196,15 +218,8 @@ function maybeMuteVideoBecausePreviewStarted() {
   }
 }
 
-/**
- * LOGIC FIX #2 (BoomBash):
- * If a preview is playing and user unmutes video, mute preview until preview completes,
- * then restore previews to default unmuted state.
- */
 function maybeMutePreviewBecauseVideoUnmuted() {
   if (!isPreviewPlaying()) return;
-
-  // Mute preview audio until it ends
   if (previewAudio) {
     previewAudio.muted = true;
     previewMutedByVideo = true;
@@ -225,7 +240,6 @@ function setBlakatsHeroMuted(muted) {
   }
 }
 
-// BlaKats: If hero video is playing AND unmuted, starting any preview mutes it immediately.
 function maybeMuteBlakatsVideoBecausePreviewStarted() {
   if (!blakatsHeroVideoEl) return;
   const videoIsPlaying = !blakatsHeroVideoEl.paused && !blakatsHeroVideoEl.ended;
@@ -236,7 +250,6 @@ function maybeMuteBlakatsVideoBecausePreviewStarted() {
   }
 }
 
-// BlaKats: If a preview is playing and user unmutes BlaKats video, mute preview until it completes.
 function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
   if (!isPreviewPlaying()) return;
   if (previewAudio) {
@@ -262,13 +275,11 @@ function ensureWaveBars(wavebox) {
 }
 
 function stopPreview() {
-  // Restore default unmuted state if we muted preview due to BoomBash (UNCHANGED behavior)
   if (previewAudio && previewMutedByVideo) {
     previewAudio.muted = false;
     previewMutedByVideo = false;
   }
 
-  // Restore default unmuted state if we muted preview due to BlaKats (NEW, BlaKats-only)
   if (previewAudio && previewMutedByBlakatsVideo) {
     previewAudio.muted = false;
     previewMutedByBlakatsVideo = false;
@@ -306,20 +317,34 @@ function stopPreview() {
 /** =========================
  *  PAYPAL
  *  ========================= */
-async function createPayPalLink(product) {
-  const res = await fetch(CREATE_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(product),
-  });
+async function createPayPalLink(track) {
+  const payload = {
+    sku: String(track.sku || "").trim(),
+    title: `${track.artist} — ${track.title}`,
+    amount: normalizeAmount(track.amount),
+  };
 
-  if (!res.ok) {
-    const t = await res.text().catch(() => "");
-    throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
-  }
+  const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
+  if (!data?.url) throw new Error(`PayPal create missing url: ${JSON.stringify(data)}`);
+  return data.url;
+}
 
-  const data = await res.json();
-  if (!data || !data.url) throw new Error("create failed: missing url");
+/** =========================
+ *  STRIPE
+ *  =========================
+ * Works in two modes:
+ *  - If STRIPE_LINKS[sku] exists -> redirect to Payment Link
+ *  - Else -> call Worker /api/stripe/create -> { url } (recommended)
+ */
+async function createStripeLinkViaWorker(track) {
+  const payload = {
+    sku: String(track.sku || "").trim(),
+    title: `${track.artist} — ${track.title}`,
+    amount: normalizeAmount(track.amount),
+  };
+
+  const data = await postJsonExpectJson(STRIPE_CREATE_URL, payload);
+  if (!data?.url) throw new Error(`Stripe create missing url: ${JSON.stringify(data)}`);
   return data.url;
 }
 
@@ -381,7 +406,7 @@ function renderPanels() {
       });
     }
 
-    // BoomBash hero (UNCHANGED)
+    // BoomBash hero
     if (tab.id === HERO_TAB_ID) {
       const heroMount = document.createElement("div");
       heroMount.id = "heroMount";
@@ -399,7 +424,6 @@ function renderPanels() {
     panelsEl.appendChild(panel);
   });
 
-  // after render, prep wavebars
   $all(".wavebox").forEach(ensureWaveBars);
 }
 
@@ -455,7 +479,7 @@ function renderTrackRow(track) {
   const buy = document.createElement("div");
   buy.className = "buy";
 
-  // PayPal button (UNCHANGED)
+  // PayPal button
   const buyBtn = document.createElement("button");
   buyBtn.type = "button";
   buyBtn.className = "buy-btn";
@@ -467,16 +491,11 @@ function renderTrackRow(track) {
     buyBtn.textContent = "Loading…";
 
     try {
-      const product = {
-        sku: track.sku,
-        title: `${track.artist} — ${track.title}`,
-        amount: track.amount,
-      };
-      const paypalUrl = await createPayPalLink(product);
+      const paypalUrl = await createPayPalLink(track);
       window.location.href = paypalUrl;
     } catch (err) {
       console.error(err);
-      alert("Could not generate payment link. Please try again.");
+      alert(err?.message || "Could not generate PayPal payment link. Please try again.");
       buyBtn.disabled = false;
       buyBtn.textContent = old;
     }
@@ -484,46 +503,62 @@ function renderTrackRow(track) {
 
   buy.appendChild(buyBtn);
 
-  // Stripe button (NEW, redirect to Payment Link)
+  // Stripe button (works for ALL tabs)
   const stripeBtn = document.createElement("button");
   stripeBtn.type = "button";
   stripeBtn.className = "buy-btn stripe-btn";
   stripeBtn.textContent = "Pay w/ Stripe";
 
-  stripeBtn.addEventListener("click", () => {
-    const url = STRIPE_LINKS[track.sku];
-    if (!url) {
-      alert("Stripe checkout is not configured for this item yet.");
-      return;
+  stripeBtn.addEventListener("click", async () => {
+    stripeBtn.disabled = true;
+    const old = stripeBtn.textContent;
+    stripeBtn.textContent = "Loading…";
+
+    try {
+      // OPTION A: Payment Link directly
+      const direct = STRIPE_LINKS[track.sku];
+      if (direct) {
+        window.location.href = direct;
+        return;
+      }
+
+      // OPTION B: Worker creates Checkout Session for ANY SKU
+      const url = await createStripeLinkViaWorker(track);
+      window.location.href = url;
+    } catch (err) {
+      console.error(err);
+      alert(
+        (err?.message || "Could not start Stripe checkout.") +
+        "\n\nIf you are using Payment Links, add STRIPE_LINKS[sku].\nIf you want Stripe for ALL items, implement POST /api/stripe/create on the Worker."
+      );
+      stripeBtn.disabled = false;
+      stripeBtn.textContent = old;
     }
-    window.location.href = url;
   });
 
   buy.appendChild(stripeBtn);
 
+  // Preview audio
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
   async function togglePreview() {
-    // if this row is currently active, stop it
     if (activePreviewBtn === previewBtn) {
       stopPreview();
       return;
     }
 
-    // stop any other preview
     stopPreview();
 
-    // BoomBash LOGIC FIX #1 (UNCHANGED)
+    // BoomBash: starting ANY preview mutes hero if unmuted
     if (activeTabId === HERO_TAB_ID) {
       maybeMuteVideoBecausePreviewStarted();
     }
 
-    // BlaKats: starting preview must mute BlaKats hero if unmuted
+    // BlaKats: starting ANY preview mutes hero if unmuted
     if (activeTabId === BLAKATS_HERO_TAB_ID) {
       maybeMuteBlakatsVideoBecausePreviewStarted();
     }
 
-    // start this preview
     ensureWaveBars(wavebox);
     wavebox.classList.remove("idle");
     wavebox.classList.add("playing");
@@ -538,13 +573,12 @@ function renderTrackRow(track) {
     previewAudio = new Audio(audioUrl);
     previewAudio.preload = "auto";
 
-    // default preview audio should be unmuted
     previewAudio.muted = false;
-    previewMutedByVideo = false;          // BoomBash flag (UNCHANGED)
-    previewMutedByBlakatsVideo = false;   // BlaKats flag
+    previewMutedByVideo = false;
+    previewMutedByBlakatsVideo = false;
 
     previewAudio.addEventListener("ended", () => {
-      stopPreview(); // restores default unmuted state if we muted due to video
+      stopPreview();
     });
 
     previewAudio.addEventListener("error", () => {
@@ -588,7 +622,7 @@ function renderTrackRow(track) {
 }
 
 /** =========================
- *  HERO VIDEO MOUNT / STOP (BoomBash)  <-- UNCHANGED
+ *  HERO VIDEO MOUNT / STOP (BoomBash)
  *  ========================= */
 function stopHeroVideo() {
   if (heroCleanupFn) {
@@ -607,16 +641,9 @@ function stopHeroVideo() {
 }
 
 function mountLoopingHeroVideo(containerEl, opts) {
-  // Clean up any previous hero (important when re-rendering)
   stopHeroVideo();
 
-  const {
-    src,
-    start = 0,
-    duration = 13,
-    poster = "",
-    caption = "Preview",
-  } = opts;
+  const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
 
   containerEl.innerHTML = `
     <div class="hero-media">
@@ -645,7 +672,6 @@ function mountLoopingHeroVideo(containerEl, opts) {
   heroVideoEl = video;
   heroMuteBtnEl = muteBtn;
 
-  // Start muted by default for autoplay policy. User can enable Sound.
   setHeroMuted(true);
 
   const end = start + duration;
@@ -655,7 +681,6 @@ function mountLoopingHeroVideo(containerEl, opts) {
   };
 
   const onTimeUpdate = () => {
-    // Loop only the segment
     if (video.currentTime >= end) {
       video.currentTime = start;
       const p = video.play();
@@ -672,31 +697,22 @@ function mountLoopingHeroVideo(containerEl, opts) {
   video.addEventListener("loadedmetadata", onLoaded);
   video.addEventListener("timeupdate", onTimeUpdate);
 
-  // Click-to-play fallback
   containerEl.addEventListener("click", () => {
     const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   });
 
-  // Mute/unmute button:
-  // LOGIC FIX #2 (BoomBash)
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
 
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
-      // user wants SOUND on video
       setHeroMuted(false);
-
-      // ensure audio engages on gesture
       video.volume = 1;
       const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
-
-      // If a preview is currently playing, mute preview until completion
       maybeMutePreviewBecauseVideoUnmuted();
     } else {
-      // user mutes video
       setHeroMuted(true);
     }
   });
@@ -729,13 +745,7 @@ function stopBlakatsHeroVideo() {
 function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   stopBlakatsHeroVideo();
 
-  const {
-    src,
-    start = 0,
-    duration = 13,
-    poster = "",
-    caption = "Preview",
-  } = opts;
+  const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
 
   containerEl.innerHTML = `
     <div class="hero-media">
@@ -764,7 +774,6 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   blakatsHeroVideoEl = video;
   blakatsHeroMuteBtnEl = muteBtn;
 
-  // Start muted by default for autoplay policy. User can enable Sound.
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
@@ -790,31 +799,22 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   video.addEventListener("loadedmetadata", onLoaded);
   video.addEventListener("timeupdate", onTimeUpdate);
 
-  // Click-to-play fallback
   containerEl.addEventListener("click", () => {
     const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   });
 
-  // BlaKats mute/unmute button:
-  // When user unmutes, ALSO mute any currently-playing preview until it completes.
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
 
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
-      // user wants SOUND on BlaKats video
       setBlakatsHeroMuted(false);
-
-      // ensure audio engages on gesture
       video.volume = 1;
       const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
-
-      // If a preview is playing, mute it until it completes
       maybeMutePreviewBecauseBlakatsVideoUnmuted();
     } else {
-      // user mutes BlaKats video
       setBlakatsHeroMuted(true);
     }
   });
@@ -832,7 +832,6 @@ function renderAll() {
   renderTabs();
   renderPanels();
 
-  // Ensure active aria-selected
   $all(".tab").forEach((btn) => {
     btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
