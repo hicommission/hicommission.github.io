@@ -1,13 +1,14 @@
 /* ============================================================
    music-portfolio/js/app.js  (FULL DROP-IN REPLACEMENT)
+
    ✅ Goals:
    - PayPal works for ALL tracks on ALL tabs
    - Stripe works for ALL tracks on ALL tabs in ONE of two ways:
-       A) If you provide STRIPE_LINKS[sku] (Payment Link), it will redirect there
-       B) Otherwise it will call your Worker endpoint /api/stripe/create (recommended)
-          which should return { url } for a Checkout Session.
-   - DOES NOT change any preview / hero-video logic
-   - Adds better error reporting so you can see WHY PayPal/Stripe fails
+       A) If STRIPE_LINKS[sku] exists -> redirect to Payment Link
+       B) Otherwise -> POST /api/stripe/create (Worker) -> { url }
+   - Stripe button sits NEXT TO PayPal button (same row)
+   - Does NOT change any preview / hero-video logic
+   - Better error reporting so you can see WHY PayPal/Stripe fails
    ============================================================ */
 
 /** =========================
@@ -15,12 +16,10 @@
  *  ========================= */
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
 
-// PayPal create endpoint (your Worker)
+// PayPal create endpoint (Worker)
 const PAYPAL_CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
 
-// Stripe create endpoint (your Worker) — recommended so Stripe works for ALL SKUs
-// Your Worker should implement POST /api/stripe/create -> { url }
-// If you do NOT have it yet, Stripe will fall back to STRIPE_LINKS[sku] when present.
+// Stripe create endpoint (Worker) — recommended so Stripe works for ALL SKUs
 const STRIPE_CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 
 // Preview length (seconds)
@@ -34,15 +33,14 @@ const PREVIEW_BASE = "assets/previews";
  *  =========================
  * If you are using Stripe Payment Links (buy.stripe.com/...), put them here.
  * If a SKU is NOT present here, the code will try OPTION B:
- *   POST /api/stripe/create
+ *   POST /api/stripe/create -> { url }
  */
 const STRIPE_LINKS = {
   // BlaKats
   blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 
-  // Add the rest as you create them, OR use /api/stripe/create for everything:
+  // Add the rest as you create them, OR use /api/stripe/create for everything.
   // blakats_cd_02: "https://buy.stripe.com/....",
-  // ...
   // 1gnm_track_01: "https://buy.stripe.com/....",
   // boombash_track_01: "https://buy.stripe.com/....",
 };
@@ -70,6 +68,7 @@ const CATALOG = [
       { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
     ],
   },
+
   {
     id: "1gnm",
     label: "1GNM",
@@ -79,6 +78,7 @@ const CATALOG = [
       { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
   },
+
   {
     id: "boombash",
     label: "BoomBash",
@@ -94,7 +94,7 @@ const CATALOG = [
  *  HERO VIDEO CONFIGS
  *  ========================= */
 
-// BoomBash hero (restored)
+// BoomBash hero
 const HERO_TAB_ID = "boombash";
 const HERO_VIDEO = {
   src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
@@ -104,7 +104,7 @@ const HERO_VIDEO = {
   caption: "BoomBash — Paint The Town Red (13s loop)",
 };
 
-// BlaKats hero (with audio on unmute)
+// BlaKats hero
 const BLAKATS_HERO_TAB_ID = "blakats";
 const BLAKATS_HERO_VIDEO = {
   src: "assets/BLAKATS_VIDEO_WEB_SMALL.mp4",
@@ -184,12 +184,12 @@ async function postJsonExpectJson(url, payload) {
   const raw = await res.text().catch(() => "");
 
   if (!res.ok) {
-    throw new Error(`${url} failed: HTTP ${res.status} ${raw}`.trim());
+    throw new Error(`${url} failed: HTTP ${res.status}\n\n${raw}`.trim());
   }
 
   let data;
   try { data = JSON.parse(raw); }
-  catch { throw new Error(`${url} returned non-JSON: ${raw}`); }
+  catch { throw new Error(`${url} returned non-JSON:\n\n${raw}`); }
 
   return data;
 }
@@ -213,9 +213,7 @@ function maybeMuteVideoBecausePreviewStarted() {
   const videoIsPlaying = !heroVideoEl.paused && !heroVideoEl.ended;
   const videoIsUnmuted = heroVideoEl.muted === false;
 
-  if (videoIsPlaying && videoIsUnmuted) {
-    setHeroMuted(true);
-  }
+  if (videoIsPlaying && videoIsUnmuted) setHeroMuted(true);
 }
 
 function maybeMutePreviewBecauseVideoUnmuted() {
@@ -245,9 +243,7 @@ function maybeMuteBlakatsVideoBecausePreviewStarted() {
   const videoIsPlaying = !blakatsHeroVideoEl.paused && !blakatsHeroVideoEl.ended;
   const videoIsUnmuted = blakatsHeroVideoEl.muted === false;
 
-  if (videoIsPlaying && videoIsUnmuted) {
-    setBlakatsHeroMuted(true);
-  }
+  if (videoIsPlaying && videoIsUnmuted) setBlakatsHeroMuted(true);
 }
 
 function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
@@ -325,17 +321,13 @@ async function createPayPalLink(track) {
   };
 
   const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
-  if (!data?.url) throw new Error(`PayPal create missing url: ${JSON.stringify(data)}`);
+  if (!data?.url) throw new Error(`PayPal create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
 }
 
 /** =========================
  *  STRIPE
- *  =========================
- * Works in two modes:
- *  - If STRIPE_LINKS[sku] exists -> redirect to Payment Link
- *  - Else -> call Worker /api/stripe/create -> { url } (recommended)
- */
+ *  ========================= */
 async function createStripeLinkViaWorker(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -344,7 +336,7 @@ async function createStripeLinkViaWorker(track) {
   };
 
   const data = await postJsonExpectJson(STRIPE_CREATE_URL, payload);
-  if (!data?.url) throw new Error(`Stripe create missing url: ${JSON.stringify(data)}`);
+  if (!data?.url) throw new Error(`Stripe create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
 }
 
@@ -475,9 +467,15 @@ function renderTrackRow(track) {
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
-  // buy button cluster
+  // buy button cluster (PayPal + Stripe side-by-side)
   const buy = document.createElement("div");
   buy.className = "buy";
+  buy.style.display = "flex";
+  buy.style.flexDirection = "row";
+  buy.style.gap = "10px";
+  buy.style.alignItems = "center";
+  buy.style.justifyContent = "flex-end";
+  buy.style.flexWrap = "wrap";
 
   // PayPal button
   const buyBtn = document.createElement("button");
@@ -501,9 +499,7 @@ function renderTrackRow(track) {
     }
   });
 
-  buy.appendChild(buyBtn);
-
-  // Stripe button (works for ALL tabs)
+  // Stripe button (NEXT TO PayPal)
   const stripeBtn = document.createElement("button");
   stripeBtn.type = "button";
   stripeBtn.className = "buy-btn stripe-btn";
@@ -536,6 +532,7 @@ function renderTrackRow(track) {
     }
   });
 
+  buy.appendChild(buyBtn);
   buy.appendChild(stripeBtn);
 
   // Preview audio
@@ -676,9 +673,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   const end = start + duration;
 
-  const seekToStart = () => {
-    try { video.currentTime = start; } catch (_) {}
-  };
+  const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
     if (video.currentTime >= end) {
@@ -778,9 +773,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   const end = start + duration;
 
-  const seekToStart = () => {
-    try { video.currentTime = start; } catch (_) {}
-  };
+  const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
     if (video.currentTime >= end) {

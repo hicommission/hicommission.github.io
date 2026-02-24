@@ -354,6 +354,38 @@ body{
   background: rgba(17,24,39,.10);
 }
 
+
+/* --- Payment buttons: PayPal + Stripe aligned --- */
+.track .buy{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;          /* keep side-by-side by default */
+}
+
+/* make both buttons same width so they look balanced */
+.track .buy .buy-btn{
+  flex: 0 0 auto;
+  min-width: 160px;           /* tweak if you want wider/narrower */
+  white-space: nowrap;
+}
+
+/* mobile: stack cleanly */
+@media (max-width: 520px){
+  .track .buy{
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .track .buy .buy-btn{
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+
 @media (max-width: 520px){
   .wavebox{ width: 160px; }
   .preview-btn{ min-width: 102px; }
