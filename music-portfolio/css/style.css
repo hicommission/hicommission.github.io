@@ -385,6 +385,28 @@ body{
   }
 }
 
+/* --- Pay buttons: always aligned (desktop) + stack (mobile) --- */
+.track .buy{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.track .buy .buy-btn{
+  min-width: 150px;        /* keeps buttons same width */
+}
+
+@media (max-width: 520px){
+  .track .buy{
+    justify-content: stretch;
+  }
+  .track .buy .buy-btn{
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
 
 @media (max-width: 520px){
   .wavebox{ width: 160px; }
