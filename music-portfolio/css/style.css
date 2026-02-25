@@ -137,24 +137,19 @@ body{
   height: 100%;
   object-fit: contain;          /* no crop (hat always visible) */
   object-position: center top;  /* keep hat visible */
-  transform: translateY(8%);    /* <-- moves guitarist DOWN */
+  transform: translateY(8%);    /* moves guitarist DOWN */
 }
 
-/* ===== Stripe button (patch) ===== */
-.buy{
-  gap: 10px;               /* space between PayPal + Stripe buttons */
-  flex-wrap: wrap;         /* prevents overflow on smaller widths */
-}
-
+/* ===== Stripe button ===== */
 .buy-btn.stripe-btn{
   background: #635bff;     /* Stripe purple */
   box-shadow: 0 12px 22px rgba(99,91,255,.25);
 }
-
 .buy-btn.stripe-btn:hover{
   filter: brightness(.95);
 }
 
+/* ===== Meta ===== */
 .meta{ min-width:0; }
 .meta .name{
   font-weight: 900;
@@ -252,11 +247,15 @@ body{
   font-weight: 800;
 }
 
-/* ===== Buy button ===== */
+/* ===== Buy buttons (PayPal + Stripe aligned) ===== */
 .buy{
   display:flex;
+  gap: 10px;
+  align-items: center;
   justify-content:flex-end;
+  flex-wrap: nowrap;           /* side-by-side on desktop */
 }
+
 .buy-btn{
   appearance:none;
   border:0;
@@ -267,7 +266,8 @@ body{
   letter-spacing:.2px;
   padding: 14px 18px;
   border-radius: 8px;
-  min-width: 170px;
+  min-width: 160px;            /* keeps both buttons balanced */
+  white-space: nowrap;
   box-shadow: 0 12px 22px rgba(76,175,80,.25);
 }
 .buy-btn:hover{ background: var(--btnGreenHover); }
@@ -283,8 +283,8 @@ body{
 
 /* ===== Tab-specific themes ===== */
 .theme-blakats{ --accent:#3f51b5; --accent2:#2f3f9a; --tabText:#fff; }
-.theme-1gnm   { --accent:#b45309; --accent2:#92400e; --tabText:#fff; }
-.theme-boombash{ --accent:#0f766e; --accent2:#115e59; --tabText:#fff; }
+.theme-artist2 { --accent:#b45309; --accent2:#92400e; --tabText:#fff; } /* 1GNM */
+.theme-artist3 { --accent:#0f766e; --accent2:#115e59; --tabText:#fff; } /* BoomBash */
 
 /* ===== Responsive ===== */
 @media (max-width: 980px){
@@ -301,7 +301,25 @@ body{
   .buy{ grid-area: buy; justify-content:flex-start; }
 }
 
-/* ===== Artist 3 hero video (BoomBash) ===== */
+/* mobile: stack buy buttons cleanly */
+@media (max-width: 520px){
+  .buy{
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  .buy .buy-btn{
+    width: 100%;
+    min-width: 0;
+  }
+
+  .wavebox{ width: 160px; }
+  .preview-btn{ min-width: 102px; }
+  .hero-caption-row{ flex-direction:column; align-items:flex-start; }
+}
+
+/* ===== Hero video (BoomBash + BlaKats) ===== */
 .hero-media {
   width: 100%;
   max-width: 900px;
@@ -352,64 +370,4 @@ body{
 .mute-btn:active{ transform: translateY(1px); }
 .mute-btn[aria-pressed="true"]{
   background: rgba(17,24,39,.10);
-}
-
-
-/* --- Payment buttons: PayPal + Stripe aligned --- */
-.track .buy{
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: nowrap;          /* keep side-by-side by default */
-}
-
-/* make both buttons same width so they look balanced */
-.track .buy .buy-btn{
-  flex: 0 0 auto;
-  min-width: 160px;           /* tweak if you want wider/narrower */
-  white-space: nowrap;
-}
-
-/* mobile: stack cleanly */
-@media (max-width: 520px){
-  .track .buy{
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: 8px;
-  }
-  .track .buy .buy-btn{
-    width: 100%;
-    min-width: 0;
-  }
-}
-
-/* --- Pay buttons: always aligned (desktop) + stack (mobile) --- */
-.track .buy{
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  justify-content: flex-end;
-  flex-wrap: wrap;
-}
-
-.track .buy .buy-btn{
-  min-width: 150px;        /* keeps buttons same width */
-}
-
-@media (max-width: 520px){
-  .track .buy{
-    justify-content: stretch;
-  }
-  .track .buy .buy-btn{
-    flex: 1 1 100%;
-    width: 100%;
-  }
-}
-
-@media (max-width: 520px){
-  .wavebox{ width: 160px; }
-  .preview-btn{ min-width: 102px; }
-  .hero-caption-row{ flex-direction:column; align-items:flex-start; }
 }
