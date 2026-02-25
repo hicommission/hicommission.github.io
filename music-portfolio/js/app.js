@@ -468,14 +468,8 @@ function renderTrackRow(track) {
   preview.appendChild(previewBoxWrap);
 
   // buy button cluster (PayPal + Stripe side-by-side)
-  const buy = document.createElement("div");
-  buy.className = "buy";
-  buy.style.display = "flex";
-  buy.style.flexDirection = "row";
-  buy.style.gap = "10px";
-  buy.style.alignItems = "center";
-  buy.style.justifyContent = "flex-end";
-  buy.style.flexWrap = "wrap";
+ const buy = document.createElement("div");
+buy.className = "buy";
 
   // PayPal button
   const buyBtn = document.createElement("button");
