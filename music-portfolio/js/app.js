@@ -4,12 +4,11 @@
    ✅ Goals:
    - PayPal works for ALL tracks on ALL tabs
    - Stripe works for ALL tracks on ALL tabs:
-       A) If STRIPE_LINKS[sku] exists -> redirect to Payment Link
-       B) Otherwise -> POST /api/stripe/create -> { url }
+       A) STRIPE_LINKS[sku] -> Payment Link
+       B) else POST /api/stripe/create -> { url }
    - Stripe button sits NEXT TO PayPal button
-   - ✅ BlaKats: Barcode + Download Wild CD buttons (top-right above hero)
-   - ✅ Fix waveform bleeding into Buy buttons (CSS supports this)
-   - Does NOT break hero video / preview logic
+   - ✅ BlaKats Barcode + Download Wild CD buttons appear BELOW Hero Video
+   - ✅ Fixes waveform bleeding into buy buttons
    ============================================================ */
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
@@ -21,15 +20,15 @@ const PREVIEW_BASE = "assets/previews";
 
 // BlaKats: Barcode + Full CD download
 const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
-
-// Full CD ZIP must be hosted on Cloudflare (your requirement)
+// Full-CD ZIP must be on Cloudflare
 const BLAKATS_CD_ZIP_URL = `${CLOUDFLARE_BASE}/assets/downloads/BlaKatsWildCDMP3s.zip`;
 
-// Optional: direct Stripe payment links for certain SKUs
+/** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
   blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 };
 
+/** Catalog */
 const CATALOG = [
   {
     id: "blakats",
@@ -70,7 +69,7 @@ const CATALOG = [
   },
 ];
 
-// Hero videos
+/** Hero configs */
 const HERO_TAB_ID = "boombash";
 const HERO_VIDEO = {
   src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
@@ -89,7 +88,7 @@ const BLAKATS_HERO_VIDEO = {
   caption: "BlaKats — Hero Video",
 };
 
-// STATE
+/** State */
 let activeTabId = CATALOG[0]?.id || "blakats";
 
 let previewAudio = null;
@@ -109,7 +108,7 @@ let blakatsHeroCleanupFn = null;
 let previewMutedByVideo = false;
 let previewMutedByBlakatsVideo = false;
 
-// HELPERS
+/** Helpers */
 function $(sel, root = document) { return root.querySelector(sel); }
 function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
@@ -152,10 +151,11 @@ async function postJsonExpectJson(url, payload) {
   let data;
   try { data = JSON.parse(raw); }
   catch { throw new Error(`${url} returned non-JSON:\n\n${raw}`); }
+
   return data;
 }
 
-// BARCODE MODAL
+/** Barcode modal */
 function ensureBarcodeModal() {
   let modal = $("#qrModal");
   if (modal) return modal;
@@ -178,7 +178,6 @@ function ensureBarcodeModal() {
   modal.addEventListener("click", (e) => {
     if (e.target === modal) closeBarcodeModal();
   });
-
   modal.querySelector(".qr-close").addEventListener("click", closeBarcodeModal);
 
   document.addEventListener("keydown", (e) => {
@@ -189,69 +188,10 @@ function ensureBarcodeModal() {
   return modal;
 }
 
-function openBarcodeModal() {
-  ensureBarcodeModal().classList.add("open");
-}
-function closeBarcodeModal() {
-  const modal = $("#qrModal");
-  if (modal) modal.classList.remove("open");
-}
+function openBarcodeModal() { ensureBarcodeModal().classList.add("open"); }
+function closeBarcodeModal() { const m = $("#qrModal"); if (m) m.classList.remove("open"); }
 
-// VIDEO MUTING (BoomBash)
-function setHeroMuted(muted) {
-  if (!heroVideoEl) return;
-  heroVideoEl.muted = !!muted;
-
-  if (heroMuteBtnEl) {
-    heroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
-    heroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
-    heroMuteBtnEl.textContent = muted ? "🔇 Muted" : "🔊 Sound";
-  }
-}
-
-function maybeMuteVideoBecausePreviewStarted() {
-  if (!heroVideoEl) return;
-  const videoIsPlaying = !heroVideoEl.paused && !heroVideoEl.ended;
-  const videoIsUnmuted = heroVideoEl.muted === false;
-  if (videoIsPlaying && videoIsUnmuted) setHeroMuted(true);
-}
-
-function maybeMutePreviewBecauseVideoUnmuted() {
-  if (!isPreviewPlaying()) return;
-  if (previewAudio) {
-    previewAudio.muted = true;
-    previewMutedByVideo = true;
-  }
-}
-
-// VIDEO MUTING (BlaKats)
-function setBlakatsHeroMuted(muted) {
-  if (!blakatsHeroVideoEl) return;
-  blakatsHeroVideoEl.muted = !!muted;
-
-  if (blakatsHeroMuteBtnEl) {
-    blakatsHeroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
-    blakatsHeroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
-    blakatsHeroMuteBtnEl.textContent = muted ? "🔇 Muted" : "🔊 Sound";
-  }
-}
-
-function maybeMuteBlakatsVideoBecausePreviewStarted() {
-  if (!blakatsHeroVideoEl) return;
-  const videoIsPlaying = !blakatsHeroVideoEl.paused && !blakatsHeroVideoEl.ended;
-  const videoIsUnmuted = blakatsHeroVideoEl.muted === false;
-  if (videoIsPlaying && videoIsUnmuted) setBlakatsHeroMuted(true);
-}
-
-function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
-  if (!isPreviewPlaying()) return;
-  if (previewAudio) {
-    previewAudio.muted = true;
-    previewMutedByBlakatsVideo = true;
-  }
-}
-
-// PREVIEW CONTROL
+/** Preview bars */
 function ensureWaveBars(wavebox) {
   if (wavebox.dataset.ready === "1") return;
   wavebox.innerHTML = "";
@@ -266,23 +206,11 @@ function ensureWaveBars(wavebox) {
 }
 
 function stopPreview() {
-  if (previewAudio && previewMutedByVideo) {
-    previewAudio.muted = false;
-    previewMutedByVideo = false;
-  }
-  if (previewAudio && previewMutedByBlakatsVideo) {
-    previewAudio.muted = false;
-    previewMutedByBlakatsVideo = false;
-  }
+  if (previewAudio && previewMutedByVideo) { previewAudio.muted = false; previewMutedByVideo = false; }
+  if (previewAudio && previewMutedByBlakatsVideo) { previewAudio.muted = false; previewMutedByBlakatsVideo = false; }
 
-  if (previewAudio) {
-    try { previewAudio.pause(); } catch {}
-    previewAudio = null;
-  }
-  if (previewTimer) {
-    clearInterval(previewTimer);
-    previewTimer = null;
-  }
+  if (previewAudio) { try { previewAudio.pause(); } catch {} previewAudio = null; }
+  if (previewTimer) { clearInterval(previewTimer); previewTimer = null; }
 
   if (activePreviewBtn) {
     activePreviewBtn.textContent = "▶ Preview";
@@ -301,7 +229,7 @@ function stopPreview() {
   activeTimeEl = null;
 }
 
-// PAYPAL
+/** PayPal / Stripe */
 async function createPayPalLink(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -313,7 +241,6 @@ async function createPayPalLink(track) {
   return data.url;
 }
 
-// STRIPE
 async function createStripeLinkViaWorker(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -325,7 +252,54 @@ async function createStripeLinkViaWorker(track) {
   return data.url;
 }
 
-// RENDER: TABS
+/** Hero muting helpers (unchanged) */
+function setHeroMuted(muted) {
+  if (!heroVideoEl) return;
+  heroVideoEl.muted = !!muted;
+
+  if (heroMuteBtnEl) {
+    heroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
+    heroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
+    heroMuteBtnEl.textContent = muted ? "🔇 Muted" : "🔊 Sound";
+  }
+}
+
+function maybeMuteVideoBecausePreviewStarted() {
+  if (!heroVideoEl) return;
+  const playing = !heroVideoEl.paused && !heroVideoEl.ended;
+  const unmuted = heroVideoEl.muted === false;
+  if (playing && unmuted) setHeroMuted(true);
+}
+
+function maybeMutePreviewBecauseVideoUnmuted() {
+  if (!isPreviewPlaying()) return;
+  if (previewAudio) { previewAudio.muted = true; previewMutedByVideo = true; }
+}
+
+function setBlakatsHeroMuted(muted) {
+  if (!blakatsHeroVideoEl) return;
+  blakatsHeroVideoEl.muted = !!muted;
+
+  if (blakatsHeroMuteBtnEl) {
+    blakatsHeroMuteBtnEl.setAttribute("aria-pressed", String(!muted));
+    blakatsHeroMuteBtnEl.title = muted ? "Unmute audio" : "Mute audio";
+    blakatsHeroMuteBtnEl.textContent = muted ? "🔇 Muted" : "🔊 Sound";
+  }
+}
+
+function maybeMuteBlakatsVideoBecausePreviewStarted() {
+  if (!blakatsHeroVideoEl) return;
+  const playing = !blakatsHeroVideoEl.paused && !blakatsHeroVideoEl.ended;
+  const unmuted = blakatsHeroVideoEl.muted === false;
+  if (playing && unmuted) setBlakatsHeroMuted(true);
+}
+
+function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
+  if (!isPreviewPlaying()) return;
+  if (previewAudio) { previewAudio.muted = true; previewMutedByBlakatsVideo = true; }
+}
+
+/** Render tabs */
 function renderTabs() {
   const nav = $(".tabs");
   nav.innerHTML = "";
@@ -340,11 +314,9 @@ function renderTabs() {
 
     btn.addEventListener("click", () => {
       if (tab.id === activeTabId) return;
-
       stopPreview();
       stopHeroVideo();
       stopBlakatsHeroVideo();
-
       activeTabId = tab.id;
       renderAll();
     });
@@ -353,7 +325,7 @@ function renderTabs() {
   });
 }
 
-// RENDER: PANELS
+/** Render panels */
 function renderPanels() {
   const panelsEl = $(".tab-panels");
   panelsEl.innerHTML = "";
@@ -368,10 +340,28 @@ function renderPanels() {
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // ✅ BlaKats tools row (TOP RIGHT, ABOVE HERO)
+    // BlaKats hero
+    if (tab.id === BLAKATS_HERO_TAB_ID) {
+      const heroMount = document.createElement("div");
+      heroMount.id = "blakatsHeroMount";
+      panel.appendChild(heroMount);
+
+      queueMicrotask(() => mountLoopingBlaKatsHeroVideo(heroMount, BLAKATS_HERO_VIDEO));
+    }
+
+    // BoomBash hero
+    if (tab.id === HERO_TAB_ID) {
+      const heroMount = document.createElement("div");
+      heroMount.id = "heroMount";
+      panel.appendChild(heroMount);
+
+      queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
+    }
+
+    // ✅ BELOW HERO: BlaKats tools row (Barcode + Download Wild CD)
     if (tab.id === "blakats") {
       const tools = document.createElement("div");
-      tools.className = "panel-tools";
+      tools.className = "panel-tools below-hero";
 
       const barcodeBtn = document.createElement("button");
       barcodeBtn.type = "button";
@@ -390,25 +380,12 @@ function renderPanels() {
       panel.appendChild(tools);
     }
 
-    // BlaKats hero
-    if (tab.id === BLAKATS_HERO_TAB_ID) {
-      const heroMount = document.createElement("div");
-      heroMount.id = "blakatsHeroMount";
-      panel.appendChild(heroMount);
-      queueMicrotask(() => mountLoopingBlaKatsHeroVideo(heroMount, BLAKATS_HERO_VIDEO));
-    }
+    // ✅ wrap tracks so we can push them down consistently
+    const tracksWrap = document.createElement("div");
+    tracksWrap.className = "tracks-wrap";
 
-    // BoomBash hero
-    if (tab.id === HERO_TAB_ID) {
-      const heroMount = document.createElement("div");
-      heroMount.id = "heroMount";
-      panel.appendChild(heroMount);
-      queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
-    }
-
-    tab.tracks.forEach((track) => {
-      panel.appendChild(renderTrackRow(track));
-    });
+    tab.tracks.forEach((track) => tracksWrap.appendChild(renderTrackRow(track)));
+    panel.appendChild(tracksWrap);
 
     panelsEl.appendChild(panel);
   });
@@ -500,7 +477,10 @@ function renderTrackRow(track) {
       window.location.href = url;
     } catch (err) {
       console.error(err);
-      alert((err?.message || "Could not start Stripe checkout."));
+      alert(
+        (err?.message || "Could not start Stripe checkout.") +
+        "\n\nIf you are using Payment Links, add STRIPE_LINKS[sku].\nIf you want Stripe for ALL items, implement POST /api/stripe/create on the Worker."
+      );
       stripeBtn.disabled = false;
       stripeBtn.textContent = old;
     }
@@ -513,6 +493,7 @@ function renderTrackRow(track) {
 
   async function togglePreview() {
     if (activePreviewBtn === previewBtn) { stopPreview(); return; }
+
     stopPreview();
 
     if (activeTabId === HERO_TAB_ID) maybeMuteVideoBecausePreviewStarted();
@@ -521,6 +502,7 @@ function renderTrackRow(track) {
     ensureWaveBars(wavebox);
     wavebox.classList.remove("idle");
     wavebox.classList.add("playing");
+
     previewBtn.textContent = "⏸ Pause";
     previewBtn.setAttribute("aria-pressed", "true");
 
@@ -570,7 +552,7 @@ function renderTrackRow(track) {
   return row;
 }
 
-// HERO VIDEO: BoomBash
+/** Hero mount/stop (BoomBash) */
 function stopHeroVideo() {
   if (heroCleanupFn) { try { heroCleanupFn(); } catch {} heroCleanupFn = null; }
   if (heroVideoEl) {
@@ -582,7 +564,6 @@ function stopHeroVideo() {
 
 function mountLoopingHeroVideo(containerEl, opts) {
   stopHeroVideo();
-
   const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
 
   containerEl.innerHTML = `
@@ -603,31 +584,19 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   heroVideoEl = video;
   heroMuteBtnEl = muteBtn;
+
   setHeroMuted(true);
 
   const end = start + duration;
-
+  const onLoaded = () => { try { video.currentTime = start; } catch {} video.play?.().catch?.(() => {}); };
   const onTimeUpdate = () => {
-    if (video.currentTime >= end) {
-      video.currentTime = start;
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    }
-  };
-
-  const onLoaded = () => {
-    try { video.currentTime = start; } catch {}
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
+    if (video.currentTime >= end) { video.currentTime = start; video.play?.().catch?.(() => {}); }
   };
 
   video.addEventListener("loadedmetadata", onLoaded);
   video.addEventListener("timeupdate", onTimeUpdate);
 
-  containerEl.addEventListener("click", () => {
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  });
+  containerEl.addEventListener("click", () => video.play?.().catch?.(() => {}));
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -635,8 +604,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
     if (currentlyMuted) {
       setHeroMuted(false);
       video.volume = 1;
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
+      video.play?.().catch?.(() => {});
       maybeMutePreviewBecauseVideoUnmuted();
     } else {
       setHeroMuted(true);
@@ -649,7 +617,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
   };
 }
 
-// HERO VIDEO: BlaKats
+/** Hero mount/stop (BlaKats) */
 function stopBlakatsHeroVideo() {
   if (blakatsHeroCleanupFn) { try { blakatsHeroCleanupFn(); } catch {} blakatsHeroCleanupFn = null; }
   if (blakatsHeroVideoEl) {
@@ -661,7 +629,6 @@ function stopBlakatsHeroVideo() {
 
 function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   stopBlakatsHeroVideo();
-
   const { src, start = 0, duration = 13, poster = "", caption = "Preview" } = opts;
 
   containerEl.innerHTML = `
@@ -682,31 +649,19 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   blakatsHeroVideoEl = video;
   blakatsHeroMuteBtnEl = muteBtn;
+
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
-
+  const onLoaded = () => { try { video.currentTime = start; } catch {} video.play?.().catch?.(() => {}); };
   const onTimeUpdate = () => {
-    if (video.currentTime >= end) {
-      video.currentTime = start;
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-    }
-  };
-
-  const onLoaded = () => {
-    try { video.currentTime = start; } catch {}
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
+    if (video.currentTime >= end) { video.currentTime = start; video.play?.().catch?.(() => {}); }
   };
 
   video.addEventListener("loadedmetadata", onLoaded);
   video.addEventListener("timeupdate", onTimeUpdate);
 
-  containerEl.addEventListener("click", () => {
-    const p = video.play();
-    if (p && typeof p.catch === "function") p.catch(() => {});
-  });
+  containerEl.addEventListener("click", () => video.play?.().catch?.(() => {}));
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
@@ -714,9 +669,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
     if (currentlyMuted) {
       setBlakatsHeroMuted(false);
       video.volume = 1;
-      const p = video.play();
-      if (p && typeof p.catch === "function") p.catch(() => {});
-      // ✅ IMPORTANT: keep preview-from-video muting consistent
+      video.play?.().catch?.(() => {});
       maybeMutePreviewBecauseBlakatsVideoUnmuted();
     } else {
       setBlakatsHeroMuted(true);
@@ -729,7 +682,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   };
 }
 
-// TOP LEVEL
+/** Top-level render */
 function renderAll() {
   renderTabs();
   renderPanels();
