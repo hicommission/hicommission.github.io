@@ -3,48 +3,33 @@
 
    ✅ Goals:
    - PayPal works for ALL tracks on ALL tabs
-   - Stripe works for ALL tracks on ALL tabs in ONE of two ways:
+   - Stripe works for ALL tracks on ALL tabs:
        A) If STRIPE_LINKS[sku] exists -> redirect to Payment Link
-       B) Otherwise -> POST /api/stripe/create (Worker) -> { url }
-   - Stripe button sits NEXT TO PayPal button (same row)
-   - DOES implement BlaKats Barcode + Download Wild CD buttons (top-right)
-   - Fixes missing "buy" element bug (was broken in the pasted version)
+       B) Otherwise -> POST /api/stripe/create -> { url }
+   - Stripe button sits NEXT TO PayPal button
+   - ✅ BlaKats: Barcode + Download Wild CD buttons (top-right above hero)
+   - ✅ Fix waveform bleeding into Buy buttons (CSS supports this)
+   - Does NOT break hero video / preview logic
    ============================================================ */
 
-/** =========================
- *  CONFIG
- *  ========================= */
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-
-// PayPal create endpoint (Worker)
 const PAYPAL_CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
-
-// Stripe create endpoint (Worker)
 const STRIPE_CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 
-// Preview length (seconds)
 const PREVIEW_SECONDS = 30;
-
-// Where previews live (GitHub Pages)
 const PREVIEW_BASE = "assets/previews";
 
 // BlaKats: Barcode + Full CD download
 const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
 
-// IMPORTANT: Full-CD ZIP must be on Cloudflare/CloudShare (NOT GitHub Pages)
+// Full CD ZIP must be hosted on Cloudflare (your requirement)
 const BLAKATS_CD_ZIP_URL = `${CLOUDFLARE_BASE}/assets/downloads/BlaKatsWildCDMP3s.zip`;
 
-/** =========================
- *  STRIPE PAYMENT LINKS (OPTION A)
- *  ========================= */
+// Optional: direct Stripe payment links for certain SKUs
 const STRIPE_LINKS = {
-  // BlaKats
   blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 };
 
-/** =========================
- *  CATALOG
- *  ========================= */
 const CATALOG = [
   {
     id: "blakats",
@@ -65,7 +50,6 @@ const CATALOG = [
       { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
     ],
   },
-
   {
     id: "1gnm",
     label: "1GNM",
@@ -75,7 +59,6 @@ const CATALOG = [
       { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
   },
-
   {
     id: "boombash",
     label: "BoomBash",
@@ -87,11 +70,7 @@ const CATALOG = [
   },
 ];
 
-/** =========================
- *  HERO VIDEO CONFIGS
- *  ========================= */
-
-// BoomBash hero
+// Hero videos
 const HERO_TAB_ID = "boombash";
 const HERO_VIDEO = {
   src: "assets/BlaKatsPaint_the_TownRed_loop.mp4",
@@ -101,7 +80,6 @@ const HERO_VIDEO = {
   caption: "BoomBash — Paint The Town Red (13s loop)",
 };
 
-// BlaKats hero
 const BLAKATS_HERO_TAB_ID = "blakats";
 const BLAKATS_HERO_VIDEO = {
   src: "assets/BLAKATS_VIDEO_WEB_SMALL.mp4",
@@ -111,37 +89,27 @@ const BLAKATS_HERO_VIDEO = {
   caption: "BlaKats — Hero Video",
 };
 
-/** =========================
- *  STATE
- *  ========================= */
+// STATE
 let activeTabId = CATALOG[0]?.id || "blakats";
 
-// Preview audio state
 let previewAudio = null;
 let previewTimer = null;
 let activePreviewBtn = null;
 let activeWavebox = null;
 let activeTimeEl = null;
 
-// BoomBash hero state
 let heroVideoEl = null;
 let heroMuteBtnEl = null;
 let heroCleanupFn = null;
 
-// BlaKats hero state
 let blakatsHeroVideoEl = null;
 let blakatsHeroMuteBtnEl = null;
 let blakatsHeroCleanupFn = null;
 
-// BoomBash logic fix flag
 let previewMutedByVideo = false;
-
-// BlaKats: mute-preview-while-video-unmuted flag
 let previewMutedByBlakatsVideo = false;
 
-/** =========================
- *  HELPERS
- *  ========================= */
+// HELPERS
 function $(sel, root = document) { return root.querySelector(sel); }
 function $all(sel, root = document) { return Array.from(root.querySelectorAll(sel)); }
 
@@ -179,21 +147,15 @@ async function postJsonExpectJson(url, payload) {
   });
 
   const raw = await res.text().catch(() => "");
-
-  if (!res.ok) {
-    throw new Error(`${url} failed: HTTP ${res.status}\n\n${raw}`.trim());
-  }
+  if (!res.ok) throw new Error(`${url} failed: HTTP ${res.status}\n\n${raw}`.trim());
 
   let data;
   try { data = JSON.parse(raw); }
   catch { throw new Error(`${url} returned non-JSON:\n\n${raw}`); }
-
   return data;
 }
 
-/** =========================
- *  BARCODE MODAL
- *  ========================= */
+// BARCODE MODAL
 function ensureBarcodeModal() {
   let modal = $("#qrModal");
   if (modal) return modal;
@@ -208,7 +170,7 @@ function ensureBarcodeModal() {
         <button type="button" class="qr-close" aria-label="Close">Close</button>
       </div>
       <div class="qr-body">
-        <img id="qrImg" alt="BlaKats barcode" src="${BLAKATS_BARCODE_IMG_URL}" />
+        <img alt="BlaKats barcode" src="${BLAKATS_BARCODE_IMG_URL}" />
       </div>
     </div>
   `;
@@ -217,8 +179,7 @@ function ensureBarcodeModal() {
     if (e.target === modal) closeBarcodeModal();
   });
 
-  const closeBtn = modal.querySelector(".qr-close");
-  closeBtn.addEventListener("click", closeBarcodeModal);
+  modal.querySelector(".qr-close").addEventListener("click", closeBarcodeModal);
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeBarcodeModal();
@@ -229,18 +190,14 @@ function ensureBarcodeModal() {
 }
 
 function openBarcodeModal() {
-  const modal = ensureBarcodeModal();
-  modal.classList.add("open");
+  ensureBarcodeModal().classList.add("open");
 }
-
 function closeBarcodeModal() {
   const modal = $("#qrModal");
   if (modal) modal.classList.remove("open");
 }
 
-/** =========================
- *  VIDEO MUTING / UI (BoomBash)
- *  ========================= */
+// VIDEO MUTING (BoomBash)
 function setHeroMuted(muted) {
   if (!heroVideoEl) return;
   heroVideoEl.muted = !!muted;
@@ -267,9 +224,7 @@ function maybeMutePreviewBecauseVideoUnmuted() {
   }
 }
 
-/** =========================
- *  VIDEO MUTING / UI (BlaKats)
- *  ========================= */
+// VIDEO MUTING (BlaKats)
 function setBlakatsHeroMuted(muted) {
   if (!blakatsHeroVideoEl) return;
   blakatsHeroVideoEl.muted = !!muted;
@@ -296,9 +251,7 @@ function maybeMutePreviewBecauseBlakatsVideoUnmuted() {
   }
 }
 
-/** =========================
- *  PREVIEW CONTROL
- *  ========================= */
+// PREVIEW CONTROL
 function ensureWaveBars(wavebox) {
   if (wavebox.dataset.ready === "1") return;
   wavebox.innerHTML = "";
@@ -348,9 +301,7 @@ function stopPreview() {
   activeTimeEl = null;
 }
 
-/** =========================
- *  PAYPAL
- *  ========================= */
+// PAYPAL
 async function createPayPalLink(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -362,9 +313,7 @@ async function createPayPalLink(track) {
   return data.url;
 }
 
-/** =========================
- *  STRIPE
- *  ========================= */
+// STRIPE
 async function createStripeLinkViaWorker(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -376,9 +325,7 @@ async function createStripeLinkViaWorker(track) {
   return data.url;
 }
 
-/** =========================
- *  RENDER: TABS
- *  ========================= */
+// RENDER: TABS
 function renderTabs() {
   const nav = $(".tabs");
   nav.innerHTML = "";
@@ -406,9 +353,7 @@ function renderTabs() {
   });
 }
 
-/** =========================
- *  RENDER: PANELS / TRACKS
- *  ========================= */
+// RENDER: PANELS
 function renderPanels() {
   const panelsEl = $(".tab-panels");
   panelsEl.innerHTML = "";
@@ -423,7 +368,7 @@ function renderPanels() {
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // ✅ BlaKats tools row: Barcode + Download Wild CD
+    // ✅ BlaKats tools row (TOP RIGHT, ABOVE HERO)
     if (tab.id === "blakats") {
       const tools = document.createElement("div");
       tools.className = "panel-tools";
@@ -432,15 +377,13 @@ function renderPanels() {
       barcodeBtn.type = "button";
       barcodeBtn.className = "tool-btn secondary";
       barcodeBtn.textContent = "Barcode";
-      barcodeBtn.addEventListener("click", () => openBarcodeModal());
+      barcodeBtn.addEventListener("click", openBarcodeModal);
 
       const cdBtn = document.createElement("button");
       cdBtn.type = "button";
       cdBtn.className = "tool-btn primary";
       cdBtn.textContent = "Download BlaKats Wild CD";
-      cdBtn.addEventListener("click", () => {
-        window.location.href = BLAKATS_CD_ZIP_URL;
-      });
+      cdBtn.addEventListener("click", () => { window.location.href = BLAKATS_CD_ZIP_URL; });
 
       tools.appendChild(barcodeBtn);
       tools.appendChild(cdBtn);
@@ -452,10 +395,7 @@ function renderPanels() {
       const heroMount = document.createElement("div");
       heroMount.id = "blakatsHeroMount";
       panel.appendChild(heroMount);
-
-      queueMicrotask(() => {
-        mountLoopingBlaKatsHeroVideo(heroMount, BLAKATS_HERO_VIDEO);
-      });
+      queueMicrotask(() => mountLoopingBlaKatsHeroVideo(heroMount, BLAKATS_HERO_VIDEO));
     }
 
     // BoomBash hero
@@ -463,10 +403,7 @@ function renderPanels() {
       const heroMount = document.createElement("div");
       heroMount.id = "heroMount";
       panel.appendChild(heroMount);
-
-      queueMicrotask(() => {
-        mountLoopingHeroVideo(heroMount, HERO_VIDEO);
-      });
+      queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
     }
 
     tab.tracks.forEach((track) => {
@@ -483,7 +420,6 @@ function renderTrackRow(track) {
   const row = document.createElement("div");
   row.className = "track";
 
-  // thumbnail
   const thumb = document.createElement("div");
   thumb.className = "thumb";
   thumb.title = "Click to preview";
@@ -492,7 +428,6 @@ function renderTrackRow(track) {
   img.alt = `${track.title} cover`;
   thumb.appendChild(img);
 
-  // meta
   const meta = document.createElement("div");
   meta.className = "meta";
   meta.innerHTML = `
@@ -501,7 +436,6 @@ function renderTrackRow(track) {
     <p class="price">$${escapeHtml(track.amount)}</p>
   `;
 
-  // preview cluster
   const preview = document.createElement("div");
   preview.className = "preview";
 
@@ -527,11 +461,9 @@ function renderTrackRow(track) {
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
-  // ✅ buy button cluster (PayPal + Stripe side-by-side)
   const buy = document.createElement("div");
   buy.className = "buy";
 
-  // PayPal button
   const buyBtn = document.createElement("button");
   buyBtn.type = "button";
   buyBtn.className = "buy-btn";
@@ -541,7 +473,6 @@ function renderTrackRow(track) {
     buyBtn.disabled = true;
     const old = buyBtn.textContent;
     buyBtn.textContent = "Loading…";
-
     try {
       const paypalUrl = await createPayPalLink(track);
       window.location.href = paypalUrl;
@@ -553,7 +484,6 @@ function renderTrackRow(track) {
     }
   });
 
-  // Stripe button
   const stripeBtn = document.createElement("button");
   stripeBtn.type = "button";
   stripeBtn.className = "buy-btn stripe-btn";
@@ -563,21 +493,14 @@ function renderTrackRow(track) {
     stripeBtn.disabled = true;
     const old = stripeBtn.textContent;
     stripeBtn.textContent = "Loading…";
-
     try {
       const direct = STRIPE_LINKS[track.sku];
-      if (direct) {
-        window.location.href = direct;
-        return;
-      }
+      if (direct) { window.location.href = direct; return; }
       const url = await createStripeLinkViaWorker(track);
       window.location.href = url;
     } catch (err) {
       console.error(err);
-      alert(
-        (err?.message || "Could not start Stripe checkout.") +
-        "\n\nIf you are using Payment Links, add STRIPE_LINKS[sku].\nIf you want Stripe for ALL items, implement POST /api/stripe/create on the Worker."
-      );
+      alert((err?.message || "Could not start Stripe checkout."));
       stripeBtn.disabled = false;
       stripeBtn.textContent = old;
     }
@@ -586,28 +509,18 @@ function renderTrackRow(track) {
   buy.appendChild(buyBtn);
   buy.appendChild(stripeBtn);
 
-  // Preview audio
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
 
   async function togglePreview() {
-    if (activePreviewBtn === previewBtn) {
-      stopPreview();
-      return;
-    }
-
+    if (activePreviewBtn === previewBtn) { stopPreview(); return; }
     stopPreview();
 
-    if (activeTabId === HERO_TAB_ID) {
-      maybeMuteVideoBecausePreviewStarted();
-    }
-    if (activeTabId === BLAKATS_HERO_TAB_ID) {
-      maybeMuteBlakatsVideoBecausePreviewStarted();
-    }
+    if (activeTabId === HERO_TAB_ID) maybeMuteVideoBecausePreviewStarted();
+    if (activeTabId === BLAKATS_HERO_TAB_ID) maybeMuteBlakatsVideoBecausePreviewStarted();
 
     ensureWaveBars(wavebox);
     wavebox.classList.remove("idle");
     wavebox.classList.add("playing");
-
     previewBtn.textContent = "⏸ Pause";
     previewBtn.setAttribute("aria-pressed", "true");
 
@@ -617,12 +530,11 @@ function renderTrackRow(track) {
 
     previewAudio = new Audio(audioUrl);
     previewAudio.preload = "auto";
-
     previewAudio.muted = false;
     previewMutedByVideo = false;
     previewMutedByBlakatsVideo = false;
 
-    previewAudio.addEventListener("ended", () => stopPreview());
+    previewAudio.addEventListener("ended", stopPreview);
     previewAudio.addEventListener("error", () => {
       stopPreview();
       alert(`Preview failed to load:\n${audioUrl}`);
@@ -636,15 +548,10 @@ function renderTrackRow(track) {
 
       previewTimer = setInterval(() => {
         if (!previewAudio) return;
-
         const elapsed = (performance.now() - startedAt) / 1000;
         const shown = Math.min(PREVIEW_SECONDS, elapsed);
-
         timeEl.textContent = `${fmtTime(shown)} / ${fmtTime(PREVIEW_SECONDS)}`;
-
-        if (elapsed >= PREVIEW_SECONDS) {
-          stopPreview();
-        }
+        if (elapsed >= PREVIEW_SECONDS) stopPreview();
       }, 120);
     } catch (e) {
       stopPreview();
@@ -663,20 +570,11 @@ function renderTrackRow(track) {
   return row;
 }
 
-/** =========================
- *  HERO VIDEO MOUNT / STOP (BoomBash)
- *  ========================= */
+// HERO VIDEO: BoomBash
 function stopHeroVideo() {
-  if (heroCleanupFn) {
-    try { heroCleanupFn(); } catch {}
-    heroCleanupFn = null;
-  }
+  if (heroCleanupFn) { try { heroCleanupFn(); } catch {} heroCleanupFn = null; }
   if (heroVideoEl) {
-    try {
-      heroVideoEl.pause();
-      heroVideoEl.muted = true;
-      heroVideoEl.currentTime = 0;
-    } catch {}
+    try { heroVideoEl.pause(); heroVideoEl.muted = true; heroVideoEl.currentTime = 0; } catch {}
   }
   heroVideoEl = null;
   heroMuteBtnEl = null;
@@ -689,17 +587,9 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   containerEl.innerHTML = `
     <div class="hero-media">
-      <video
-        class="hero-video"
-        ${poster ? `poster="${poster}"` : ""}
-        muted
-        autoplay
-        playsinline
-        preload="metadata"
-      >
+      <video class="hero-video" ${poster ? `poster="${poster}"` : ""} muted autoplay playsinline preload="metadata">
         <source src="${src}" type="video/mp4" />
       </video>
-
       <div class="hero-caption hero-caption-row">
         <span>${escapeHtml(caption)}</span>
         <button type="button" class="mute-btn" aria-pressed="false" title="Unmute audio">🔇 Muted</button>
@@ -713,12 +603,9 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   heroVideoEl = video;
   heroMuteBtnEl = muteBtn;
-
   setHeroMuted(true);
 
   const end = start + duration;
-
-  const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
     if (video.currentTime >= end) {
@@ -729,7 +616,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
   };
 
   const onLoaded = () => {
-    seekToStart();
+    try { video.currentTime = start; } catch {}
     const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   };
@@ -744,7 +631,6 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
       setHeroMuted(false);
@@ -763,20 +649,11 @@ function mountLoopingHeroVideo(containerEl, opts) {
   };
 }
 
-/** =========================
- *  HERO VIDEO MOUNT / STOP (BlaKats)
- *  ========================= */
+// HERO VIDEO: BlaKats
 function stopBlakatsHeroVideo() {
-  if (blakatsHeroCleanupFn) {
-    try { blakatsHeroCleanupFn(); } catch {}
-    blakatsHeroCleanupFn = null;
-  }
+  if (blakatsHeroCleanupFn) { try { blakatsHeroCleanupFn(); } catch {} blakatsHeroCleanupFn = null; }
   if (blakatsHeroVideoEl) {
-    try {
-      blakatsHeroVideoEl.pause();
-      blakatsHeroVideoEl.muted = true;
-      blakatsHeroVideoEl.currentTime = 0;
-    } catch {}
+    try { blakatsHeroVideoEl.pause(); blakatsHeroVideoEl.muted = true; blakatsHeroVideoEl.currentTime = 0; } catch {}
   }
   blakatsHeroVideoEl = null;
   blakatsHeroMuteBtnEl = null;
@@ -789,17 +666,9 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   containerEl.innerHTML = `
     <div class="hero-media">
-      <video
-        class="hero-video blakats-hero-video"
-        ${poster ? `poster="${poster}"` : ""}
-        muted
-        autoplay
-        playsinline
-        preload="metadata"
-      >
+      <video class="hero-video blakats-hero-video" ${poster ? `poster="${poster}"` : ""} muted autoplay playsinline preload="metadata">
         <source src="${src}" type="video/mp4" />
       </video>
-
       <div class="hero-caption hero-caption-row">
         <span>${escapeHtml(caption)}</span>
         <button type="button" class="mute-btn blakats-mute-btn" aria-pressed="false" title="Unmute audio">🔇 Muted</button>
@@ -813,12 +682,9 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   blakatsHeroVideoEl = video;
   blakatsHeroMuteBtnEl = muteBtn;
-
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
-
-  const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
     if (video.currentTime >= end) {
@@ -829,7 +695,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   };
 
   const onLoaded = () => {
-    seekToStart();
+    try { video.currentTime = start; } catch {}
     const p = video.play();
     if (p && typeof p.catch === "function") p.catch(() => {});
   };
@@ -844,13 +710,13 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
-
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
       setBlakatsHeroMuted(false);
       video.volume = 1;
       const p = video.play();
       if (p && typeof p.catch === "function") p.catch(() => {});
+      // ✅ IMPORTANT: keep preview-from-video muting consistent
       maybeMutePreviewBecauseBlakatsVideoUnmuted();
     } else {
       setBlakatsHeroMuted(true);
@@ -863,21 +729,13 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   };
 }
 
-/** =========================
- *  TOP-LEVEL RENDER
- *  ========================= */
+// TOP LEVEL
 function renderAll() {
   renderTabs();
   renderPanels();
-
   $all(".tab").forEach((btn) => {
     btn.setAttribute("aria-selected", btn.dataset.tab === activeTabId ? "true" : "false");
   });
 }
 
-/** =========================
- *  INIT
- *  ========================= */
-document.addEventListener("DOMContentLoaded", () => {
-  renderAll();
-});
+document.addEventListener("DOMContentLoaded", renderAll);
