@@ -77,6 +77,7 @@ body{
   box-shadow: var(--shadow);
   overflow: hidden;
 }
+
 .panel{ display:none; }
 .panel.active{ display:block; }
 
@@ -90,99 +91,45 @@ body{
   text-align:center;
 }
 
-/* =========================================================
-   NEW: Panel tools row (Barcode + Download CD) — TOP RIGHT
-   ========================================================= */
+/* ===== BlaKats panel tools row (Barcode + Download CD) ===== */
 .panel-tools{
   display:flex;
   justify-content:flex-end;
-  gap: 12px;
+  align-items:center;
+  gap: 10px;
   padding: 12px 16px;
   border-bottom: 1px solid rgba(0,0,0,.06);
   background: #fff;
 }
-.panel-tools .tool-btn{
+.tool-btn{
   appearance:none;
-  border: 0;
+  border: 1px solid rgba(0,0,0,.10);
   cursor:pointer;
+  border-radius: 12px;
+  padding: 10px 14px;
   font-weight: 900;
   letter-spacing:.2px;
-  padding: 12px 16px;
-  border-radius: 12px;
-  box-shadow: 0 10px 18px rgba(0,0,0,.08);
+  box-shadow: 0 10px 18px rgba(0,0,0,.06);
   white-space: nowrap;
 }
-.panel-tools .tool-btn.secondary{
-  background: #e5e7eb;
-  color: rgba(17,24,39,.92);
+.tool-btn.secondary{
+  background: rgba(17,24,39,.06);
+  color: rgba(17,24,39,.90);
 }
-.panel-tools .tool-btn.primary{
+.tool-btn.primary{
+  border: 0;
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   color: var(--tabText);
+  box-shadow: 0 12px 22px rgba(0,0,0,.14);
 }
-.panel-tools .tool-btn:hover{ filter: brightness(1.02); }
-.panel-tools .tool-btn:active{ transform: translateY(1px); }
-
-/* =========================================================
-   NEW: Barcode modal overlay
-   ========================================================= */
-.qr-modal{
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding: 20px;
-  background: rgba(0,0,0,.55);
-}
-.qr-modal.open{ display:flex; }
-
-.qr-card{
-  width: min(520px, 96vw);
-  background: #fff;
-  border-radius: 16px;
-  overflow:hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  border: 1px solid rgba(0,0,0,.12);
-}
-.qr-card-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(0,0,0,.08);
-  font-weight: 900;
-}
-.qr-close{
-  appearance:none;
-  border: 0;
-  background: rgba(17,24,39,.08);
-  color: rgba(17,24,39,.9);
-  border-radius: 10px;
-  padding: 8px 10px;
-  cursor:pointer;
-  font-weight: 900;
-}
-.qr-close:hover{ filter: brightness(1.02); }
-.qr-body{
-  padding: 16px;
-}
-.qr-body img{
-  width: 100%;
-  height: auto;
-  display:block;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.10);
-}
+.tool-btn:hover{ filter: brightness(1.02); }
+.tool-btn:active{ transform: translateY(1px); }
 
 /* ===== Track row ===== */
-/* IMPORTANT FIX:
-   Make preview + buy columns flexible so the waveform cannot overlap the buy column. */
 .track{
   display:grid;
-  grid-template-columns: 86px minmax(220px, 1fr) minmax(240px, 360px) minmax(180px, 210px);
+  /* Key fix: use minmax so preview column can shrink without overlapping buy column */
+  grid-template-columns: 86px 1fr minmax(260px, 360px) minmax(200px, 210px);
   gap: 14px;
   padding: 16px;
   align-items:center;
@@ -220,13 +167,6 @@ body{
   transform: translateY(8%);
 }
 
-/* ===== Stripe button ===== */
-.buy-btn.stripe-btn{
-  background: #635bff;
-  box-shadow: 0 12px 22px rgba(99,91,255,.25);
-}
-.buy-btn.stripe-btn:hover{ filter: brightness(.95); }
-
 /* ===== Meta ===== */
 .meta{ min-width:0; }
 .meta .name{
@@ -252,13 +192,14 @@ body{
   align-items:center;
   gap: 12px;
   justify-content:flex-start;
-
-  /* critical so preview content can shrink instead of overlapping buy column */
-  min-width: 0;
+  min-width: 0;                 /* allow shrinking inside grid */
+  overflow: hidden;             /* prevent bleeding into buy column */
 }
 .preview-boxwrap{
   min-width: 0;
+  max-width: 100%;
 }
+
 .preview-btn{
   appearance:none;
   border: 1px solid rgba(0,0,0,.10);
@@ -295,7 +236,6 @@ body{
   position: relative;
   overflow:hidden;
 }
-
 .wavebox .bar{
   width: 4px;
   height: 10px;
@@ -312,7 +252,6 @@ body{
   animation-delay: calc(var(--i) * 14ms);
   background: rgba(63,81,181,.55);
 }
-
 @keyframes idlePulse{
   0%,100%{ transform: scaleY(.55); opacity:.55; }
   50%{ transform: scaleY(1.2); opacity:.85; }
@@ -335,7 +274,7 @@ body{
   gap: 10px;
   align-items:center;
   justify-content:flex-end;
-  flex-wrap: wrap;     /* allow wrap so nothing collides */
+  flex-wrap: wrap;
   min-width: 0;
 }
 .buy-btn{
@@ -354,6 +293,12 @@ body{
 }
 .buy-btn:hover{ background: var(--btnGreenHover); }
 .buy-btn:active{ transform: translateY(1px); }
+
+.buy-btn.stripe-btn{
+  background: #635bff;
+  box-shadow: 0 12px 22px rgba(99,91,255,.25);
+}
+.buy-btn.stripe-btn:hover{ filter: brightness(.95); }
 
 /* ===== Footer ===== */
 .footer{
@@ -386,14 +331,15 @@ body{
 /* mobile: stack buy buttons cleanly */
 @media (max-width: 520px){
   .panel-tools{
-    justify-content: flex-start;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
   }
+  .tool-btn{ width: 100%; }
 
   .buy{
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content:flex-start;
     gap: 8px;
   }
   .buy .buy-btn{
@@ -417,14 +363,12 @@ body{
   overflow: hidden;
   box-shadow: 0 10px 26px rgba(0,0,0,0.08);
 }
-
 .hero-media video {
   width: 100%;
   height: auto;
   display: block;
   background: #000;
 }
-
 .hero-media .hero-caption {
   padding: 10px 12px;
   font-size: 14px;
@@ -439,7 +383,6 @@ body{
   justify-content:space-between;
   gap: 10px;
 }
-
 .mute-btn{
   appearance:none;
   border: 1px solid rgba(0,0,0,.12);
@@ -455,6 +398,56 @@ body{
 }
 .mute-btn:hover{ filter: brightness(1.02); }
 .mute-btn:active{ transform: translateY(1px); }
-.mute-btn[aria-pressed="true"]{
-  background: rgba(17,24,39,.10);
+.mute-btn[aria-pressed="true"]{ background: rgba(17,24,39,.10); }
+
+/* ===== QR / Barcode modal ===== */
+.qr-modal{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+.qr-modal.open{ display:flex; }
+
+.qr-card{
+  width: min(520px, 100%);
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 18px 46px rgba(0,0,0,.22);
+  border: 1px solid rgba(255,255,255,.35);
+}
+.qr-card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  font-weight: 900;
+  background: rgba(17,24,39,.05);
+  border-bottom: 1px solid rgba(0,0,0,.08);
+}
+.qr-close{
+  appearance:none;
+  border: 1px solid rgba(0,0,0,.12);
+  background: #fff;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-weight: 900;
+  cursor:pointer;
+}
+.qr-close:hover{ filter: brightness(1.02); }
+.qr-body{
+  padding: 14px;
+  display:flex;
+  justify-content:center;
+}
+.qr-body img{
+  width: min(420px, 100%);
+  height: auto;
+  display:block;
 }
