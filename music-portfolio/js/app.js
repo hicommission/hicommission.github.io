@@ -21,7 +21,7 @@ const PREVIEW_BASE = "assets/previews";
 // BlaKats: Barcode + Full CD download
 const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
 // Full-CD ZIP must be on Cloudflare
-const BLAKATS_CD_ZIP_URL = `${CLOUDFLARE_BASE}/assets/downloads/BlaKatsWildCDMP3s.zip`;
+const BLAKATS_CD_ZIP_URL = "https://cliquetraxx.com/download/BlaKatsWildCDMP3s.zip";
 
 /** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
