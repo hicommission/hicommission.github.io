@@ -12,7 +12,6 @@
   --shadow: 0 10px 30px rgba(0,0,0,.08);
   --radius: 14px;
 
-  /* default accent (tab-specific accents override via .theme-*) */
   --accent: #3f51b5;
   --accent2: #2f3f9a;
   --tabText: #fff;
@@ -62,7 +61,6 @@ body{
   color: rgba(17,24,39,.85);
   transition: transform .12s ease, filter .12s ease, background .12s ease;
 }
-
 .tab:hover{ transform: translateY(-1px); filter: brightness(1.02); }
 .tab:active{ transform: translateY(0); filter: brightness(.98); }
 
@@ -94,11 +92,45 @@ body{
   text-align:center;
 }
 
-/* ===== Track row ===== */
+/* ===== Album row (Barcode + Download CD) ===== */
+.album-row{
+  display:flex;
+  gap: 12px;
+  padding: 14px 16px;
+  align-items:center;
+  justify-content:flex-end;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  flex-wrap: wrap;
+}
+.album-btn{
+  appearance:none;
+  border:0;
+  cursor:pointer;
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-weight: 900;
+  letter-spacing:.2px;
+  white-space: nowrap;
+  box-shadow: 0 10px 18px rgba(0,0,0,.10);
+}
+.album-btn.barcode{
+  background: rgba(17,24,39,.10);
+  color: rgba(17,24,39,.92);
+}
+.album-btn.barcode:hover{ filter: brightness(1.02); }
+
+.album-btn.download{
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  color: var(--tabText);
+}
+.album-btn.download:hover{ filter: brightness(.98); }
+
+/* ===== Track row =====
+   KEY FIX: avoid bleed by using flexible columns (minmax)
+*/
 .track{
   display:grid;
-  /* Key fix: allow preview + buy columns to shrink */
-  grid-template-columns: 86px 1fr minmax(240px, 360px) minmax(170px, 210px);
+  grid-template-columns: 86px minmax(240px,1fr) minmax(320px,360px) minmax(220px,260px);
   gap: 14px;
   padding: 16px;
   align-items:center;
@@ -123,48 +155,35 @@ body{
   display:block;
 }
 
-/* =========================================================
-   1GNM ONLY (panel uses .theme-artist2)
-   Show full image (no crop) + nudge DOWN so the guitarist sits lower
-   ========================================================= */
-.theme-artist2 .thumb{ background: #000; }
+/* 1GNM ONLY */
+.theme-artist2 .thumb{ background:#000; }
 .theme-artist2 .thumb img{
-  width: 100%;
-  height: 100%;
+  width:100%;
+  height:100%;
   object-fit: contain;
   object-position: center top;
   transform: translateY(8%);
 }
 
-/* ===== Meta ===== */
+/* Meta */
 .meta{ min-width:0; }
-.meta .name{
-  font-weight: 900;
-  margin: 0;
-  line-height: 1.2;
-}
-.meta .artist{
-  margin: 2px 0 0 0;
-  font-weight: 800;
-  color: rgba(17,24,39,.90);
-}
-.meta .price{
-  margin: 2px 0 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  font-weight: 700;
-}
+.meta .name{ font-weight:900; margin:0; line-height:1.2; }
+.meta .artist{ margin:2px 0 0 0; font-weight:800; color: rgba(17,24,39,.90); }
+.meta .price{ margin:2px 0 0 0; color: var(--muted); font-size:13px; font-weight:700; }
 
-/* ===== Preview cluster ===== */
-/* Key fix: allow wrapping and prevent overflow “bleeding” into buy column */
+/* Preview cluster */
 .preview{
   display:flex;
   align-items:center;
   gap: 12px;
-  justify-content: flex-start;
-  flex-wrap: wrap;
+  justify-content:flex-start;
   min-width: 0;
-  overflow: hidden;
+}
+
+.preview-boxwrap{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
 }
 
 .preview-btn{
@@ -183,20 +202,13 @@ body{
   gap: 8px;
   box-shadow: 0 8px 16px rgba(0,0,0,.06);
 }
-
 .preview-btn:hover{ filter: brightness(1.02); }
 .preview-btn:active{ filter: brightness(.98); }
 .preview-btn[disabled]{ opacity:.6; cursor:not-allowed; }
 
-.preview-boxwrap{
-  min-width: 0;
-  overflow: hidden;
-}
-
-/* Key fix: waveform can shrink on medium widths */
 .wavebox{
   height: 42px;
-  width: clamp(140px, 22vw, 190px);
+  width: 190px;
   max-width: 100%;
   border-radius: 10px;
   background: rgba(17,24,39,.04);
@@ -217,12 +229,10 @@ body{
   background: rgba(63,81,181,.35);
   transform-origin: bottom;
 }
-
 .wavebox.idle .bar{
   animation: idlePulse 1.2s ease-in-out infinite;
   animation-delay: calc(var(--i) * 25ms);
 }
-
 .wavebox.playing .bar{
   animation: playingPulse .22s ease-in-out infinite;
   animation-delay: calc(var(--i) * 14ms);
@@ -245,13 +255,14 @@ body{
   font-weight: 800;
 }
 
-/* ===== Buy buttons (PayPal + Stripe aligned) ===== */
+/* Buy buttons (PayPal + Stripe) */
 .buy{
   display:flex;
   gap: 10px;
-  align-items: center;
+  align-items:center;
   justify-content:flex-end;
-  flex-wrap: nowrap;          /* side-by-side on desktop */
+  flex-wrap: wrap;      /* IMPORTANT: prevents overlap on smaller widths */
+  min-width: 0;
 }
 
 .buy-btn{
@@ -271,14 +282,13 @@ body{
 .buy-btn:hover{ background: var(--btnGreenHover); }
 .buy-btn:active{ transform: translateY(1px); }
 
-/* Stripe button */
 .buy-btn.stripe-btn{
   background: #635bff;
   box-shadow: 0 12px 22px rgba(99,91,255,.25);
 }
 .buy-btn.stripe-btn:hover{ filter: brightness(.95); }
 
-/* ===== Footer ===== */
+/* Footer */
 .footer{
   margin-top: 14px;
   color: rgba(17,24,39,.55);
@@ -286,12 +296,12 @@ body{
   text-align:center;
 }
 
-/* ===== Tab-specific themes ===== */
+/* Themes */
 .theme-blakats{ --accent:#3f51b5; --accent2:#2f3f9a; --tabText:#fff; }
-.theme-artist2 { --accent:#b45309; --accent2:#92400e; --tabText:#fff; } /* 1GNM */
-.theme-artist3 { --accent:#0f766e; --accent2:#115e59; --tabText:#fff; } /* BoomBash */
+.theme-artist2 { --accent:#b45309; --accent2:#92400e; --tabText:#fff; }
+.theme-artist3 { --accent:#0f766e; --accent2:#115e59; --tabText:#fff; }
 
-/* ===== Responsive ===== */
+/* Responsive */
 @media (max-width: 980px){
   .track{
     grid-template-columns: 86px 1fr;
@@ -304,27 +314,25 @@ body{
   .meta{ grid-area: meta; }
   .preview{ grid-area: preview; justify-content:flex-start; }
   .buy{ grid-area: buy; justify-content:flex-start; }
+  .wavebox{ width: 190px; }
 }
 
-/* mobile: stack buy buttons cleanly */
 @media (max-width: 520px){
   .buy{
     flex-direction: column;
     align-items: stretch;
-    justify-content: flex-start;
+    justify-content:flex-start;
     gap: 8px;
   }
-  .buy .buy-btn{
-    width: 100%;
-    min-width: 0;
-  }
-
+  .buy .buy-btn{ width:100%; min-width:0; }
   .wavebox{ width: 160px; }
   .preview-btn{ min-width: 102px; }
   .hero-caption-row{ flex-direction:column; align-items:flex-start; }
+  .album-row{ justify-content:flex-start; }
+  .album-btn{ width: 100%; }
 }
 
-/* ===== Hero video (BoomBash + BlaKats) ===== */
+/* Hero video */
 .hero-media {
   width: 100%;
   max-width: 900px;
@@ -335,14 +343,7 @@ body{
   overflow: hidden;
   box-shadow: 0 10px 26px rgba(0,0,0,0.08);
 }
-
-.hero-media video {
-  width: 100%;
-  height: auto;
-  display: block;
-  background: #000;
-}
-
+.hero-media video { width:100%; height:auto; display:block; background:#000; }
 .hero-media .hero-caption {
   padding: 10px 12px;
   font-size: 14px;
