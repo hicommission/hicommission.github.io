@@ -313,5 +313,18 @@ body{
   font-weight:900;
   cursor:pointer;
 }
+
+/* Center the BlaKats tools row BELOW the hero video */
+.below-hero-tools{
+  padding: 6px 16px 14px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0,0,0,.06);
+}
+.panel-tools.below-hero{
+  border: 0;
+  background: transparent;
+  justify-content: center; /* <-- center */
+}
+
 .qr-body{ padding:14px; display:flex; justify-content:center; }
 .qr-body img{ width:min(420px,100%); height:auto; display:block; }

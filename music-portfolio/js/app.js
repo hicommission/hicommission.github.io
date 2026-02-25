@@ -7,8 +7,9 @@
        A) STRIPE_LINKS[sku] -> Payment Link
        B) else POST /api/stripe/create -> { url }
    - Stripe button sits NEXT TO PayPal button
-   - ✅ BlaKats Barcode + Download Wild CD buttons appear BELOW Hero Video
-   - ✅ Fixes waveform bleeding into buy buttons
+   - ✅ BlaKats Barcode + Download Wild CD buttons appear BELOW Hero Video (CENTERED)
+   - ✅ CD button DOES NOT start a download until AFTER PAYMENT (PayPal flow)
+   - ✅ Fixes waveform bleeding into buy buttons (layout + CSS class hooks)
    ============================================================ */
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
@@ -20,8 +21,14 @@ const PREVIEW_BASE = "assets/previews";
 
 // BlaKats: Barcode + Full CD download
 const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
-// Full-CD ZIP must be on Cloudflare
-const BLAKATS_CD_ZIP_URL = "https://cliquetraxx.com/download/BlaKatsWildCDMP3s.zip";
+
+// IMPORTANT: the CD button MUST go through payment (NOT direct URL).
+// This sku must exist in your Worker mapping:
+//   PAYPAL_SKU_TO_FILE["blakats_wild_cd"] = "BlaKatsWildCDMP3s.zip"
+//   SKU_TO_ZIP["blakats_wild_cd"] = "BlaKatsWildCDMP3s.zip"   (optional but recommended)
+const BLAKATS_CD_SKU = "blakats_wild_cd";
+const BLAKATS_CD_TITLE = "BlaKats — Wild CD (Full Download)";
+const BLAKATS_CD_AMOUNT = "9.99"; // <-- set your real price here
 
 /** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
@@ -175,19 +182,14 @@ function ensureBarcodeModal() {
     </div>
   `;
 
-  modal.addEventListener("click", (e) => {
-    if (e.target === modal) closeBarcodeModal();
-  });
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeBarcodeModal(); });
   modal.querySelector(".qr-close").addEventListener("click", closeBarcodeModal);
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeBarcodeModal();
-  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeBarcodeModal(); });
 
   document.body.appendChild(modal);
   return modal;
 }
-
 function openBarcodeModal() { ensureBarcodeModal().classList.add("open"); }
 function closeBarcodeModal() { const m = $("#qrModal"); if (m) m.classList.remove("open"); }
 
@@ -230,29 +232,29 @@ function stopPreview() {
 }
 
 /** PayPal / Stripe */
-async function createPayPalLink(track) {
+async function createPayPalLink(trackOrItem) {
   const payload = {
-    sku: String(track.sku || "").trim(),
-    title: `${track.artist} — ${track.title}`,
-    amount: normalizeAmount(track.amount),
+    sku: String(trackOrItem.sku || "").trim(),
+    title: `${trackOrItem.artist ? `${trackOrItem.artist} — ` : ""}${trackOrItem.title}`,
+    amount: normalizeAmount(trackOrItem.amount),
   };
   const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
   if (!data?.url) throw new Error(`PayPal create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
 }
 
-async function createStripeLinkViaWorker(track) {
+async function createStripeLinkViaWorker(trackOrItem) {
   const payload = {
-    sku: String(track.sku || "").trim(),
-    title: `${track.artist} — ${track.title}`,
-    amount: normalizeAmount(track.amount),
+    sku: String(trackOrItem.sku || "").trim(),
+    title: `${trackOrItem.artist ? `${trackOrItem.artist} — ` : ""}${trackOrItem.title}`,
+    amount: normalizeAmount(trackOrItem.amount),
   };
   const data = await postJsonExpectJson(STRIPE_CREATE_URL, payload);
   if (!data?.url) throw new Error(`Stripe create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
 }
 
-/** Hero muting helpers (unchanged) */
+/** Hero muting helpers */
 function setHeroMuted(muted) {
   if (!heroVideoEl) return;
   heroVideoEl.muted = !!muted;
@@ -345,7 +347,6 @@ function renderPanels() {
       const heroMount = document.createElement("div");
       heroMount.id = "blakatsHeroMount";
       panel.appendChild(heroMount);
-
       queueMicrotask(() => mountLoopingBlaKatsHeroVideo(heroMount, BLAKATS_HERO_VIDEO));
     }
 
@@ -354,14 +355,16 @@ function renderPanels() {
       const heroMount = document.createElement("div");
       heroMount.id = "heroMount";
       panel.appendChild(heroMount);
-
       queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
     }
 
-    // ✅ BELOW HERO: BlaKats tools row (Barcode + Download Wild CD)
+    // ✅ BELOW HERO + CENTERED: BlaKats tools row (Barcode + Download Wild CD)
     if (tab.id === "blakats") {
+      const toolsWrap = document.createElement("div");
+      toolsWrap.className = "below-hero-tools"; // CSS hook (added in style.css replacement)
+
       const tools = document.createElement("div");
-      tools.className = "panel-tools below-hero";
+      tools.className = "panel-tools below-hero center-tools";
 
       const barcodeBtn = document.createElement("button");
       barcodeBtn.type = "button";
@@ -373,14 +376,43 @@ function renderPanels() {
       cdBtn.type = "button";
       cdBtn.className = "tool-btn primary";
       cdBtn.textContent = "Download BlaKats Wild CD";
-      cdBtn.addEventListener("click", () => { window.location.href = BLAKATS_CD_ZIP_URL; });
+
+      // ✅ Do NOT download until AFTER payment:
+      // This triggers the normal PayPal flow -> /pay/return -> /download?token=...
+      cdBtn.addEventListener("click", async () => {
+        cdBtn.disabled = true;
+        const old = cdBtn.textContent;
+        cdBtn.textContent = "Loading…";
+
+        const cdItem = { sku: BLAKATS_CD_SKU, title: BLAKATS_CD_TITLE, artist: "BlaKats", amount: BLAKATS_CD_AMOUNT };
+
+        try {
+          // Prefer Stripe payment link if you add one for the CD SKU:
+          const direct = STRIPE_LINKS[cdItem.sku];
+          if (direct) {
+            window.location.href = direct;
+            return;
+          }
+
+          // Default: PayPal create (works immediately with your existing worker)
+          const paypalUrl = await createPayPalLink(cdItem);
+          window.location.href = paypalUrl;
+        } catch (err) {
+          console.error(err);
+          alert(err?.message || "Could not start CD checkout. Please try again.");
+          cdBtn.disabled = false;
+          cdBtn.textContent = old;
+        }
+      });
 
       tools.appendChild(barcodeBtn);
       tools.appendChild(cdBtn);
-      panel.appendChild(tools);
+
+      toolsWrap.appendChild(tools);
+      panel.appendChild(toolsWrap);
     }
 
-    // ✅ wrap tracks so we can push them down consistently
+    // ✅ wrap tracks so we can push them down consistently if needed
     const tracksWrap = document.createElement("div");
     tracksWrap.className = "tracks-wrap";
 
@@ -400,6 +432,7 @@ function renderTrackRow(track) {
   const thumb = document.createElement("div");
   thumb.className = "thumb";
   thumb.title = "Click to preview";
+
   const img = document.createElement("img");
   img.src = track.thumb;
   img.alt = `${track.title} cover`;
@@ -588,9 +621,17 @@ function mountLoopingHeroVideo(containerEl, opts) {
   setHeroMuted(true);
 
   const end = start + duration;
-  const onLoaded = () => { try { video.currentTime = start; } catch {} video.play?.().catch?.(() => {}); };
+
+  const onLoaded = () => {
+    try { video.currentTime = start; } catch {}
+    video.play?.().catch?.(() => {});
+  };
+
   const onTimeUpdate = () => {
-    if (video.currentTime >= end) { video.currentTime = start; video.play?.().catch?.(() => {}); }
+    if (video.currentTime >= end) {
+      video.currentTime = start;
+      video.play?.().catch?.(() => {});
+    }
   };
 
   video.addEventListener("loadedmetadata", onLoaded);
@@ -653,9 +694,17 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
-  const onLoaded = () => { try { video.currentTime = start; } catch {} video.play?.().catch?.(() => {}); };
+
+  const onLoaded = () => {
+    try { video.currentTime = start; } catch {}
+    video.play?.().catch?.(() => {});
+  };
+
   const onTimeUpdate = () => {
-    if (video.currentTime >= end) { video.currentTime = start; video.play?.().catch?.(() => {}); }
+    if (video.currentTime >= end) {
+      video.currentTime = start;
+      video.play?.().catch?.(() => {});
+    }
   };
 
   video.addEventListener("loadedmetadata", onLoaded);
