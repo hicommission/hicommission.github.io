@@ -49,7 +49,6 @@ body{
   margin-bottom: 14px;
   flex-wrap: wrap;
 }
-
 .tab{
   appearance:none;
   border: 0;
@@ -64,7 +63,6 @@ body{
 }
 .tab:hover{ transform: translateY(-1px); filter: brightness(1.02); }
 .tab:active{ transform: translateY(0); filter: brightness(.98); }
-
 .tab[aria-selected="true"]{
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   color: var(--tabText);
@@ -79,7 +77,6 @@ body{
   box-shadow: var(--shadow);
   overflow: hidden;
 }
-
 .panel{ display:none; }
 .panel.active{ display:block; }
 
@@ -93,63 +90,105 @@ body{
   text-align:center;
 }
 
-/* ===== BlaKats: action row (Barcode + Download CD) ===== */
-.panel-actions{
+/* =========================================================
+   NEW: Panel tools row (Barcode + Download CD) — TOP RIGHT
+   ========================================================= */
+.panel-tools{
   display:flex;
   justify-content:flex-end;
-  align-items:center;
   gap: 12px;
   padding: 12px 16px;
   border-bottom: 1px solid rgba(0,0,0,.06);
-  background: rgba(17,24,39,.02);
+  background: #fff;
 }
-
-.action-btn{
+.panel-tools .tool-btn{
   appearance:none;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(17,24,39,.06);
-  color: rgba(17,24,39,.92);
-  font-weight: 900;
-  border-radius: 12px;
-  padding: 10px 14px;
+  border: 0;
   cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap: 8px;
-  min-height: 40px;
-  box-shadow: 0 10px 22px rgba(0,0,0,.06);
+  font-weight: 900;
+  letter-spacing:.2px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  box-shadow: 0 10px 18px rgba(0,0,0,.08);
   white-space: nowrap;
 }
-.action-btn:hover{ filter: brightness(1.02); }
-.action-btn:active{ transform: translateY(1px); }
-
-.action-btn.primary{
-  border: 0;
+.panel-tools .tool-btn.secondary{
+  background: #e5e7eb;
+  color: rgba(17,24,39,.92);
+}
+.panel-tools .tool-btn.primary{
   background: linear-gradient(90deg, var(--accent), var(--accent2));
   color: var(--tabText);
-  box-shadow: 0 12px 22px rgba(0,0,0,.12);
 }
-.action-btn[disabled]{
-  opacity:.55;
-  cursor:not-allowed;
-  transform:none;
+.panel-tools .tool-btn:hover{ filter: brightness(1.02); }
+.panel-tools .tool-btn:active{ transform: translateY(1px); }
+
+/* =========================================================
+   NEW: Barcode modal overlay
+   ========================================================= */
+.qr-modal{
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding: 20px;
+  background: rgba(0,0,0,.55);
+}
+.qr-modal.open{ display:flex; }
+
+.qr-card{
+  width: min(520px, 96vw);
+  background: #fff;
+  border-radius: 16px;
+  overflow:hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  border: 1px solid rgba(0,0,0,.12);
+}
+.qr-card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,0,0,.08);
+  font-weight: 900;
+}
+.qr-close{
+  appearance:none;
+  border: 0;
+  background: rgba(17,24,39,.08);
+  color: rgba(17,24,39,.9);
+  border-radius: 10px;
+  padding: 8px 10px;
+  cursor:pointer;
+  font-weight: 900;
+}
+.qr-close:hover{ filter: brightness(1.02); }
+.qr-body{
+  padding: 16px;
+}
+.qr-body img{
+  width: 100%;
+  height: auto;
+  display:block;
+  border-radius: 12px;
+  border: 1px solid rgba(0,0,0,.10);
 }
 
 /* ===== Track row ===== */
+/* IMPORTANT FIX:
+   Make preview + buy columns flexible so the waveform cannot overlap the buy column. */
 .track{
   display:grid;
-  /* make preview/buy columns flexible to prevent overlap */
-  grid-template-columns: 86px 1fr minmax(260px, 340px) minmax(190px, 220px);
+  grid-template-columns: 86px minmax(220px, 1fr) minmax(240px, 360px) minmax(180px, 210px);
   gap: 14px;
   padding: 16px;
   align-items:center;
   border-bottom: 1px solid rgba(0,0,0,.06);
 }
 .track:last-child{ border-bottom:0; }
-
-/* Prevent grid children from overflowing into other columns */
-.track > *{ min-width:0; }
 
 .thumb{
   width: 72px;
@@ -181,6 +220,13 @@ body{
   transform: translateY(8%);
 }
 
+/* ===== Stripe button ===== */
+.buy-btn.stripe-btn{
+  background: #635bff;
+  box-shadow: 0 12px 22px rgba(99,91,255,.25);
+}
+.buy-btn.stripe-btn:hover{ filter: brightness(.95); }
+
 /* ===== Meta ===== */
 .meta{ min-width:0; }
 .meta .name{
@@ -206,15 +252,13 @@ body{
   align-items:center;
   gap: 12px;
   justify-content:flex-start;
-  min-width:0;
-  overflow:hidden; /* key: prevents waveform bleeding into buy column */
-}
 
+  /* critical so preview content can shrink instead of overlapping buy column */
+  min-width: 0;
+}
 .preview-boxwrap{
-  min-width:0;
-  max-width: 100%;
+  min-width: 0;
 }
-
 .preview-btn{
   appearance:none;
   border: 1px solid rgba(0,0,0,.10);
@@ -232,7 +276,6 @@ body{
   box-shadow: 0 8px 16px rgba(0,0,0,.06);
   flex: 0 0 auto;
 }
-
 .preview-btn:hover{ filter: brightness(1.02); }
 .preview-btn:active{ filter: brightness(.98); }
 .preview-btn[disabled]{ opacity:.6; cursor:not-allowed; }
@@ -260,12 +303,10 @@ body{
   background: rgba(63,81,181,.35);
   transform-origin: bottom;
 }
-
 .wavebox.idle .bar{
   animation: idlePulse 1.2s ease-in-out infinite;
   animation-delay: calc(var(--i) * 25ms);
 }
-
 .wavebox.playing .bar{
   animation: playingPulse .22s ease-in-out infinite;
   animation-delay: calc(var(--i) * 14ms);
@@ -292,12 +333,11 @@ body{
 .buy{
   display:flex;
   gap: 10px;
-  align-items: center;
+  align-items:center;
   justify-content:flex-end;
-  flex-wrap: wrap; /* safer when space is tight */
-  min-width:0;
+  flex-wrap: wrap;     /* allow wrap so nothing collides */
+  min-width: 0;
 }
-
 .buy-btn{
   appearance:none;
   border:0;
@@ -315,12 +355,6 @@ body{
 .buy-btn:hover{ background: var(--btnGreenHover); }
 .buy-btn:active{ transform: translateY(1px); }
 
-.buy-btn.stripe-btn{
-  background: #635bff;
-  box-shadow: 0 12px 22px rgba(99,91,255,.25);
-}
-.buy-btn.stripe-btn:hover{ filter: brightness(.95); }
-
 /* ===== Footer ===== */
 .footer{
   margin-top: 14px;
@@ -335,8 +369,7 @@ body{
 .theme-artist3 { --accent:#0f766e; --accent2:#115e59; --tabText:#fff; } /* BoomBash */
 
 /* ===== Responsive ===== */
-@media (max-width: 1040px){
-  /* switch earlier to avoid overlap between preview + buy */
+@media (max-width: 980px){
   .track{
     grid-template-columns: 86px 1fr;
     grid-template-areas:
@@ -346,13 +379,14 @@ body{
   }
   .thumb{ grid-area: thumb; }
   .meta{ grid-area: meta; }
-  .preview{ grid-area: preview; }
+  .preview{ grid-area: preview; justify-content:flex-start; }
   .buy{ grid-area: buy; justify-content:flex-start; }
 }
 
+/* mobile: stack buy buttons cleanly */
 @media (max-width: 520px){
-  .panel-actions{
-    justify-content:flex-start;
+  .panel-tools{
+    justify-content: flex-start;
     flex-wrap: wrap;
   }
 
@@ -398,6 +432,7 @@ body{
   border-top: 1px solid rgba(0,0,0,0.08);
 }
 
+/* caption row w/ mute button */
 .hero-caption-row{
   display:flex;
   align-items:center;
@@ -420,54 +455,6 @@ body{
 }
 .mute-btn:hover{ filter: brightness(1.02); }
 .mute-btn:active{ transform: translateY(1px); }
-.mute-btn[aria-pressed="true"]{ background: rgba(17,24,39,.10); }
-
-/* ===== Barcode modal ===== */
-.modal-backdrop{
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,.55);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding: 18px;
-  z-index: 9999;
-}
-.modal-backdrop.open{ display:flex; }
-
-.modal-card{
-  width: min(560px, 100%);
-  background: #fff;
-  border-radius: 14px;
-  overflow:hidden;
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
-}
-
-.modal-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap: 10px;
-  padding: 12px 14px;
-  border-bottom: 1px solid rgba(0,0,0,.08);
-  font-weight: 900;
-}
-
-.modal-close{
-  appearance:none;
-  border: 1px solid rgba(0,0,0,.12);
-  background: rgba(17,24,39,.06);
-  border-radius: 10px;
-  padding: 8px 10px;
-  cursor:pointer;
-  font-weight: 900;
-}
-
-.modal-body{ padding: 14px; }
-.modal-body img{
-  width: 100%;
-  height: auto;
-  display:block;
-  border-radius: 12px;
-  border: 1px solid rgba(0,0,0,.10);
+.mute-btn[aria-pressed="true"]{
+  background: rgba(17,24,39,.10);
 }

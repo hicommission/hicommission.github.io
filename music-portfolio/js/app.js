@@ -2,14 +2,13 @@
    music-portfolio/js/app.js  (FULL DROP-IN REPLACEMENT)
 
    ✅ Goals:
-   - Add BlaKats-only top action bar:
-       [Barcode] [Download BlaKats Wild CD]
-     placed between panel header and hero video.
-   - Barcode uses: assets/downloads/blakats_barcode.png
-   - Download button points to a configurable ZIP path (you will update later)
-   - Fix waveform bleeding (CSS handles it) + ensure DOM structure supports it
-   - Stripe + PayPal logic unchanged
-   - Fix bug: buy container must be created (was commented out in your current file)
+   - PayPal works for ALL tracks on ALL tabs
+   - Stripe works for ALL tracks on ALL tabs in ONE of two ways:
+       A) If STRIPE_LINKS[sku] exists -> redirect to Payment Link
+       B) Otherwise -> POST /api/stripe/create (Worker) -> { url }
+   - Stripe button sits NEXT TO PayPal button (same row)
+   - DOES implement BlaKats Barcode + Download Wild CD buttons (top-right)
+   - Fixes missing "buy" element bug (was broken in the pasted version)
    ============================================================ */
 
 /** =========================
@@ -29,28 +28,22 @@ const PREVIEW_SECONDS = 30;
 // Where previews live (GitHub Pages)
 const PREVIEW_BASE = "assets/previews";
 
-// BlaKats: barcode image (you said you copied it here)
-const BLAKATS_BARCODE_IMG = "assets/downloads/blakats_barcode.png";
+// BlaKats: Barcode + Full CD download
+const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
 
-/**
- * BlaKats: full CD ZIP download
- * You said you have NOT updated this ZIP yet.
- * Set this to your final ZIP file when ready, e.g.:
- *   "assets/downloads/blakats_wild_cd.zip"
- *
- * For now, leave it as "" to show the button but disabled.
- */
-const BLAKATS_CD_ZIP_URL = "";
+// IMPORTANT: Full-CD ZIP must be on Cloudflare/CloudShare (NOT GitHub Pages)
+const BLAKATS_CD_ZIP_URL = `${CLOUDFLARE_BASE}/assets/downloads/BlaKatsWildCDMP3s.zip`;
 
 /** =========================
  *  STRIPE PAYMENT LINKS (OPTION A)
  *  ========================= */
 const STRIPE_LINKS = {
+  // BlaKats
   blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
 };
 
 /** =========================
- *  CATALOG (EDIT THIS)
+ *  CATALOG
  *  ========================= */
 const CATALOG = [
   {
@@ -140,14 +133,11 @@ let blakatsHeroVideoEl = null;
 let blakatsHeroMuteBtnEl = null;
 let blakatsHeroCleanupFn = null;
 
-// BoomBash logic flag
+// BoomBash logic fix flag
 let previewMutedByVideo = false;
 
-// BlaKats logic flag
+// BlaKats: mute-preview-while-video-unmuted flag
 let previewMutedByBlakatsVideo = false;
-
-// Barcode modal state
-let barcodeModalEl = null;
 
 /** =========================
  *  HELPERS
@@ -205,48 +195,47 @@ async function postJsonExpectJson(url, payload) {
  *  BARCODE MODAL
  *  ========================= */
 function ensureBarcodeModal() {
-  if (barcodeModalEl) return barcodeModalEl;
+  let modal = $("#qrModal");
+  if (modal) return modal;
 
-  const backdrop = document.createElement("div");
-  backdrop.className = "modal-backdrop";
-  backdrop.innerHTML = `
-    <div class="modal-card" role="dialog" aria-modal="true" aria-label="Barcode">
-      <div class="modal-head">
-        <div>Barcode</div>
-        <button type="button" class="modal-close">Close</button>
+  modal = document.createElement("div");
+  modal.id = "qrModal";
+  modal.className = "qr-modal";
+  modal.innerHTML = `
+    <div class="qr-card" role="dialog" aria-modal="true" aria-label="Barcode">
+      <div class="qr-card-header">
+        <div>Scan to Buy & Download</div>
+        <button type="button" class="qr-close" aria-label="Close">Close</button>
       </div>
-      <div class="modal-body">
-        <img alt="BlaKats barcode" />
+      <div class="qr-body">
+        <img id="qrImg" alt="BlaKats barcode" src="${BLAKATS_BARCODE_IMG_URL}" />
       </div>
     </div>
   `;
 
-  const closeBtn = backdrop.querySelector(".modal-close");
-  closeBtn.addEventListener("click", () => closeBarcodeModal());
-
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) closeBarcodeModal();
+  modal.addEventListener("click", (e) => {
+    if (e.target === modal) closeBarcodeModal();
   });
+
+  const closeBtn = modal.querySelector(".qr-close");
+  closeBtn.addEventListener("click", closeBarcodeModal);
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeBarcodeModal();
   });
 
-  document.body.appendChild(backdrop);
-  barcodeModalEl = backdrop;
-  return barcodeModalEl;
+  document.body.appendChild(modal);
+  return modal;
 }
 
-function openBarcodeModal(imgSrc) {
-  const m = ensureBarcodeModal();
-  const img = m.querySelector("img");
-  img.src = imgSrc;
-  m.classList.add("open");
+function openBarcodeModal() {
+  const modal = ensureBarcodeModal();
+  modal.classList.add("open");
 }
 
 function closeBarcodeModal() {
-  if (!barcodeModalEl) return;
-  barcodeModalEl.classList.remove("open");
+  const modal = $("#qrModal");
+  if (modal) modal.classList.remove("open");
 }
 
 /** =========================
@@ -337,7 +326,6 @@ function stopPreview() {
     try { previewAudio.pause(); } catch {}
     previewAudio = null;
   }
-
   if (previewTimer) {
     clearInterval(previewTimer);
     previewTimer = null;
@@ -347,12 +335,10 @@ function stopPreview() {
     activePreviewBtn.textContent = "▶ Preview";
     activePreviewBtn.removeAttribute("aria-pressed");
   }
-
   if (activeWavebox) {
     activeWavebox.classList.remove("playing");
     activeWavebox.classList.add("idle");
   }
-
   if (activeTimeEl) {
     activeTimeEl.textContent = `0:00 / ${fmtTime(PREVIEW_SECONDS)}`;
   }
@@ -371,7 +357,6 @@ async function createPayPalLink(track) {
     title: `${track.artist} — ${track.title}`,
     amount: normalizeAmount(track.amount),
   };
-
   const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
   if (!data?.url) throw new Error(`PayPal create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
@@ -386,7 +371,6 @@ async function createStripeLinkViaWorker(track) {
     title: `${track.artist} — ${track.title}`,
     amount: normalizeAmount(track.amount),
   };
-
   const data = await postJsonExpectJson(STRIPE_CREATE_URL, payload);
   if (!data?.url) throw new Error(`Stripe create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
@@ -413,7 +397,6 @@ function renderTabs() {
       stopPreview();
       stopHeroVideo();
       stopBlakatsHeroVideo();
-      closeBarcodeModal();
 
       activeTabId = tab.id;
       renderAll();
@@ -440,9 +423,28 @@ function renderPanels() {
     header.textContent = tab.label;
     panel.appendChild(header);
 
-    // ✅ BlaKats actions row (between header and hero video)
-    if (tab.id === BLAKATS_HERO_TAB_ID) {
-      panel.appendChild(renderBlakatsActionsRow());
+    // ✅ BlaKats tools row: Barcode + Download Wild CD
+    if (tab.id === "blakats") {
+      const tools = document.createElement("div");
+      tools.className = "panel-tools";
+
+      const barcodeBtn = document.createElement("button");
+      barcodeBtn.type = "button";
+      barcodeBtn.className = "tool-btn secondary";
+      barcodeBtn.textContent = "Barcode";
+      barcodeBtn.addEventListener("click", () => openBarcodeModal());
+
+      const cdBtn = document.createElement("button");
+      cdBtn.type = "button";
+      cdBtn.className = "tool-btn primary";
+      cdBtn.textContent = "Download BlaKats Wild CD";
+      cdBtn.addEventListener("click", () => {
+        window.location.href = BLAKATS_CD_ZIP_URL;
+      });
+
+      tools.appendChild(barcodeBtn);
+      tools.appendChild(cdBtn);
+      panel.appendChild(tools);
     }
 
     // BlaKats hero
@@ -467,7 +469,6 @@ function renderPanels() {
       });
     }
 
-    // tracks
     tab.tracks.forEach((track) => {
       panel.appendChild(renderTrackRow(track));
     });
@@ -476,37 +477,6 @@ function renderPanels() {
   });
 
   $all(".wavebox").forEach(ensureWaveBars);
-}
-
-function renderBlakatsActionsRow() {
-  const row = document.createElement("div");
-  row.className = "panel-actions";
-
-  const barcodeBtn = document.createElement("button");
-  barcodeBtn.type = "button";
-  barcodeBtn.className = "action-btn";
-  barcodeBtn.textContent = "Barcode";
-  barcodeBtn.addEventListener("click", () => {
-    openBarcodeModal(BLAKATS_BARCODE_IMG);
-  });
-
-  const downloadBtn = document.createElement("button");
-  downloadBtn.type = "button";
-  downloadBtn.className = "action-btn primary";
-  downloadBtn.textContent = "Download BlaKats Wild CD";
-
-  if (!BLAKATS_CD_ZIP_URL) {
-    downloadBtn.disabled = true;
-    downloadBtn.title = "ZIP not set yet. Update BLAKATS_CD_ZIP_URL in app.js when ready.";
-  } else {
-    downloadBtn.addEventListener("click", () => {
-      window.location.href = BLAKATS_CD_ZIP_URL;
-    });
-  }
-
-  row.appendChild(barcodeBtn);
-  row.appendChild(downloadBtn);
-  return row;
 }
 
 function renderTrackRow(track) {
@@ -557,7 +527,7 @@ function renderTrackRow(track) {
   preview.appendChild(previewBtn);
   preview.appendChild(previewBoxWrap);
 
-  // ✅ buy button cluster (PayPal + Stripe side-by-side) — FIXED: must be created
+  // ✅ buy button cluster (PayPal + Stripe side-by-side)
   const buy = document.createElement("div");
   buy.className = "buy";
 
@@ -600,7 +570,6 @@ function renderTrackRow(track) {
         window.location.href = direct;
         return;
       }
-
       const url = await createStripeLinkViaWorker(track);
       window.location.href = url;
     } catch (err) {
@@ -628,12 +597,9 @@ function renderTrackRow(track) {
 
     stopPreview();
 
-    // BoomBash: starting ANY preview mutes hero if unmuted
     if (activeTabId === HERO_TAB_ID) {
       maybeMuteVideoBecausePreviewStarted();
     }
-
-    // BlaKats: starting ANY preview mutes hero if unmuted
     if (activeTabId === BLAKATS_HERO_TAB_ID) {
       maybeMuteBlakatsVideoBecausePreviewStarted();
     }
@@ -676,7 +642,9 @@ function renderTrackRow(track) {
 
         timeEl.textContent = `${fmtTime(shown)} / ${fmtTime(PREVIEW_SECONDS)}`;
 
-        if (elapsed >= PREVIEW_SECONDS) stopPreview();
+        if (elapsed >= PREVIEW_SECONDS) {
+          stopPreview();
+        }
       }, 120);
     } catch (e) {
       stopPreview();
@@ -749,6 +717,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
   setHeroMuted(true);
 
   const end = start + duration;
+
   const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
@@ -775,6 +744,7 @@ function mountLoopingHeroVideo(containerEl, opts) {
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
       setHeroMuted(false);
@@ -847,6 +817,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
   setBlakatsHeroMuted(true);
 
   const end = start + duration;
+
   const seekToStart = () => { try { video.currentTime = start; } catch (_) {} };
 
   const onTimeUpdate = () => {
@@ -873,6 +844,7 @@ function mountLoopingBlaKatsHeroVideo(containerEl, opts) {
 
   muteBtn.addEventListener("click", (e) => {
     e.stopPropagation();
+
     const currentlyMuted = video.muted === true;
     if (currentlyMuted) {
       setBlakatsHeroMuted(false);
