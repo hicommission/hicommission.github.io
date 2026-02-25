@@ -96,7 +96,7 @@ body{
 /* ===== Tools row BELOW hero (as requested) ===== */
 .panel-tools{
   display:flex;
-  justify-content:flex-end;
+  justify-content:center; 
   align-items:center;
   gap:10px;
   padding:10px 16px 12px;
