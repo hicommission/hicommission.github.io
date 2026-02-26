@@ -7,8 +7,9 @@
        A) STRIPE_LINKS[sku] -> Payment Link
        B) else POST /api/stripe/create -> { url }
    - Stripe button sits NEXT TO PayPal button
-   - ✅ BlaKats Barcode + CD purchase buttons appear BELOW Hero Video
-   - ✅ CD purchase offers BOTH PayPal + Stripe (NOT direct download)
+   - ✅ BlaKats Barcode + CD PayPal/Stripe buttons appear BELOW Hero Video
+   - ✅ Adds label: BlaKats "Wild" CD $0.10
+   - ✅ CD download does NOT start until payment (SKU blakats_wild_cd)
    - ✅ Fixes waveform bleeding into buy buttons
    ============================================================ */
 
@@ -19,25 +20,16 @@ const STRIPE_CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 const PREVIEW_SECONDS = 30;
 const PREVIEW_BASE = "assets/previews";
 
-// BlaKats: Barcode + Full CD (PAID via Worker SKU blakats_wild_cd)
+// BlaKats: Barcode image (for modal)
 const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
-
-// OPTIONAL: only for your own admin testing if you enabled direct download with ?k=...
-// const BLAKATS_CD_ZIP_URL = "https://cliquetraxx.com/download/BlaKatsWildCDMP3s.zip";
-
-// ✅ This is the PAID SKU that your Worker maps to BlaKatsWildCDMP3s.zip
-const BLAKATS_WILD_CD = {
-  sku: "blakats_wild_cd",
-  title: "BlaKats Wild CD (Full Album)",
-  artist: "BlaKats",
-  amount: "9.99", // <-- CHANGE THIS PRICE if you want
-};
 
 /** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
+  // Example existing:
   blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
-  // If you have a Stripe Payment Link for the full CD, put it here:
-  // blakats_wild_cd: "https://buy.stripe.com/.....",
+
+  // OPTIONAL: If you create a Stripe Payment Link for the full CD, put it here.
+  // blakats_wild_cd: "https://buy.stripe.com/xxxxxx",
 };
 
 /** Catalog */
@@ -242,22 +234,22 @@ function stopPreview() {
 }
 
 /** PayPal / Stripe */
-async function createPayPalLink(trackLike) {
+async function createPayPalLink(track) {
   const payload = {
-    sku: String(trackLike.sku || "").trim(),
-    title: `${trackLike.artist} — ${trackLike.title}`,
-    amount: normalizeAmount(trackLike.amount),
+    sku: String(track.sku || "").trim(),
+    title: `${track.artist} — ${track.title}`,
+    amount: normalizeAmount(track.amount),
   };
   const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
   if (!data?.url) throw new Error(`PayPal create missing url:\n\n${JSON.stringify(data)}`);
   return data.url;
 }
 
-async function createStripeLinkViaWorker(trackLike) {
+async function createStripeLinkViaWorker(track) {
   const payload = {
-    sku: String(trackLike.sku || "").trim(),
-    title: `${trackLike.artist} — ${trackLike.title}`,
-    amount: normalizeAmount(trackLike.amount),
+    sku: String(track.sku || "").trim(),
+    title: `${track.artist} — ${track.title}`,
+    amount: normalizeAmount(track.amount),
   };
   const data = await postJsonExpectJson(STRIPE_CREATE_URL, payload);
   if (!data?.url) throw new Error(`Stripe create missing url:\n\n${JSON.stringify(data)}`);
@@ -370,10 +362,15 @@ function renderPanels() {
       queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
     }
 
-    // ✅ BELOW HERO: BlaKats tools row (Barcode + CD PayPal + CD Stripe)
+    // ✅ BELOW HERO: BlaKats tools row (Label + Barcode + CD PayPal + CD Stripe)
+    // ✅ CD payment uses SKU blakats_wild_cd (Worker must map -> BlaKatsWildCDMP3s.zip)
     if (tab.id === "blakats") {
       const tools = document.createElement("div");
       tools.className = "panel-tools below-hero";
+
+      const cdLabel = document.createElement("div");
+      cdLabel.className = "cd-label";
+      cdLabel.textContent = 'BlaKats "Wild" CD $0.10';
 
       const barcodeBtn = document.createElement("button");
       barcodeBtn.type = "button";
@@ -383,19 +380,20 @@ function renderPanels() {
 
       const cdPayPalBtn = document.createElement("button");
       cdPayPalBtn.type = "button";
-      cdPayPalBtn.className = "tool-btn primary";
+      // ✅ SAME LOOK AS TRACK BUY BUTTON
+      cdPayPalBtn.className = "buy-btn";
       cdPayPalBtn.textContent = "Buy Wild CD (PayPal)";
-
       cdPayPalBtn.addEventListener("click", async () => {
         cdPayPalBtn.disabled = true;
         const old = cdPayPalBtn.textContent;
         cdPayPalBtn.textContent = "Loading…";
         try {
-          const paypalUrl = await createPayPalLink(BLAKATS_WILD_CD);
+          const cdItem = { sku: "blakats_wild_cd", title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: "0.10" };
+          const paypalUrl = await createPayPalLink(cdItem);
           window.location.href = paypalUrl;
         } catch (err) {
           console.error(err);
-          alert(err?.message || "Could not start PayPal checkout for the CD.");
+          alert(err?.message || "Could not generate PayPal payment link. Please try again.");
           cdPayPalBtn.disabled = false;
           cdPayPalBtn.textContent = old;
         }
@@ -403,29 +401,35 @@ function renderPanels() {
 
       const cdStripeBtn = document.createElement("button");
       cdStripeBtn.type = "button";
-      cdStripeBtn.className = "tool-btn primary stripe-tool-btn";
+      // ✅ SAME LOOK AS TRACK STRIPE BUTTON
+      cdStripeBtn.className = "buy-btn stripe-btn";
       cdStripeBtn.textContent = "Pay w/ Stripe (Wild CD)";
-
       cdStripeBtn.addEventListener("click", async () => {
         cdStripeBtn.disabled = true;
         const old = cdStripeBtn.textContent;
         cdStripeBtn.textContent = "Loading…";
         try {
-          const direct = STRIPE_LINKS[BLAKATS_WILD_CD.sku];
+          const cdItem = { sku: "blakats_wild_cd", title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: "0.10" };
+          const direct = STRIPE_LINKS[cdItem.sku];
           if (direct) { window.location.href = direct; return; }
-          const url = await createStripeLinkViaWorker(BLAKATS_WILD_CD);
+          const url = await createStripeLinkViaWorker(cdItem);
           window.location.href = url;
         } catch (err) {
           console.error(err);
-          alert(err?.message || "Could not start Stripe checkout for the CD.");
+          alert(
+            (err?.message || "Could not start Stripe checkout.") +
+            "\n\nIf you are using Payment Links, add STRIPE_LINKS[blakats_wild_cd].\nOtherwise ensure Worker has POST /api/stripe/create."
+          );
           cdStripeBtn.disabled = false;
           cdStripeBtn.textContent = old;
         }
       });
 
+      tools.appendChild(cdLabel);
       tools.appendChild(barcodeBtn);
       tools.appendChild(cdPayPalBtn);
       tools.appendChild(cdStripeBtn);
+
       panel.appendChild(tools);
     }
 
