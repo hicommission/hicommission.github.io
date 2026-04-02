@@ -1,262 +1,297 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>VideoOrganizer for Android</title>
-    <style>
-        :root {
-            --bg: #f4f4f4;
-            --card: #ffffff;
-            --text: #222;
-            --muted: #666;
-            --accent: #d63b32;
-            --border: #e8e8e8;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoOrganizer for Android</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --text: #1f1f1f;
+      --muted: #666;
+      --accent: #e14b3b;
+      --border: #e8e8ec;
+      --shadow: 0 10px 30px rgba(0,0,0,0.08);
+      --radius: 20px;
+    }
 
-        * {
-            box-sizing: border-box;
-        }
+    * {
+      box-sizing: border-box;
+    }
 
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            text-align: center;
-        }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-        .container {
-            max-width: 980px;
-            margin: 0 auto;
-            padding: 40px 20px 60px;
-            background: var(--card);
-        }
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 18px 60px;
+    }
 
-        .hero {
-            margin-bottom: 28px;
-        }
+    .shell {
+      background: var(--card);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
 
-        .hero h1 {
-            font-size: clamp(2rem, 4vw, 3rem);
-            margin: 18px 0 10px;
-            line-height: 1.1;
-        }
+    .hero {
+      padding: 40px 24px 20px;
+      text-align: center;
+      background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+    }
 
-        .hero p {
-            max-width: 760px;
-            margin: 0 auto;
-            font-size: 1.05rem;
-            line-height: 1.7;
-            color: var(--muted);
-        }
+    .hero-shot {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      display: block;
+      margin: 0 auto 24px;
+      border-radius: 34px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+      background: #fff;
+    }
 
-        .screenshot-hero {
-            width: 100%;
-            max-width: 420px;
-            display: block;
-            margin: 0 auto 24px;
-            border-radius: 28px;
-            box-shadow: var(--shadow);
-        }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.08;
+    }
 
-        .section-title {
-            font-size: 2rem;
-            margin: 42px 0 14px;
-        }
+    .subtitle {
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.7;
+    }
 
-        .section-copy {
-            max-width: 760px;
-            margin: 0 auto 28px;
-            color: var(--muted);
-            line-height: 1.7;
-        }
+    .content {
+      padding: 10px 24px 40px;
+    }
 
-        .gallery {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 24px;
-            margin-top: 24px;
-        }
+    .section {
+      margin-top: 26px;
+    }
 
-        .shot-card {
-            background: #fafafa;
-            border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 18px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
-        }
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.8rem;
+      text-align: center;
+    }
 
-        .shot-card img {
-            width: 100%;
-            max-width: 260px;
-            display: block;
-            margin: 0 auto 16px;
-            border-radius: 24px;
-            box-shadow: var(--shadow);
-        }
+    .section p.lead {
+      max-width: 760px;
+      margin: 0 auto 26px;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
+    }
 
-        .shot-card h3 {
-            margin: 0 0 8px;
-            font-size: 1.2rem;
-        }
+    .shots {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 20px;
+      align-items: start;
+    }
 
-        .shot-card p {
-            margin: 0;
-            color: var(--muted);
-            line-height: 1.6;
-            font-size: 0.98rem;
-        }
+    .shot-card {
+      background: #fcfcfd;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+    }
 
-        .feature-list {
-            margin: 40px auto 0;
-            max-width: 760px;
-            text-align: left;
-            display: grid;
-            gap: 14px;
-        }
+    .shot-card img {
+      width: 100%;
+      max-width: 220px;
+      height: auto;
+      display: block;
+      margin: 0 auto 14px;
+      border-radius: 26px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+      background: #fff;
+    }
 
-        .feature-item {
-            background: #fafafa;
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 16px 18px;
-            line-height: 1.6;
-        }
+    .shot-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+    }
 
-        .feature-item strong {
-            color: var(--accent);
-        }
+    .shot-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.97rem;
+    }
 
-        footer {
-            color: #777;
-            margin-top: 48px;
-            font-size: 0.95rem;
-        }
+    .features {
+      max-width: 820px;
+      margin: 28px auto 0;
+      display: grid;
+      gap: 14px;
+    }
 
-        footer a {
-            color: #007acc;
-            text-decoration: none;
-        }
+    .feature-item {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+      line-height: 1.65;
+      color: var(--text);
+    }
 
-        footer a:hover {
-            text-decoration: underline;
-        }
+    .feature-item strong {
+      color: var(--accent);
+    }
 
-        @media (max-width: 900px) {
-            .gallery {
-                grid-template-columns: 1fr;
-            }
-        }
+    footer {
+      margin-top: 34px;
+      text-align: center;
+      color: #777;
+      font-size: 0.95rem;
+    }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 28px 14px 48px;
-            }
+    footer a {
+      color: #007acc;
+      text-decoration: none;
+    }
 
-            .shot-card {
-                padding: 14px;
-            }
+    footer a:hover {
+      text-decoration: underline;
+    }
 
-            .screenshot-hero {
-                max-width: 360px;
-            }
-        }
-    </style>
+    @media (max-width: 900px) {
+      .shots {
+        grid-template-columns: 1fr;
+      }
+
+      .shot-card img {
+        max-width: 260px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .page {
+        padding: 12px 10px 40px;
+      }
+
+      .hero {
+        padding: 26px 16px 10px;
+      }
+
+      .content {
+        padding: 10px 16px 30px;
+      }
+
+      .hero-shot {
+        max-width: 280px;
+      }
+    }
+  </style>
 </head>
 <body>
-<div class="container">
+  <div class="page">
+    <div class="shell">
 
-    <section class="hero">
+      <section class="hero">
         <img
-            src="img/Screenshot_20260401_170246.png"
-            alt="VideoOrganizer Android home screen"
-            class="screenshot-hero"
+          src="img/Screenshot_20260401_170246.png"
+          alt="VideoOrganizer Android home screen"
+          class="hero-shot"
         />
-
         <h1>VideoOrganizer for Android</h1>
-        <p>
-            Organize your YouTube playlists manually, clearly, and safely.
-            VideoOrganizer keeps every action user-initiated, so you stay in control while
-            browsing, creating, and managing playlist content on Android.
+        <p class="subtitle">
+          Organize your YouTube playlists manually, clearly, and safely.
+          VideoOrganizer keeps every action user-initiated, so you stay in control
+          while browsing, creating, and managing playlist content on Android.
         </p>
-    </section>
+      </section>
 
-    <section>
-        <h2 class="section-title">Clean Android Workflow</h2>
-        <p class="section-copy">
-            The app is designed to make playlist management straightforward: browse your playlists,
-            review contents, and create new lists without unnecessary complexity.
-        </p>
+      <div class="content">
+        <section class="section">
+          <h2>Clean Android Workflow</h2>
+          <p class="lead">
+            Browse playlists, create new ones, and manage content with a focused interface
+            designed to keep playlist organization simple.
+          </p>
 
-        <div class="gallery">
+          <div class="shots">
             <div class="shot-card">
-                <img
-                    src="img/Screenshot_20260401_170557.png"
-                    alt="VideoOrganizer Android playlist browser"
-                />
-                <h3>Browse Playlists</h3>
-                <p>
-                    View your playlists in a fast, visual list so you can quickly find what you want
-                    and manage your content more efficiently.
-                </p>
-            </div>
-
-            <div class="shot-card">
-                <img
-                    src="img/Screenshot_20260401_170611.png"
-                    alt="VideoOrganizer Android create playlist screen"
-                />
-                <h3>Create New Playlists</h3>
-                <p>
-                    Build new playlists with a simple form that keeps naming and description entry
-                    easy and direct.
-                </p>
+              <img
+                src="img/Screenshot_20260401_170557.png"
+                alt="Browse playlists in VideoOrganizer"
+              />
+              <h3>Browse Playlists</h3>
+              <p>
+                View your playlists in a fast, readable list so you can quickly find,
+                review, and manage your content.
+              </p>
             </div>
 
             <div class="shot-card">
-                <img
-                    src="img/Screenshot_20260401_170246.png"
-                    alt="VideoOrganizer Android sign-in screen"
-                />
-                <h3>Simple Start</h3>
-                <p>
-                    Begin with a focused connection flow and a clean interface that makes the app
-                    easy to understand from the first screen.
-                </p>
+              <img
+                src="img/Screenshot_20260401_170611.png"
+                alt="Create playlist in VideoOrganizer"
+              />
+              <h3>Create New Playlists</h3>
+              <p>
+                Add playlists with a simple, uncluttered creation flow that keeps
+                naming and organization easy.
+              </p>
             </div>
-        </div>
-    </section>
 
-    <section>
-        <h2 class="section-title">Main Features</h2>
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_170246.png"
+                alt="Start screen in VideoOrganizer"
+              />
+              <h3>Simple Start</h3>
+              <p>
+                Begin with a focused entry screen that makes the app easy to understand
+                from the very first tap.
+              </p>
+            </div>
+          </div>
+        </section>
 
-        <div class="feature-list">
-            <div class="feature-item">
-                <strong>Manual control:</strong> every organizational change is initiated by you.
-            </div>
-            <div class="feature-item">
-                <strong>Playlist visibility:</strong> quickly see your lists and their contents in one place.
-            </div>
-            <div class="feature-item">
-                <strong>Simple creation flow:</strong> add new playlists without clutter or confusion.
-            </div>
-            <div class="feature-item">
-                <strong>Clean Android interface:</strong> optimized for mobile browsing and playlist management.
-            </div>
-        </div>
-    </section>
+        <section class="section">
+          <h2>Main Features</h2>
 
-    <footer>
-        <p>
+          <div class="features">
+            <div class="feature-item">
+              <strong>Manual control:</strong> all playlist actions remain user-initiated.
+            </div>
+            <div class="feature-item">
+              <strong>Fast browsing:</strong> quickly see playlist names, counts, and structure.
+            </div>
+            <div class="feature-item">
+              <strong>Simple creation:</strong> create playlists without clutter or extra steps.
+            </div>
+            <div class="feature-item">
+              <strong>Mobile-first design:</strong> optimized for Android browsing and playlist management.
+            </div>
+          </div>
+        </section>
+
+        <footer>
+          <p>
             <a href="https://hicommission.github.io/privacystatementvo.html">Privacy Policy</a>
             &nbsp;|&nbsp;
             <a href="https://hicommission.github.io/termsvo.html">Terms of Service</a>
             &nbsp;|&nbsp;
             © 2025 VideoOrganizer
-        </p>
-    </footer>
-</div>
+          </p>
+        </footer>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
