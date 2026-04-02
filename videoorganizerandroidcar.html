@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VideoOrganizer for Android</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card: #ffffff;
+      --soft: #fafafa;
+      --text: #1f1f1f;
+      --muted: #666;
+      --accent: #df4b3d;
+      --border: #e7e7eb;
+      --shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+      --radius: 24px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 24px 16px 56px;
+    }
+
+    .shell {
+      background: var(--card);
+      border-radius: 32px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .hero {
+      padding: 42px 24px 26px;
+      text-align: center;
+      background: linear-gradient(to bottom, #ffffff 0%, #fafafa 100%);
+    }
+
+    .hero-shot {
+      width: 100%;
+      max-width: 320px;
+      display: block;
+      margin: 0 auto 24px;
+      border-radius: 34px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.12);
+      background: #fff;
+    }
+
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      max-width: 780px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 1.08rem;
+      line-height: 1.7;
+    }
+
+    .content {
+      padding: 8px 24px 40px;
+    }
+
+    .section {
+      margin-top: 30px;
+    }
+
+    .section h2 {
+      margin: 0 0 10px;
+      font-size: 1.9rem;
+      text-align: center;
+      letter-spacing: -0.02em;
+    }
+
+    .lead {
+      max-width: 800px;
+      margin: 0 auto 28px;
+      color: var(--muted);
+      line-height: 1.7;
+      text-align: center;
+    }
+
+    .featured-row {
+      display: grid;
+      grid-template-columns: minmax(280px, 360px) 1fr;
+      gap: 28px;
+      align-items: center;
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 26px;
+      box-shadow: 0 6px 22px rgba(0,0,0,0.04);
+    }
+
+    .featured-row img {
+      width: 100%;
+      max-width: 320px;
+      display: block;
+      margin: 0 auto;
+      border-radius: 30px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.10);
+      background: #fff;
+    }
+
+    .featured-copy h3 {
+      margin: 0 0 12px;
+      font-size: 1.6rem;
+    }
+
+    .featured-copy p {
+      margin: 0 0 16px;
+      color: var(--muted);
+      line-height: 1.75;
+      font-size: 1rem;
+    }
+
+    .highlight-list {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--text);
+      line-height: 1.75;
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-top: 26px;
+    }
+
+    .shot-card {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 18px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.04);
+    }
+
+    .shot-card img {
+      width: 100%;
+      max-width: 260px;
+      display: block;
+      margin: 0 auto 16px;
+      border-radius: 28px;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.10);
+      background: #fff;
+    }
+
+    .shot-card h3 {
+      margin: 0 0 8px;
+      font-size: 1.15rem;
+      text-align: center;
+    }
+
+    .shot-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.65;
+      text-align: center;
+      font-size: 0.97rem;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      max-width: 880px;
+      margin: 28px auto 0;
+    }
+
+    .feature-item {
+      background: var(--soft);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      text-align: left;
+      line-height: 1.65;
+    }
+
+    .feature-item strong {
+      color: var(--accent);
+    }
+
+    footer {
+      margin-top: 38px;
+      text-align: center;
+      color: #777;
+      font-size: 0.95rem;
+    }
+
+    footer a {
+      color: #007acc;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 940px) {
+      .featured-row {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .highlight-list {
+        text-align: left;
+        display: inline-block;
+      }
+
+      .gallery,
+      .features {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        padding: 10px 8px 36px;
+      }
+
+      .hero {
+        padding: 28px 16px 18px;
+      }
+
+      .content {
+        padding: 8px 16px 30px;
+      }
+
+      .hero-shot {
+        max-width: 280px;
+      }
+
+      .featured-row {
+        padding: 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="shell">
+
+      <section class="hero">
+        <img
+          src="img/Screenshot_20260401_170246.png"
+          alt="VideoOrganizer Android welcome screen"
+          class="hero-shot"
+        />
+        <h1>VideoOrganizer for Android</h1>
+        <p class="subtitle">
+          Organize your YouTube playlists manually, clearly, and safely.
+          VideoOrganizer gives you a focused Android workflow for browsing playlists,
+          creating new ones, and managing content with full user control.
+        </p>
+      </section>
+
+      <div class="content">
+        <section class="section">
+          <h2>Designed for Everyday Playlist Management</h2>
+          <p class="lead">
+            The app keeps the interface simple while still giving you the tools you need
+            to browse, sort, create, search, and manage playlists efficiently.
+          </p>
+
+          <div class="featured-row">
+            <img
+              src="img/Screenshot_20260401_170557.png"
+              alt="Playlist list screen in VideoOrganizer"
+            />
+            <div class="featured-copy">
+              <h3>Browse and organize with a clean playlist view</h3>
+              <p>
+                The main playlist screen makes it easy to review your content at a glance.
+                You can see playlist names, counts, thumbnails, and quickly move into the
+                actions you need.
+              </p>
+              <ul class="highlight-list">
+                <li>Clean list-based layout for fast scanning</li>
+                <li>Playlist thumbnails and item counts visible up front</li>
+                <li>Designed for touch-first Android interaction</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Key Screens</h2>
+          <p class="lead">
+            Here are some of the core interactions that make VideoOrganizer useful on Android.
+          </p>
+
+          <div class="gallery">
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_170611.png"
+                alt="Create playlist modal"
+              />
+              <h3>Create New Playlists</h3>
+              <p>
+                Add playlists with a simple, direct creation flow for title and description.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_170621.png"
+                alt="Playlist browser with populated playlist list"
+              />
+              <h3>Manage Real Playlist Libraries</h3>
+              <p>
+                Handle larger playlist collections with a layout that stays readable and organized.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="Screenshot_20260401_170710.png"
+                alt="Sort menu in VideoOrganizer"
+              />
+              <h3>Sort Your Playlist View</h3>
+              <p>
+                Change the view order with clear sort options such as newest, oldest, and title order.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_170729.png"
+                alt="Search YouTube bottom sheet in VideoOrganizer"
+              />
+              <h3>Search and Add Content</h3>
+              <p>
+                Use the search flow to find YouTube content and prepare it for playlist organization.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="Screenshot_20260401_171115.png"
+                alt="Account history screen"
+              />
+              <h3>Track Account Activity</h3>
+              <p>
+                Review activity history through a dedicated screen that keeps actions visible and easy to follow.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_171142.png"
+                alt="Recently deleted screen"
+              />
+              <h3>Recently Deleted View</h3>
+              <p>
+                Recover context quickly with a recent deletion screen that helps keep playlist management safer.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="Screenshot_20260401_171151.png"
+                alt="Playlist actions modal"
+              />
+              <h3>Edit and Restore Options</h3>
+              <p>
+                Access edit and recently deleted actions from a focused playlist actions dialog.
+              </p>
+            </div>
+
+            <div class="shot-card">
+              <img
+                src="img/Screenshot_20260401_171225.png"
+                alt="Camera permission modal"
+              />
+              <h3>Native Android Permissions</h3>
+              <p>
+                Android permission prompts appear cleanly inside the flow when camera access is requested.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h2>Main Features</h2>
+
+          <div class="features">
+            <div class="feature-item">
+              <strong>Manual control:</strong> every major organizational action remains initiated by the user.
+            </div>
+            <div class="feature-item">
+              <strong>Fast browsing:</strong> quickly scan playlist names, counts, and thumbnails in one place.
+            </div>
+            <div class="feature-item">
+              <strong>Sorting options:</strong> adjust the playlist view order to fit how you like to work.
+            </div>
+            <div class="feature-item">
+              <strong>Simple creation flow:</strong> add new playlists without clutter or extra steps.
+            </div>
+            <div class="feature-item">
+              <strong>Search workflow:</strong> move from discovery to playlist management in a more focused way.
+            </div>
+            <div class="feature-item">
+              <strong>Android-native feel:</strong> designed to look and behave naturally on mobile devices.
+            </div>
+          </div>
+        </section>
+
+        <footer>
+          <p>
+            <a href="https://hicommission.github.io/privacystatementvo.html">Privacy Policy</a>
+            &nbsp;|&nbsp;
+            <a href="https://hicommission.github.io/termsvo.html">Terms of Service</a>
+            &nbsp;|&nbsp;
+            © 2025 VideoOrganizer
+          </p>
+        </footer>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
