@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VideoOrganizer for Android</title>
+    <style>
+        :root {
+            --bg: #f4f4f4;
+            --card: #ffffff;
+            --text: #222;
+            --muted: #666;
+            --accent: #d63b32;
+            --border: #e8e8e8;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            text-align: center;
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            padding: 40px 20px 60px;
+            background: var(--card);
+        }
+
+        .hero {
+            margin-bottom: 28px;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            margin: 18px 0 10px;
+            line-height: 1.1;
+        }
+
+        .hero p {
+            max-width: 760px;
+            margin: 0 auto;
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--muted);
+        }
+
+        .screenshot-hero {
+            width: 100%;
+            max-width: 420px;
+            display: block;
+            margin: 0 auto 24px;
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin: 42px 0 14px;
+        }
+
+        .section-copy {
+            max-width: 760px;
+            margin: 0 auto 28px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+
+        .shot-card {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
+        }
+
+        .shot-card img {
+            width: 100%;
+            max-width: 260px;
+            display: block;
+            margin: 0 auto 16px;
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .shot-card h3 {
+            margin: 0 0 8px;
+            font-size: 1.2rem;
+        }
+
+        .shot-card p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.6;
+            font-size: 0.98rem;
+        }
+
+        .feature-list {
+            margin: 40px auto 0;
+            max-width: 760px;
+            text-align: left;
+            display: grid;
+            gap: 14px;
+        }
+
+        .feature-item {
+            background: #fafafa;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 16px 18px;
+            line-height: 1.6;
+        }
+
+        .feature-item strong {
+            color: var(--accent);
+        }
+
+        footer {
+            color: #777;
+            margin-top: 48px;
+            font-size: 0.95rem;
+        }
+
+        footer a {
+            color: #007acc;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 900px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 28px 14px 48px;
+            }
+
+            .shot-card {
+                padding: 14px;
+            }
+
+            .screenshot-hero {
+                max-width: 360px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <section class="hero">
+        <img
+            src="img/Screenshot_20260401_170246.png"
+            alt="img/VideoOrganizer Android home screen"
+            class="img/screenshot-hero"
+        />
+
+        <h1>VideoOrganizer for Android</h1>
+        <p>
+            Organize your YouTube playlists manually, clearly, and safely.
+            VideoOrganizer keeps every action user-initiated, so you stay in control while
+            browsing, creating, and managing playlist content on Android.
+        </p>
+    </section>
+
+    <section>
+        <h2 class="section-title">Clean Android Workflow</h2>
+        <p class="section-copy">
+            The app is designed to make playlist management straightforward: browse your playlists,
+            review contents, and create new lists without unnecessary complexity.
+        </p>
+
+        <div class="gallery">
+            <div class="shot-card">
+                <img
+                    src="Screenshot_20260401_170557.png"
+                    alt="VideoOrganizer Android playlist browser"
+                />
+                <h3>Browse Playlists</h3>
+                <p>
+                    View your playlists in a fast, visual list so you can quickly find what you want
+                    and manage your content more efficiently.
+                </p>
+            </div>
+
+            <div class="shot-card">
+                <img
+                    src="Screenshot_20260401_170611.png"
+                    alt="VideoOrganizer Android create playlist screen"
+                />
+                <h3>Create New Playlists</h3>
+                <p>
+                    Build new playlists with a simple form that keeps naming and description entry
+                    easy and direct.
+                </p>
+            </div>
+
+            <div class="shot-card">
+                <img
+                    src="Screenshot_20260401_170246.png"
+                    alt="VideoOrganizer Android sign-in screen"
+                />
+                <h3>Simple Start</h3>
+                <p>
+                    Begin with a focused connection flow and a clean interface that makes the app
+                    easy to understand from the first screen.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <h2 class="section-title">Main Features</h2>
+
+        <div class="feature-list">
+            <div class="feature-item">
+                <strong>Manual control:</strong> every organizational change is initiated by you.
+            </div>
+            <div class="feature-item">
+                <strong>Playlist visibility:</strong> quickly see your lists and their contents in one place.
+            </div>
+            <div class="feature-item">
+                <strong>Simple creation flow:</strong> add new playlists without clutter or confusion.
+            </div>
+            <div class="feature-item">
+                <strong>Clean Android interface:</strong> optimized for mobile browsing and playlist management.
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            <a href="https://hicommission.github.io/privacystatementvo.html">Privacy Policy</a>
+            &nbsp;|&nbsp;
+            <a href="https://hicommission.github.io/termsvo.html">Terms of Service</a>
+            &nbsp;|&nbsp;
+            © 2025 VideoOrganizer
+        </p>
+    </footer>
+</div>
+</body>
+</html>
