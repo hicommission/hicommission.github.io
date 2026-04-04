@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VideoOrganizer Clean Player</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+  #player { width: 100%; height: 100%; }
+</style>
+</head>
+<body>
+<div id="player"></div>
+<script>
+  // Parse URL parameters
+  var params = new URLSearchParams(window.location.search);
+  var videoId = params.get('video') || '';
+  var autoplay = params.get('autoplay') === '1' ? 1 : 0;
+
+  // Load YouTube IFrame API
+  var tag = document.createElement('script');
+  tag.src = 'https://www.youtube.com/iframe_api';
+  var firstScriptTag = document.getElementsByTagName('script')[0];
+  firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+  var player;
+
+  function onYouTubeIframeAPIReady() {
+    player = new YT.Player('player', {
+      videoId: videoId,
+      playerVars: {
+        autoplay: autoplay,
+        controls: 0,          // No progress bar, play button, volume
+        modestbranding: 1,    // Minimal YouTube branding
+        rel: 0,               // No related videos at end
+        showinfo: 0,          // No title bar (deprecated but still helps)
+        iv_load_policy: 3,    // No annotations
+        playsinline: 1,       // Inline playback on mobile
+        disablekb: 0,         // Keep keyboard controls for accessibility
+        fs: 0,                // No fullscreen button
+        cc_load_policy: 0     // No captions by default
+      },
+      events: {
+        onReady: onPlayerReady,
+        onError: onPlayerError
+      }
+    });
+  }
+
+  function onPlayerReady(event) {
+    // Expose player globally for JavaScript bridge access
+    window.player = player;
+    console.log('Clean player ready: ' + videoId);
+  }
+
+  function onPlayerError(event) {
+    console.error('Player error: ' + event.data);
+  }
+
+  // Listen for postMessage commands from the app's WKWebView
+  window.addEventListener('message', function(event) {
+    try {
+      var data = JSON.parse(event.data);
+      if (data.event === 'command' && player) {
+        switch (data.func) {
+          case 'playVideo':    player.playVideo(); break;
+          case 'pauseVideo':   player.pauseVideo(); break;
+          case 'seekTo':       player.seekTo(data.args[0], true); break;
+          case 'setPlaybackRate': player.setPlaybackRate(data.args[0]); break;
+        }
+      }
+    } catch(e) {}
+  });
+</script>
+</body>
+</html>
