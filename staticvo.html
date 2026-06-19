@@ -289,8 +289,23 @@
           flash.style.opacity = '0.55';
           setTimeout(function() { flash.style.opacity = '0'; }, 90);
         }
+        // Send the player div's bounding rect so the iOS side can
+        // crop precisely to the video area instead of capturing
+        // the surrounding Pro-Looper page chrome. Coords are in
+        // CSS points — same coordinate space as WKWebView.bounds.
+        var payload = {};
+        var pl = document.getElementById('player');
+        if (pl) {
+          var r = pl.getBoundingClientRect();
+          payload = {
+            x: r.left,
+            y: r.top,
+            width: r.width,
+            height: r.height
+          };
+        }
         try {
-          window.webkit.messageHandlers.snapshot.postMessage({});
+          window.webkit.messageHandlers.snapshot.postMessage(payload);
         } catch (e) {
           console.error('snapshot bridge failed:', e);
         }
