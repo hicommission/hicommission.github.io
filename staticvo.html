@@ -169,6 +169,10 @@
   <script>
     const params = new URLSearchParams(window.location.search);
     const initialVideoId = params.get("video") || "";
+    // Optional resume offset (seconds). Set by VideoOrganizer when
+    // the user taps a Photo Moment bookmark — see VideoPlayerView's
+    // `seekTo` param.
+    const initialSeek = parseFloat(params.get("t") || "") || 0;
     let player = null;
     let playerReady = false;
     let loopEnabled = false;
@@ -232,8 +236,21 @@
             playerReady = true;
             playBtn.disabled = loopBtn.disabled = false;
             if (initialVideoId.length > 0) {
-               player.loadVideoById(initialVideoId);
-               statusText.textContent = "Video loaded: " + initialVideoId;
+               // If we have a resume offset (Photo Moment bookmark),
+               // load + seek atomically via loadVideoById's startSeconds
+               // arg. Without this, loadVideoById would land at 0 and
+               // a subsequent seekTo would only fire once the player
+               // had buffered enough — ugly user-visible jump.
+               if (initialSeek > 0) {
+                 player.loadVideoById({
+                   videoId: initialVideoId,
+                   startSeconds: initialSeek
+                 });
+               } else {
+                 player.loadVideoById(initialVideoId);
+               }
+               statusText.textContent = "Video loaded: " + initialVideoId
+                 + (initialSeek > 0 ? "  (resumed @ " + initialSeek + "s)" : "");
                //player.mute();      // Allow autoplay
                //player.playVideo(); // Start playback immediately
                 //player.mute(); // required for silent auto-play
@@ -289,21 +306,25 @@
           flash.style.opacity = '0.55';
           setTimeout(function() { flash.style.opacity = '0'; }, 90);
         }
-        // Send the player div's bounding rect so the iOS side can
-        // crop precisely to the video area instead of capturing
-        // the surrounding Pro-Looper page chrome. Coords are in
-        // CSS points — same coordinate space as WKWebView.bounds.
+        // Send the current playback time so the iOS side can store
+        // a bookmark (thumbnail + offset) and seek back here when
+        // the user taps this moment in the carousel. We can't ship
+        // actual video pixels — iOS blocks frame capture for
+        // YouTube content (AVPlayer protected output) — so the
+        // bookmark approach is the workable substitute.
+        // `player` is the closure-scoped YT.Player instance declared
+        // up at module scope. It's the same variable the Play/Loop
+        // buttons use; reading getCurrentTime() here is safe once
+        // playerReady is true (set in onReady).
         var payload = {};
-        var pl = document.getElementById('player');
-        if (pl) {
-          var r = pl.getBoundingClientRect();
-          payload = {
-            x: r.left,
-            y: r.top,
-            width: r.width,
-            height: r.height
-          };
-        }
+        try {
+          if (playerReady && player && typeof player.getCurrentTime === 'function') {
+            var t = player.getCurrentTime();
+            if (typeof t === 'number' && isFinite(t) && t >= 0) {
+              payload.time = t;
+            }
+          }
+        } catch (e) { /* player not yet ready — payload stays empty */ }
         try {
           window.webkit.messageHandlers.snapshot.postMessage(payload);
         } catch (e) {
