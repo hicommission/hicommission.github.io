@@ -60,7 +60,7 @@
 </ul>
 
 <h3>1.2 App Usage Data</h3>
-<p>VideoOrganizer does <strong>not</strong> collect any usage analytics, performance logs, or error/debug data. The app runs entirely on your device; we operate no analytics, tracking, or logging services.</p>
+<p>We run <strong>no</strong> analytics, tracking, or logging services of our own, and the App contains no advertising or analytics SDKs. On Android only, the camera text scan uses Google ML Kit, which sends usage and performance information, including a per-installation identifier (not your name or account), to Google (see §10).</p>
 
 <hr>
 
@@ -102,7 +102,7 @@
 
 <p>Your use of these services is subject to Google’s Privacy Policy and Terms of Service.</p>
 
-<p>We do not share your data with any other third parties.</p>
+<p>Data goes only to the Google services described in this policy, to perform the features you use, and (for the Android video player) to GitHub Pages as our hosting provider. We do not sell your data or share it with anyone else, and we operate no servers that receive your data.</p>
 
 <hr>
 
@@ -111,8 +111,9 @@
 <h3>5.1 Disconnect Google Account</h3>
 <p>You may sign out at any time. When you sign out:</p>
 <ul>
-    <li>All playlist data is removed from your device</li>
-    <li>The App no longer accesses your Google account</li>
+    <li>Your sign-in is removed from the device and the App no longer accesses your Google account</li>
+    <li>On iOS, all playlist data is removed from your device</li>
+    <li>On Android, tags, favorites, See Also links, imported history and the PhotoFinder index stay on the device until you clear the App’s storage or uninstall it (see §10 and §11)</li>
 </ul>
 
 <h3>5.2 Delete the App</h3>
@@ -159,11 +160,24 @@
 <ul>
     <li><strong>Sign-in:</strong> Google sign-in opens in your web browser (Chrome when it is installed). The App asks only for access to your YouTube account.</li>
     <li><strong>PhotoFinder (optional):</strong> if you open PhotoFinder and allow photo access, the App reads the date and location saved in the photos on your device to build a searchable index on your device. To show place names it uses Android’s built-in geocoder, which may send photo coordinates to Google’s location services. Your photos themselves are not uploaded.</li>
-    <li><strong>Camera text scan:</strong> text recognition runs on your device using Google ML Kit. ML Kit may send anonymous usage and performance information to Google.</li>
+    <li><strong>Camera text scan:</strong> text recognition runs on your device using Google ML Kit. ML Kit sends usage and performance information, including a per-installation identifier (not your name or account), to Google.</li>
+    <li><strong>Search:</strong> what you search for is sent to YouTube to return results. That includes text you type, text scanned with the camera, text pasted from or detected on the clipboard, and a video title when you open See Also &gt; YouTube. The App reads the clipboard when it opens or returns to the foreground, to detect YouTube links; clipboard text is sent only when it is used as a search or to add a video.</li>
+    <li><strong>Playlist changes:</strong> playlists you create or rename (title and description), and videos you add, remove or reorder, are sent to YouTube to update your account.</li>
     <li><strong>Stored on your device:</strong> tags, favorites, See Also links, imported watch history and the Recently Deleted list are stored only on your device. They stay on the device after you sign out and are removed when you uninstall the App.</li>
-    <li><strong>Video player:</strong> videos play in the official YouTube embedded player, loaded from our website (hicommission.github.io).</li>
+    <li><strong>Video player:</strong> videos play in the official YouTube embedded player. YouTube receives the video you play and your interactions with the player, and may store cookies in the App’s player. The player page is hosted on GitHub Pages (hicommission.github.io), which receives the video ID and your IP address as our hosting provider.</li>
 </ul>
-<p>Apart from the Google services described above, we do not share your information with anyone, and we do not operate servers that receive your data.</p>
+<p>Data goes only to the Google services described above, to perform the features you use, and to GitHub Pages as our hosting provider. We do not sell your data or share it with anyone else, and we operate no servers that receive your data.</p>
+
+<hr>
+
+<h2 id="delete-data">11. Deleting Your Data</h2>
+<ul>
+    <li>We keep no copy of your data, so there is nothing for us to delete on a server.</li>
+    <li>To remove everything the App stores on your device: sign out, then go to <em>Settings &gt; Apps &gt; VideoOrganizer &gt; Storage &gt; Clear storage</em>, or uninstall the App.</li>
+    <li>To remove the App’s access to your Google account: <a href="https://security.google.com/settings/security/permissions">https://security.google.com/settings/security/permissions</a>.</li>
+    <li>Playlist changes you made live in your YouTube account and are managed in YouTube.</li>
+    <li>Questions: email gsizzler@gmail.com.</li>
+</ul>
 
 </body>
 </html>
