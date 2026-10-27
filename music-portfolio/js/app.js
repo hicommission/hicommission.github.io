@@ -2,20 +2,17 @@
    music-portfolio/js/app.js  (FULL DROP-IN REPLACEMENT)
 
    ✅ Goals:
-   - PayPal works for ALL tracks on ALL tabs
-   - Stripe works for ALL tracks on ALL tabs:
+   - Stripe only (card checkout, no Stripe account needed by the buyer):
        A) STRIPE_LINKS[sku] -> Payment Link
        B) else POST /api/stripe/create -> { url }
-   - Stripe button sits NEXT TO PayPal button
-   - ✅ BlaKats Barcode + CD PayPal/Stripe buttons appear BELOW Hero Video
-   - ✅ Adds label: BlaKats "Wild" CD $0.10
+   - ✅ Prices: single download $0.99, full "Wild" CD $9.99 (the Worker charges its own price table)
+   - ✅ BlaKats Barcode + CD button appear BELOW Hero Video
    - ✅ CD download does NOT start until payment (SKU blakats_wild_cd)
    - ✅ Fixes waveform bleeding into buy buttons
-   - ✅ Stripe-only CD amount is $0.50 (PayPal CD stays $0.10)
+   - ✅ Tracks with no download file yet show "Coming soon" (comingSoon: true)
    ============================================================ */
 
 const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-const PAYPAL_CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
 const STRIPE_CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 
 const PREVIEW_SECONDS = 30;
@@ -26,18 +23,11 @@ const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
 
 // BlaKats CD SKU (must map in Worker -> BlaKatsWildCDMP3s.zip)
 const BLAKATS_CD_SKU = "blakats_wild_cd";
-const BLAKATS_CD_LABEL_TEXT = 'BlaKats "Wild" CD $0.10';
-
-// IMPORTANT: Stripe minimum is $0.50 for Checkout Session.
-// PayPal can stay at $0.10.
-const BLAKATS_CD_PAYPAL_AMOUNT = "0.10";
-const BLAKATS_CD_STRIPE_AMOUNT = "0.50";
+const BLAKATS_CD_LABEL_TEXT = 'BlaKats "Wild" CD $9.99';
+const BLAKATS_CD_AMOUNT = "9.99";
 
 /** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
-  // Example existing:
-  blakats_cd_01: "https://buy.stripe.com/7sY8wP0G8bGF4j7ercfjG01",
-
   // OPTIONAL: If you create a Stripe Payment Link for the full CD, put it here.
   // blakats_wild_cd: "https://buy.stripe.com/xxxxxx",
 };
@@ -49,18 +39,18 @@ const CATALOG = [
     label: "BlaKats",
     themeClass: "theme-blakats",
     tracks: [
-      { sku: "blakats_cd_01", title: "01. Can't Take It Back (Remix)", artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_01_preview.mp3" },
-      { sku: "blakats_cd_02", title: "02. Don't Feed The Animals",      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_02_preview.mp3" },
-      { sku: "blakats_cd_03", title: "03. Wild Cherry",                 artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
-      { sku: "blakats_cd_04", title: "04. Memories",                    artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
-      { sku: "blakats_cd_05", title: "05. Tonite",                      artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_05_preview.mp3" },
-      { sku: "blakats_cd_06", title: "06. Ask Me Nicely",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_06_preview.mp3" },
-      { sku: "blakats_cd_07", title: "07. Pure Heart",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_07_preview.mp3" },
-      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",       artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
-      { sku: "blakats_cd_09", title: "09. Hold Me Close",               artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_09_preview.mp3" },
-      { sku: "blakats_cd_10", title: "10. (Track 10)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_10_preview.mp3" },
-      { sku: "blakats_cd_11", title: "11. (Track 11)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_11_preview.mp3" },
-      { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.10", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
+      { sku: "blakats_cd_01", title: "01. Can't Take It Back (Remix)", artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_01_preview.mp3" },
+      { sku: "blakats_cd_02", title: "02. Don't Feed The Animals",      artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_02_preview.mp3" },
+      { sku: "blakats_cd_03", title: "03. Wild Cherry",                 artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
+      { sku: "blakats_cd_04", title: "04. Memories",                    artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
+      { sku: "blakats_cd_05", title: "05. Tonite",                      artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_05_preview.mp3" },
+      { sku: "blakats_cd_06", title: "06. Ask Me Nicely",               artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_06_preview.mp3" },
+      { sku: "blakats_cd_07", title: "07. Pure Heart",                  artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_07_preview.mp3" },
+      { sku: "blakats_cd_08", title: "08. Perfect Time For Love",       artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_08_preview.mp3" },
+      { sku: "blakats_cd_09", title: "09. Hold Me Close",               artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_09_preview.mp3" },
+      { sku: "blakats_cd_10", title: "10. (Track 10)",                  artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_10_preview.mp3" },
+      { sku: "blakats_cd_11", title: "11. (Track 11)",                  artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_11_preview.mp3" },
+      { sku: "blakats_cd_12", title: "12. (Track 12)",                  artist: "BlaKats", amount: "0.99", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_12_preview.mp3" },
     ],
   },
   {
@@ -68,8 +58,8 @@ const CATALOG = [
     label: "1GNM",
     themeClass: "theme-artist2",
     tracks: [
-      { sku: "1gnm_track_01", title: "01. Sample Track One", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_01_preview.mp3" },
-      { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
+      { sku: "1gnm_track_01", title: "01. Sample Track One", artist: "1GNM", amount: "0.99", comingSoon: true, thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_01_preview.mp3" },
+      { sku: "1gnm_track_02", title: "02. Sample Track Two", artist: "1GNM", amount: "0.99", comingSoon: true, thumb: "assets/1GNM.jpeg", previewFile: "blakats_cd_02_preview.mp3" },
     ],
   },
   {
@@ -77,8 +67,8 @@ const CATALOG = [
     label: "BoomBash",
     themeClass: "theme-artist3",
     tracks: [
-      { sku: "boombash_track_01", title: "01. Sample Track One", artist: "BoomBash", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
-      { sku: "boombash_track_02", title: "02. Sample Track Two", artist: "BoomBash", amount: "1.29", thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
+      { sku: "boombash_track_01", title: "01. Sample Track One", artist: "BoomBash", amount: "0.99", comingSoon: true, thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_03_preview.mp3" },
+      { sku: "boombash_track_02", title: "02. Sample Track Two", artist: "BoomBash", amount: "0.99", comingSoon: true, thumb: "assets/pop-cover.jpg", previewFile: "blakats_cd_04_preview.mp3" },
     ],
   },
 ];
@@ -160,7 +150,11 @@ async function postJsonExpectJson(url, payload) {
   });
 
   const raw = await res.text().catch(() => "");
-  if (!res.ok) throw new Error(`${url} failed: HTTP ${res.status}\n\n${raw}`.trim());
+  if (!res.ok) {
+    let msg = "";
+    try { msg = JSON.parse(raw)?.error || ""; } catch {}
+    throw new Error(msg || `${url} failed: HTTP ${res.status}\n\n${raw}`.trim());
+  }
 
   let data;
   try { data = JSON.parse(raw); }
@@ -243,18 +237,7 @@ function stopPreview() {
   activeTimeEl = null;
 }
 
-/** PayPal / Stripe */
-async function createPayPalLink(track) {
-  const payload = {
-    sku: String(track.sku || "").trim(),
-    title: `${track.artist} — ${track.title}`,
-    amount: normalizeAmount(track.amount),
-  };
-  const data = await postJsonExpectJson(PAYPAL_CREATE_URL, payload);
-  if (!data?.url) throw new Error(`PayPal create missing url:\n\n${JSON.stringify(data)}`);
-  return data.url;
-}
-
+/** Stripe */
 async function createStripeLinkViaWorker(track) {
   const payload = {
     sku: String(track.sku || "").trim(),
@@ -372,7 +355,7 @@ function renderPanels() {
       queueMicrotask(() => mountLoopingHeroVideo(heroMount, HERO_VIDEO));
     }
 
-    // ✅ BELOW HERO: BlaKats tools row (Label + Barcode + CD PayPal + CD Stripe)
+    // ✅ BELOW HERO: BlaKats tools row (Label + Barcode + CD Stripe)
     // ✅ CD payment uses SKU blakats_wild_cd (Worker must map -> BlaKatsWildCDMP3s.zip)
     if (tab.id === "blakats") {
       const tools = document.createElement("div");
@@ -388,46 +371,23 @@ function renderPanels() {
       barcodeBtn.textContent = "Barcode";
       barcodeBtn.addEventListener("click", openBarcodeModal);
 
-      const cdPayPalBtn = document.createElement("button");
-      cdPayPalBtn.type = "button";
-      cdPayPalBtn.className = "buy-btn";
-      cdPayPalBtn.textContent = "Buy Wild CD (PayPal)";
-      cdPayPalBtn.addEventListener("click", async () => {
-        cdPayPalBtn.disabled = true;
-        const old = cdPayPalBtn.textContent;
-        cdPayPalBtn.textContent = "Loading…";
-        try {
-          const cdItem = { sku: BLAKATS_CD_SKU, title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: BLAKATS_CD_PAYPAL_AMOUNT };
-          const paypalUrl = await createPayPalLink(cdItem);
-          window.location.href = paypalUrl;
-        } catch (err) {
-          console.error(err);
-          alert(err?.message || "Could not generate PayPal payment link. Please try again.");
-          cdPayPalBtn.disabled = false;
-          cdPayPalBtn.textContent = old;
-        }
-      });
-
       const cdStripeBtn = document.createElement("button");
       cdStripeBtn.type = "button";
       cdStripeBtn.className = "buy-btn stripe-btn";
-      cdStripeBtn.textContent = "Pay w/ Stripe (Wild CD)";
+      cdStripeBtn.textContent = "Buy Wild CD";
       cdStripeBtn.addEventListener("click", async () => {
         cdStripeBtn.disabled = true;
         const old = cdStripeBtn.textContent;
         cdStripeBtn.textContent = "Loading…";
         try {
-          const cdItem = { sku: BLAKATS_CD_SKU, title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: BLAKATS_CD_STRIPE_AMOUNT };
+          const cdItem = { sku: BLAKATS_CD_SKU, title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: BLAKATS_CD_AMOUNT };
           const direct = STRIPE_LINKS[cdItem.sku];
           if (direct) { window.location.href = direct; return; }
           const url = await createStripeLinkViaWorker(cdItem);
           window.location.href = url;
         } catch (err) {
           console.error(err);
-          alert(
-            (err?.message || "Could not start Stripe checkout.") +
-            "\n\nIf you are using Payment Links, add STRIPE_LINKS[blakats_wild_cd].\nOtherwise ensure Worker has POST /api/stripe/create."
-          );
+          alert(err?.message || "Could not start checkout. Please try again.");
           cdStripeBtn.disabled = false;
           cdStripeBtn.textContent = old;
         }
@@ -435,7 +395,6 @@ function renderPanels() {
 
       tools.appendChild(cdLabel);
       tools.appendChild(barcodeBtn);
-      tools.appendChild(cdPayPalBtn);
       tools.appendChild(cdStripeBtn);
 
       panel.appendChild(tools);
@@ -502,30 +461,11 @@ function renderTrackRow(track) {
   const buy = document.createElement("div");
   buy.className = "buy";
 
-  const buyBtn = document.createElement("button");
-  buyBtn.type = "button";
-  buyBtn.className = "buy-btn";
-  buyBtn.textContent = "Buy & Download";
-
-  buyBtn.addEventListener("click", async () => {
-    buyBtn.disabled = true;
-    const old = buyBtn.textContent;
-    buyBtn.textContent = "Loading…";
-    try {
-      const paypalUrl = await createPayPalLink(track);
-      window.location.href = paypalUrl;
-    } catch (err) {
-      console.error(err);
-      alert(err?.message || "Could not generate PayPal payment link. Please try again.");
-      buyBtn.disabled = false;
-      buyBtn.textContent = old;
-    }
-  });
-
   const stripeBtn = document.createElement("button");
   stripeBtn.type = "button";
   stripeBtn.className = "buy-btn stripe-btn";
-  stripeBtn.textContent = "Pay w/ Stripe";
+  stripeBtn.textContent = track.comingSoon ? "Coming soon" : "Buy & Download";
+  stripeBtn.disabled = !!track.comingSoon;
 
   stripeBtn.addEventListener("click", async () => {
     stripeBtn.disabled = true;
@@ -538,16 +478,12 @@ function renderTrackRow(track) {
       window.location.href = url;
     } catch (err) {
       console.error(err);
-      alert(
-        (err?.message || "Could not start Stripe checkout.") +
-        "\n\nIf you are using Payment Links, add STRIPE_LINKS[sku].\nIf you want Stripe for ALL items, implement POST /api/stripe/create on the Worker."
-      );
+      alert(err?.message || "Could not start checkout. Please try again.");
       stripeBtn.disabled = false;
       stripeBtn.textContent = old;
     }
   });
 
-  buy.appendChild(buyBtn);
   buy.appendChild(stripeBtn);
 
   const audioUrl = `${PREVIEW_BASE}/${track.previewFile}`;
