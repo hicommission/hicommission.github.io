@@ -7,8 +7,8 @@
        - Single-click cover toggles pause/resume (no double click)
        - Stage uses object-fit: cover to FILL the space (no letterboxing)
      Uses:
-       POST https://cliquetraxx.com/api/paypal/create -> PayPal
-     TESTING: sku blakats_cd_01 (mp3)
+       POST https://cliquetraxx.com/api/stripe/create -> Stripe Checkout
+       sku sofia_book (price is set by the Worker, not the page)
      ========================================================= -->
 <!doctype html>
 <html lang="en">
@@ -260,9 +260,8 @@
         <h1>SOFIA — African Concept of God, Creation and Fundamentals of Spirituality and Science</h1>
 
         <p class="subtitle">
-          After checkout, you’ll be redirected to a secure download endpoint.
-          <strong>Testing is currently wired to <code>blakats_cd_01.mp3</code>.</strong>
-          When you’re ready to ship the real book PDF, change the <code>sku</code> and upload the file.
+          The complete book as a searchable PDF (175 pages).
+          Pay securely with Stripe and your download starts right after checkout.
         </p>
 
         <div class="meta">
@@ -276,7 +275,7 @@
           </div>
           <div class="box">
             <div class="k">Delivery</div>
-            <div class="v">Secure link after payment</div>
+            <div class="v">PDF download after payment</div>
           </div>
           <div class="box">
             <div class="k">Support</div>
@@ -292,7 +291,6 @@
             <div class="label">Book cover</div>
             <div class="small">Single-click cover: pause/resume flip</div>
           </div>
-          <div class="small">Test SKU: <code>blakats_cd_01</code></div>
         </div>
 
         <!-- SINGLE IMAGE fills the stage -->
@@ -305,22 +303,22 @@
 
         <div class="cta">
           <div class="price-row">
-            <div class="price">$0.10</div>
-            <div class="fine">Test price • USD</div>
+            <div class="price">$9.99</div>
+            <div class="fine">USD</div>
           </div>
 
           <button id="buyBtn" class="btn">Buy & Download</button>
           <div id="status" class="status"></div>
 
           <div class="fine">
-            After payment, PayPal returns you to <code>/pay/return</code>, then the Worker redirects you to <code>/download</code>.
+            Secure checkout by Stripe. The download link works once and lasts 24 hours, so save the PDF when it arrives.
           </div>
         </div>
       </div>
     </div>
 
     <div class="footer">
-      Tip: Place this file next to your <code>index.html</code> and link to it.
+      © Midao Dr. Kagbo Kumodzie 2022 · Published by GAVOSS Education Plc Ltd, Ghana
     </div>
   </div>
 
@@ -329,13 +327,12 @@
     // CONFIG
     // =========================================================
     const CLOUDFLARE_BASE = "https://cliquetraxx.com";
-    const CREATE_URL = `${CLOUDFLARE_BASE}/api/paypal/create`;
+    const CREATE_URL = `${CLOUDFLARE_BASE}/api/stripe/create`;
 
-    // TEST product (uses existing mp3 so you can validate the flow)
+    // The Worker looks up the price and the file from the sku.
     const PRODUCT = {
-      sku: "blakats_cd_01",
-      title: "SOFIA (Test Download)",
-      amount: "0.10",
+      sku: "sofia_book",
+      title: "SOFIA — African Concept of God (PDF)",
     };
 
     const FRONT_COVER = "assets/sofia-cover.png";
@@ -350,7 +347,7 @@
     const stageImg = document.getElementById("stageImg");
 
     // =========================================================
-    // PayPal create + redirect
+    // Stripe Checkout: create a session, then go to it
     // =========================================================
     function setBusy(busy, msg = "") {
       buyBtn.disabled = busy;
@@ -358,35 +355,32 @@
       statusEl.textContent = msg || "";
     }
 
-    async function createPayPalLink() {
+    async function createCheckoutLink() {
       const res = await fetch(CREATE_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(PRODUCT),
       });
 
-      if (!res.ok) {
-        const t = await res.text().catch(() => "");
-        throw new Error(`create failed: HTTP ${res.status} ${t}`.trim());
-      }
-
-      const data = await res.json();
-      if (!data || !data.url) throw new Error("create failed: missing url");
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data || !data.url)
+        throw new Error((data && data.error) || `Checkout failed (HTTP ${res.status}).`);
       return data.url;
     }
 
     buyBtn.addEventListener("click", async () => {
       if (buyBtn.disabled) return;
-      setBusy(true, "Generating secure PayPal link…");
+      setBusy(true, "Opening secure checkout…");
       try {
-        const paypalUrl = await createPayPalLink();
-        window.location.href = paypalUrl; // SAME TAB
+        window.location.href = await createCheckoutLink(); // same tab
       } catch (err) {
         console.error(err);
-        setBusy(false, "Could not generate payment link. Please try again.");
-        alert("Payment link failed to generate. Please try again.");
+        setBusy(false, err.message || "Checkout could not be started. Please try again.");
       }
     });
+
+    // Coming back from Stripe with the Back button restores this page from cache: re-enable the button.
+    window.addEventListener("pageshow", () => setBusy(false));
 
     // =========================================================
     // Cover flip logic (ONE image)
