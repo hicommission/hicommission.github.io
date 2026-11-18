@@ -23,7 +23,7 @@ const BLAKATS_BARCODE_IMG_URL = "assets/downloads/blakats_barcode.png";
 
 // BlaKats CD SKU (must map in Worker -> BlaKatsWildCDMP3s.zip)
 const BLAKATS_CD_SKU = "blakats_wild_cd";
-const BLAKATS_CD_LABEL_TEXT = 'BlaKats "Wild" CD $9.99';
+const BLAKATS_CD_LABEL_TEXT = 'BlaKats "Don\'t Feed the Animals" CD $9.99';
 const BLAKATS_CD_AMOUNT = "9.99";
 
 // PHYSICAL CD — $9.99 + location-appropriate shipping & handling (2026-11-18).
@@ -421,13 +421,13 @@ function renderPanels() {
       const cdStripeBtn = document.createElement("button");
       cdStripeBtn.type = "button";
       cdStripeBtn.className = "buy-btn stripe-btn";
-      cdStripeBtn.textContent = "Buy Wild CD (download)";
+      cdStripeBtn.textContent = "Buy Don't Feed the Animals CD (download)";
       cdStripeBtn.addEventListener("click", async () => {
         cdStripeBtn.disabled = true;
         const old = cdStripeBtn.textContent;
         cdStripeBtn.textContent = "Loading…";
         try {
-          const cdItem = { sku: BLAKATS_CD_SKU, title: 'BlaKats "Wild" CD', artist: "BlaKats", amount: BLAKATS_CD_AMOUNT };
+          const cdItem = { sku: BLAKATS_CD_SKU, title: 'BlaKats "Don\'t Feed the Animals" CD', artist: "BlaKats", amount: BLAKATS_CD_AMOUNT };
           const direct = STRIPE_LINKS[cdItem.sku];
           if (direct) { window.location.href = direct; return; }
           const url = await createStripeLinkViaWorker(cdItem);
