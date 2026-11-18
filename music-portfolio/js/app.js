@@ -26,6 +26,53 @@ const BLAKATS_CD_SKU = "blakats_wild_cd";
 const BLAKATS_CD_LABEL_TEXT = 'BlaKats "Wild" CD $9.99';
 const BLAKATS_CD_AMOUNT = "9.99";
 
+// PHYSICAL CD — $9.99 + location-appropriate shipping & handling (2026-11-18).
+// One Stripe Payment Link per region; each link only accepts addresses in its own countries,
+// so the buyer always pays the right shipping for where the CD is going.
+const BLAKATS_PHYSICAL_CD = {
+  price: "9.99",
+  regions: {
+    us:   { label: "US & Puerto Rico", sh: "$5.99 S&H", note: " ($8.99 faster)", link: "https://buy.stripe.com/eVqcN51Kc8utdTH0AmfjG02" },
+    camx: { label: "Canada or Mexico",            sh: "$17.99 S&H",                  link: "https://buy.stripe.com/dRm5kD60seSRcPD82OfjG03" },
+    intl: { label: "Other countries",             sh: "$22.99 S&H",                  link: "https://buy.stripe.com/cNi4gz2Og5ih2aZcj4fjG04" },
+  },
+};
+const BLAKATS_PHYSICAL_CD_LINK = BLAKATS_PHYSICAL_CD.regions.us.link;   // non-empty = show the physical CD button
+
+// Best guess of the visitor's shipping region from the device's time zone, then its language region; they can change it.
+function detectCdRegion() {
+  let tz = "";
+  try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ""; } catch (_) {}
+  const CA = /^America\/(Toronto|Montreal|Vancouver|Edmonton|Winnipeg|Halifax|St_Johns|Regina|Moncton|Glace_Bay|Goose_Bay|Whitehorse|Dawson|Dawson_Creek|Fort_Nelson|Creston|Iqaluit|Rankin_Inlet|Resolute|Cambridge_Bay|Inuvik|Yellowknife|Swift_Current|Atikokan|Blanc-Sablon|Nipigon|Thunder_Bay|Rainy_River|Pangnirtung)$/;
+  const MX = /^America\/(Mexico_City|Cancun|Merida|Monterrey|Matamoros|Chihuahua|Ciudad_Juarez|Ojinaga|Mazatlan|Bahia_Banderas|Hermosillo|Tijuana)$/;
+  if (CA.test(tz) || MX.test(tz)) return "camx";
+  if (/^(America\/(New_York|Chicago|Denver|Los_Angeles|Phoenix|Anchorage|Juneau|Sitka|Metlakatla|Yakutat|Nome|Adak|Boise|Detroit|Menominee|Puerto_Rico|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+)|Pacific\/Honolulu)$/.test(tz)) return "us";
+  const lang = (navigator.languages && navigator.languages[0]) || navigator.language || "";
+  const region = (lang.split("-")[1] || "").toUpperCase();
+  if (region === "US" || region === "PR") return "us";
+  if (region === "CA" || region === "MX") return "camx";
+  return tz ? "intl" : "us";
+}
+
+// Pass the YouTube video / campaign that sent the buyer to Stripe (client_reference_id: letters, digits, - and _ only, max 200)
+function physicalCdCheckoutUrl(regionKey) {
+  const base = (BLAKATS_PHYSICAL_CD.regions[regionKey] || BLAKATS_PHYSICAL_CD.regions.us).link;
+  const q = new URLSearchParams(window.location.search);
+  const ref = [q.get("utm_source"), q.get("utm_campaign"), q.get("utm_content")]
+    .filter(Boolean).join("_").replace(/[^A-Za-z0-9_-]/g, "-").slice(0, 200);
+  return ref ? `${base}?client_reference_id=${encodeURIComponent(ref)}` : base;
+}
+
+// Thank-you note after a physical-CD purchase (the Payment Link redirects back with ?cd=thanks)
+document.addEventListener("DOMContentLoaded", () => {
+  if (new URLSearchParams(window.location.search).get("cd") !== "thanks") return;
+  const note = document.createElement("div");
+  note.setAttribute("role", "status");
+  note.style.cssText = "margin:12px auto;max-width:720px;padding:14px 18px;border-radius:12px;background:#eef5ee;color:#1d4d27;font-weight:600;text-align:center";
+  note.textContent = "Thank you! Your BlaKats CD order is in. You'll get a receipt by email, and the CD ships by USPS within 2 business days.";
+  document.body.prepend(note);
+});
+
 /** Stripe Payment Links (optional) */
 const STRIPE_LINKS = {
   // OPTIONAL: If you create a Stripe Payment Link for the full CD, put it here.
@@ -396,6 +443,38 @@ function renderPanels() {
       tools.appendChild(cdLabel);
       tools.appendChild(barcodeBtn);
       tools.appendChild(cdStripeBtn);
+
+      // ✅ PHYSICAL CD (ships by mail) — Stripe Payment Link with shipping address + flat US shipping (Phase 1, 2026-11-18)
+      if (BLAKATS_PHYSICAL_CD_LINK) {
+        const shipWrap = document.createElement("label");
+        shipWrap.className = "cd-ship-to";
+        shipWrap.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:.9em;width:100%;max-width:100%;box-sizing:border-box";
+        shipWrap.textContent = "Ship the CD to:";
+        const shipSel = document.createElement("select");
+        shipSel.setAttribute("aria-label", "Ship the physical CD to");
+        shipSel.style.cssText = "flex:1 1 220px;min-width:0;max-width:100%;padding:6px;border-radius:8px";
+        Object.entries(BLAKATS_PHYSICAL_CD.regions).forEach(([key, r]) => {
+          const opt = document.createElement("option");
+          opt.value = key;
+          opt.textContent = `${r.label} — ${r.sh}${r.note || ""}`;
+          shipSel.appendChild(opt);
+        });
+        shipSel.value = detectCdRegion();
+        shipWrap.appendChild(shipSel);
+
+        const physBtn = document.createElement("button");
+        physBtn.type = "button";
+        physBtn.className = "buy-btn stripe-btn";
+        const label = () => `Buy the CD (ships) $${BLAKATS_PHYSICAL_CD.price} + ${BLAKATS_PHYSICAL_CD.regions[shipSel.value].sh}`;
+        physBtn.textContent = label();
+        physBtn.title = "Physical CD mailed to you by USPS. Shipping & handling depends on where it ships.";
+        shipSel.addEventListener("change", () => { physBtn.textContent = label(); });
+        physBtn.addEventListener("click", () => {
+          window.location.href = physicalCdCheckoutUrl(shipSel.value);
+        });
+        tools.appendChild(shipWrap);
+        tools.appendChild(physBtn);
+      }
 
       panel.appendChild(tools);
     }
