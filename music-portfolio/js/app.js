@@ -421,7 +421,7 @@ function renderPanels() {
       const cdStripeBtn = document.createElement("button");
       cdStripeBtn.type = "button";
       cdStripeBtn.className = "buy-btn stripe-btn";
-      cdStripeBtn.textContent = "Buy Wild CD";
+      cdStripeBtn.textContent = "Buy Wild CD (download)";
       cdStripeBtn.addEventListener("click", async () => {
         cdStripeBtn.disabled = true;
         const old = cdStripeBtn.textContent;
